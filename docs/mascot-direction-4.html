@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>North — cardinal face mascot</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --field-deep: #0F1319;
+      --field: #12161C;
+      --field-raised: #1A1F27;
+      --line: #2A3038;
+      --line-soft: #20262E;
+      --brass: #C9A227;
+      --paper: #F2F0EB;
+      --ash: #9BA3AD;
+      --slate: #7E8288;
+      --quick: 150ms;
+      --settle: 240ms;
+      --ease: cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--field-deep);
+      color: var(--paper);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    main {
+      width: min(100% - 44px, 820px);
+      margin: 0 auto;
+      padding: 48px 0 64px;
+    }
+
+    header { margin-bottom: 32px; }
+
+    .eyebrow,
+    .control-label,
+    output {
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow { margin: 0 0 12px; color: var(--slate); }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(25px, 6vw, 34px);
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .intro {
+      max-width: 62ch;
+      margin: 12px 0 0;
+      color: var(--ash);
+      font-size: 15px;
+      line-height: 1.62;
+    }
+
+    .stage {
+      display: grid;
+      place-items: center;
+      min-height: 380px;
+      padding: 28px 20px;
+      overflow: hidden;
+      background: var(--field);
+      border: 1px solid var(--line-soft);
+      border-radius: 12px;
+    }
+
+    .mascot {
+      width: min(100%, 330px);
+      height: auto;
+      overflow: visible;
+      --outer-angle: 0deg;
+      --cardinal-angle: 0deg;
+      --face-angle: 0deg;
+    }
+
+    .outer-ring,
+    .cardinal-ring,
+    .face-rotor {
+      transform-origin: 130px 130px;
+      transition: transform var(--settle) var(--ease);
+    }
+
+    .outer-ring { transform: rotate(var(--outer-angle)); }
+    .cardinal-ring { transform: rotate(var(--cardinal-angle)); }
+    .face-rotor { transform: rotate(var(--face-angle)); }
+
+    .tick { stroke: var(--slate); stroke-width: 0.8; }
+    .tick.major { stroke: var(--ash); stroke-width: 1.1; }
+    .tick.cardinal { stroke: var(--paper); stroke-width: 1.4; }
+
+    .morph-eye {
+      fill: var(--paper);
+      stroke: var(--paper);
+      stroke-width: 4.5;
+      stroke-linejoin: round;
+    }
+
+    .controls {
+      display: grid;
+      gap: 24px;
+      margin-top: 24px;
+      padding: 20px;
+      background: var(--field);
+      border: 1px solid var(--line-soft);
+      border-radius: 12px;
+    }
+
+    .control-label { display: block; margin-bottom: 10px; color: var(--slate); }
+
+    .expression-options {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    button {
+      min-height: 44px;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--field-raised);
+      color: var(--ash);
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      transition:
+        border-color var(--quick) var(--ease),
+        color var(--quick) var(--ease),
+        transform 90ms var(--ease),
+        opacity 90ms var(--ease);
+    }
+
+    button:hover,
+    button[aria-pressed="true"] { border-color: var(--slate); color: var(--paper); }
+    button:active { opacity: 0.9; transform: scale(0.985); }
+
+    button:focus-visible,
+    input:focus-visible { outline: 2px solid var(--paper); outline-offset: 3px; }
+
+    .rotation-controls {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .range-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    output { color: var(--paper); font-variant-numeric: tabular-nums; }
+
+    input[type="range"] {
+      width: 100%;
+      height: 44px;
+      margin: 0;
+      accent-color: var(--ash);
+      cursor: pointer;
+    }
+
+    .note { margin: 18px 0 0; color: var(--slate); font-size: 13px; line-height: 1.55; }
+
+    @media (max-width: 700px) {
+      main { padding-top: 32px; }
+      .stage { min-height: 320px; }
+      .expression-options { grid-template-columns: repeat(2, 1fr); }
+      .rotation-controls { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">Mascot study · direction 04</p>
+      <h1>Cardinal face.</h1>
+      <p class="intro">A compass built in three independent layers: a real tick bezel, a cardinal ring, and a square-eyed face. Expressions are state changes, not idle decoration.</p>
+    </header>
+
+    <section class="stage" aria-label="Interactive mascot prototype">
+      <svg
+        id="mascot"
+        class="mascot"
+        data-expression="neutral"
+        viewBox="0 0 260 260"
+        role="img"
+        aria-label="Neutral mascot. Outer ring zero degrees, cardinal ring zero degrees, face zero degrees."
+      >
+        <g class="outer-ring" aria-hidden="true">
+          <circle cx="130" cy="130" r="108" fill="var(--line)" />
+          <g id="tick-ring"></g>
+        </g>
+
+        <g class="cardinal-ring" aria-hidden="true">
+          <circle cx="130" cy="130" r="96" fill="var(--line-soft)" />
+          <g
+            fill="var(--ash)"
+            font-family="JetBrains Mono, ui-monospace, monospace"
+            font-size="9"
+            font-weight="500"
+            text-anchor="middle"
+          >
+            <text class="cardinal-n" x="130" y="44" fill="var(--brass)">N</text>
+            <text x="220" y="133">E</text>
+            <text x="130" y="222">S</text>
+            <text x="40" y="133">W</text>
+          </g>
+        </g>
+
+        <g class="face-rotor">
+          <circle cx="130" cy="130" r="84" fill="var(--field-raised)" />
+          <g aria-hidden="true">
+            <path id="left-eye" class="morph-eye" />
+            <path id="right-eye" class="morph-eye" />
+          </g>
+        </g>
+      </svg>
+    </section>
+
+    <section class="controls" aria-label="Prototype controls">
+      <div>
+        <span class="control-label">Expression</span>
+        <div class="expression-options">
+          <button type="button" data-expression="neutral" aria-pressed="true">Neutral</button>
+          <button type="button" data-expression="focused" aria-pressed="false">Focused</button>
+          <button type="button" data-expression="loading" aria-pressed="false">Loading</button>
+          <button type="button" data-expression="proud" aria-pressed="false">Proud</button>
+          <button type="button" data-expression="sad" aria-pressed="false">Sad</button>
+          <button type="button" data-expression="concerned" aria-pressed="false">Concerned</button>
+          <button type="button" data-expression="tired" aria-pressed="false">Tired</button>
+          <button type="button" data-expression="direction" aria-pressed="false">Direction</button>
+          <button type="button" data-expression="compass" aria-pressed="false">Compass</button>
+          <button type="button" data-expression="settled" aria-pressed="false">Settled</button>
+        </div>
+      </div>
+
+      <div class="rotation-controls">
+        <label>
+          <span class="range-heading">
+            <span class="control-label">Outer ticks</span>
+            <output id="outer-output" for="outer-angle">0°</output>
+          </span>
+          <input id="outer-angle" type="range" min="-180" max="180" step="1" value="0">
+        </label>
+
+        <label>
+          <span class="range-heading">
+            <span class="control-label">Cardinal ring</span>
+            <output id="cardinal-output" for="cardinal-angle">0°</output>
+          </span>
+          <input id="cardinal-angle" type="range" min="-180" max="180" step="1" value="0">
+        </label>
+
+        <label>
+          <span class="range-heading">
+            <span class="control-label">Face</span>
+            <output id="face-output" for="face-angle">0°</output>
+          </span>
+          <input id="face-angle" type="range" min="-180" max="180" step="1" value="0">
+        </label>
+      </div>
+    </section>
+
+    <p class="note">Loading and compass movements run once when selected. Proud enters through one acknowledgment blink; the mascot has no looping idle motion. The controls expose the prototype layers; they do not decide which product states trigger them.</p>
+  </main>
+
+  <script>
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const mascot = document.querySelector('#mascot');
+    const tickRing = document.querySelector('#tick-ring');
+    const leftEye = document.querySelector('#left-eye');
+    const rightEye = document.querySelector('#right-eye');
+    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const expressionButtons = [...document.querySelectorAll('[data-expression]')];
+    const rotations = {
+      outer: bindRotation('outer-angle', 'outer-output', '--outer-angle'),
+      cardinal: bindRotation('cardinal-angle', 'cardinal-output', '--cardinal-angle'),
+      face: bindRotation('face-angle', 'face-output', '--face-angle'),
+    };
+    let needleAngle = 0;
+    let morphFrame = 0;
+
+    for (let index = 0; index < 24; index += 1) {
+      const tick = document.createElementNS(SVG_NS, 'line');
+      const isCardinal = index % 6 === 0;
+      const isMajor = index % 2 === 0;
+      tick.setAttribute('x1', '130');
+      tick.setAttribute('x2', '130');
+      tick.setAttribute('y1', '23');
+      tick.setAttribute('y2', isCardinal ? '33' : isMajor ? '31' : '28');
+      tick.setAttribute('transform', `rotate(${index * 15} 130 130)`);
+      tick.setAttribute('class', `tick${isCardinal ? ' cardinal' : isMajor ? ' major' : ''}`);
+      tickRing.append(tick);
+    }
+
+    function normalizeAngle(value) {
+      return ((Number(value) + 180) % 360 + 360) % 360 - 180;
+    }
+
+    function roundedRect(cx, cy, width, height) {
+      const left = cx - width / 2;
+      const right = cx + width / 2;
+      const top = cy - height / 2;
+      const bottom = cy + height / 2;
+
+      return [
+        left, top,
+        cx, top,
+        right, top,
+        right, cy,
+        right, bottom,
+        cx, bottom,
+        left, bottom,
+        left, cy,
+      ];
+    }
+
+    function rightTriangle(cx, cy, width, height) {
+      const left = cx - width / 2;
+      const right = cx + width / 2;
+      const top = cy - height / 2;
+      const bottom = cy + height / 2;
+
+      return [
+        left, top,
+        left, top,
+        right, cy,
+        right, cy,
+        left, bottom,
+        left, bottom,
+        left, cy,
+        left, cy,
+      ];
+    }
+
+    function proudEye(cx, cy, width, height) {
+      const left = cx - width / 2;
+      const right = cx + width / 2;
+      const top = cy - height / 2;
+      const bottom = cy + height / 2;
+
+      return [
+        left, top,
+        cx, top,
+        right, top,
+        right, cy,
+        right, bottom - 1,
+        cx, bottom - 4,
+        left, bottom - 1,
+        left, cy,
+      ];
+    }
+
+    function rotatePoints(points, angle, cx = 130, cy = 130) {
+      const radians = angle * Math.PI / 180;
+      const cosine = Math.cos(radians);
+      const sine = Math.sin(radians);
+      const rotated = [];
+
+      for (let index = 0; index < points.length; index += 2) {
+        const x = points[index] - cx;
+        const y = points[index + 1] - cy;
+        rotated.push(
+          cx + x * cosine - y * sine,
+          cy + x * sine + y * cosine,
+        );
+      }
+
+      return rotated;
+    }
+
+    const northNeedle = [
+      130, 78,
+      134, 99,
+      136, 122,
+      133, 128,
+      130, 132,
+      127, 128,
+      124, 122,
+      126, 99,
+    ];
+    const southNeedle = [
+      130, 128,
+      134, 134,
+      136, 138,
+      134, 158,
+      130, 182,
+      126, 158,
+      124, 138,
+      126, 134,
+    ];
+    const proudBlink = {
+      curve: 0,
+      left: roundedRect(100, 113, 31, 5),
+      right: roundedRect(160, 113, 31, 5),
+    };
+    function expressionTarget(expression) {
+      const targets = {
+        neutral: {
+          left: roundedRect(100, 112, 27, 27),
+          right: roundedRect(160, 112, 27, 27),
+        },
+        focused: {
+          left: roundedRect(100, 113, 29, 21),
+          right: roundedRect(160, 113, 29, 21),
+        },
+        loading: {
+          left: roundedRect(100, 113, 30, 10),
+          right: roundedRect(160, 113, 30, 10),
+        },
+        proud: {
+          curve: 1,
+          left: proudEye(100, 111, 31, 21),
+          right: proudEye(160, 111, 31, 21),
+        },
+        sad: {
+          left: rotatePoints(roundedRect(100, 115, 25, 21), -8, 100, 115),
+          right: rotatePoints(roundedRect(160, 115, 25, 21), 8, 160, 115),
+        },
+        concerned: {
+          left: roundedRect(100, 109, 23, 23),
+          right: roundedRect(160, 115, 28, 28),
+        },
+        tired: {
+          left: roundedRect(100, 116, 29, 7),
+          right: roundedRect(160, 116, 29, 7),
+        },
+        direction: {
+          left: rightTriangle(100, 112, 30, 29),
+          right: rightTriangle(160, 112, 30, 29),
+        },
+        compass: {
+          left: rotatePoints(northNeedle, needleAngle),
+          right: rotatePoints(southNeedle, needleAngle),
+        },
+        settled: {
+          left: roundedRect(100, 113, 22, 22),
+          right: roundedRect(160, 113, 22, 22),
+        },
+      };
+      const target = targets[expression] || targets.neutral;
+
+      return {
+        curve: target.curve || 0,
+        left: target.left,
+        right: target.right,
+      };
+    }
+
+    function eyePath(points, curve) {
+      let path = `M ${points[0]} ${points[1]}`;
+      for (let index = 2; index <= 8; index += 2) {
+        path += ` L ${points[index]} ${points[index + 1]}`;
+      }
+      const firstControlX = (points[8] + points[10]) / 2;
+      const firstControlY = (points[9] + points[11]) / 2;
+      const secondControlX = (points[10] + points[12]) / 2;
+      const secondControlY = (points[11] + points[13]) / 2;
+      const curvedFirstY = firstControlY + (points[11] - firstControlY) * curve;
+      const curvedSecondY = secondControlY + (points[11] - secondControlY) * curve;
+      return `${path} Q ${firstControlX} ${curvedFirstY} ${points[10]} ${points[11]} Q ${secondControlX} ${curvedSecondY} ${points[12]} ${points[13]} L ${points[14]} ${points[15]} Z`;
+    }
+
+    function interpolate(from, to, progress) {
+      return from.map((value, index) => value + (to[index] - value) * progress);
+    }
+
+    function renderMorph(state) {
+      leftEye.setAttribute('d', eyePath(state.left, state.curve));
+      rightEye.setAttribute('d', eyePath(state.right, state.curve));
+    }
+
+    let currentMorph = expressionTarget('neutral');
+    renderMorph(currentMorph);
+
+    function morphTo(target, via = null) {
+      cancelAnimationFrame(morphFrame);
+      const from = {
+        curve: currentMorph.curve,
+        left: [...currentMorph.left],
+        right: [...currentMorph.right],
+      };
+      const duration = reducedMotionQuery.matches ? 1 : 240;
+      const startedAt = performance.now();
+
+      function frame(now) {
+        const elapsed = Math.min((now - startedAt) / duration, 1);
+        const viaStop = 0.45;
+        const left = via
+          ? elapsed < viaStop
+            ? interpolate(from.left, via.left, 1 - Math.pow(1 - elapsed / viaStop, 3))
+            : interpolate(via.left, target.left, 1 - Math.pow(1 - (elapsed - viaStop) / (1 - viaStop), 3))
+          : interpolate(from.left, target.left, 1 - Math.pow(1 - elapsed, 3));
+        const right = via
+          ? elapsed < viaStop
+            ? interpolate(from.right, via.right, 1 - Math.pow(1 - elapsed / viaStop, 3))
+            : interpolate(via.right, target.right, 1 - Math.pow(1 - (elapsed - viaStop) / (1 - viaStop), 3))
+          : interpolate(from.right, target.right, 1 - Math.pow(1 - elapsed, 3));
+        const curve = via
+          ? elapsed < viaStop
+            ? from.curve + (via.curve - from.curve) * (1 - Math.pow(1 - elapsed / viaStop, 3))
+            : via.curve + (target.curve - via.curve) * (1 - Math.pow(1 - (elapsed - viaStop) / (1 - viaStop), 3))
+          : from.curve + (target.curve - from.curve) * (1 - Math.pow(1 - elapsed, 3));
+        currentMorph = {
+          curve,
+          left,
+          right,
+        };
+        renderMorph(currentMorph);
+
+        if (elapsed < 1) {
+          morphFrame = requestAnimationFrame(frame);
+        }
+      }
+
+      morphFrame = requestAnimationFrame(frame);
+    }
+
+    function bindRotation(inputId, outputId, property) {
+      const input = document.querySelector(`#${inputId}`);
+      const output = document.querySelector(`#${outputId}`);
+
+      function set(value) {
+        const angle = normalizeAngle(value);
+        input.value = String(angle);
+        output.value = `${angle}°`;
+        mascot.style.setProperty(property, `${angle}deg`);
+        updateLabel();
+      }
+
+      input.addEventListener('input', () => set(input.value));
+      return { set, get: () => Number(input.value) };
+    }
+
+    function setExpression(expression) {
+      const previousExpression = mascot.dataset.expression;
+      mascot.dataset.expression = expression;
+      expressionButtons.forEach((button) => {
+        button.setAttribute('aria-pressed', String(button.dataset.expression === expression));
+      });
+
+      if (expression === 'loading') {
+        rotations.outer.set(rotations.outer.get() + 20);
+      }
+
+      if (expression === 'compass') {
+        needleAngle = normalizeAngle(needleAngle + 137);
+      }
+
+      const enteringProud = expression === 'proud' && previousExpression !== 'proud';
+      morphTo(expressionTarget(expression), enteringProud ? proudBlink : null);
+      updateLabel();
+    }
+
+    function updateLabel() {
+      const expression = mascot.dataset.expression || 'transitioning';
+      mascot.setAttribute(
+        'aria-label',
+        `${expression} mascot. Outer ring ${rotations.outer?.get?.() ?? 0} degrees, cardinal ring ${rotations.cardinal?.get?.() ?? 0} degrees, face ${rotations.face?.get?.() ?? 0} degrees.`,
+      );
+    }
+
+    expressionButtons.forEach((button) => {
+      button.addEventListener('click', () => setExpression(button.dataset.expression));
+    });
+
+    window.NorthMascot = Object.freeze({
+      setExpression,
+      setOuterRing: rotations.outer.set,
+      setCardinalRing: rotations.cardinal.set,
+      setFaceRotation: rotations.face.set,
+    });
+  </script>
+</body>
+</html>

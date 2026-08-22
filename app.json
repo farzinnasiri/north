@@ -6,20 +6,49 @@
     "orientation": "portrait",
     "scheme": "north",
     "userInterfaceStyle": "dark",
+    "icon": "./assets/icon.png",
+    "ios": {
+      "infoPlist": {
+        "CADisableMinimumFrameDurationOnPhone": true
+      },
+      "supportsTablet": false
+    },
     "android": {
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "adaptiveIcon": {
+        "backgroundColor": "#0F1319",
+        "foregroundImage": "./assets/adaptive-icon.png"
+      }
     },
     "web": {
-      "output": "static"
+      "bundler": "metro"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#0F1319"
+          "backgroundColor": "#0F1319",
+          "image": "./assets/splash-mark.png",
+          "imageWidth": 168,
+          "resizeMode": "contain"
         }
-      ]
+      ],
+      "expo-audio",
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "node_modules/@expo-google-fonts/inter/400Regular/Inter_400Regular.ttf",
+            "node_modules/@expo-google-fonts/inter/500Medium/Inter_500Medium.ttf",
+            "node_modules/@expo-google-fonts/jetbrains-mono/400Regular/JetBrainsMono_400Regular.ttf",
+            "node_modules/@expo-google-fonts/jetbrains-mono/500Medium/JetBrainsMono_500Medium.ttf"
+          ]
+        }
+      ],
+      "expo-asset",
+      "expo-sqlite",
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true,

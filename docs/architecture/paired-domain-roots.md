@@ -27,6 +27,12 @@ functions. Create a directory only when implementing the first working slice.
 | bearing | Bearing state, movement policy, recalibration, Hold North | Action lifecycle or the unresolved formula |
 | content | Authored Actions and Lessons; deterministic selection inputs | LLM generation or Action lifecycle |
 | journey | Cross-stage lifecycle from first open through Exit | Domain persistence copied from the domains above |
+| mascot | Frontend scene vocabulary, expression geometry, and restrained motion | Screen-specific reaction policy or durable state |
+
+`mascot` is intentionally frontend-only. It owns no durable state or backend
+policy, so creating an empty `convex/domains/mascot/` peer would add a false
+seam. If that changes, the first real backend behavior creates the matching
+peer.
 
 ## Dependency rules
 
@@ -34,8 +40,9 @@ functions. Create a directory only when implementing the first working slice.
    product policy or data access.
 2. Screens compose domain UI. Reusable product behavior stays in the owning
    domain, not in `screens/`.
-3. A frontend domain calls the public Convex API exposed by its paired backend
-   domain. It does not import backend implementation files.
+3. During the frontend prototype phase, domains use local fixtures and UI state.
+   When backend work resumes, a frontend domain may call only the public Convex
+   API exposed by its paired backend domain; it never imports backend files.
 4. Backend registered functions validate the transport boundary and delegate to
    domain modules. Persistence details stay behind the owning domain.
 5. Platform modules adapt technology. They never choose product outcomes.

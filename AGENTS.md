@@ -10,13 +10,16 @@ are the source of truth.
 - Read `north.html` and `DESIGN.md` before changing UI, motion, sound, or copy.
 - Read `UBIQUITOUS_LANGUAGE.md` before naming public types, functions, routes,
   stored concepts, or product copy.
+- Read `docs/architecture/frontend-stack.md` before adding a dependency or
+  proposing a different library. It records what was already rejected and why.
 - Trace the relevant flow in current code before editing. Do not infer ownership
   from filenames alone.
 
 ## Project shape
 
-North is an Expo Router app backed by Convex. Use the paired-domain architecture
-before inventing new boundaries:
+North is currently a frontend-only Expo Router prototype. The Convex scaffold is
+reserved for a later phase and must not be used or changed during frontend
+iteration. Use the paired-domain architecture before inventing new boundaries:
 
 - `src/app/` - thin Expo Router composition entrypoints; every file is a route
 - `src/domains/` - frontend domain model, application logic, and domain UI
@@ -32,6 +35,34 @@ complexity into the owning domain. Do not add root-level modules, cross-domain
 shortcuts, or shared abstractions until an existing boundary demonstrably cannot
 own the work.
 
+## Stack
+
+iOS and Android are the product targets. Web is a development-preview surface,
+not a shipping target or a parity requirement. Reasoning and rejected
+alternatives live in `docs/architecture/frontend-stack.md`. Most of these are
+enforced by `eslint.config.js` — if lint blocks an import, read that file before
+working around it.
+
+- Styling is React Native `StyleSheet` with tokens from `@/theme`. Never add a
+  styling library, and never write a raw hex color outside the generated theme.
+- `src/theme.ts` is generated from the `DESIGN.md` frontmatter by `make tokens`.
+  Never hand-edit it; change `DESIGN.md` and regenerate.
+- Animate with Reanimated 4, never React Native `Animated`. Use the CSS API for
+  state-driven transitions and shared values for the needle and gestures.
+- Entrances go through `@/components/ui/reveal`, never `entering`/`exiting`
+  layout animations: those silently do not run on the web preview, and the one
+  screen that needs them already pays for a `.web.tsx` fork.
+- Post-onboarding state lives in `@/domains/journey/store` (Zustand, persisted
+  to local storage). Screens read it; they never own product state themselves.
+- Navigation is Expo Router with native `Stack`, `NativeTabs`, and `formSheet`.
+  Import from `expo-router/react-navigation`, never `@react-navigation/*`.
+- `expo-audio` not `expo-av`; `expo-image` not `Image`; `expo-sqlite`
+  `localStorage` not AsyncStorage; `react-native-svg` not Skia.
+- Content carries no icons. Native tab icons use the `sf` and `md` props.
+- Do not add glass or blur effects, platform semantic colors, an icon-font
+  package, or a notifications library.
+- No barrel files. Import from the defining module.
+
 ## Commands
 
 Use the Makefile instead of invoking npm, Expo, Convex, linters, tests, or type
@@ -39,23 +70,30 @@ checking directly:
 
 ```bash
 make install
+make add PKG="expo-image"
 make dev
+make go
 make ios
 make android
-make web
-make export-web
 make doctor
 make audit
+make atlas
+make tokens
 make convex-dev
 make convex-sync
 make check
 ```
+
+Add dependencies with `make add`, never bare `npm install`; it routes through
+`expo install` so versions stay aligned with the SDK.
 
 `ENV=development` is the default. Pass `ENV=production` only when production
 configuration and deployment have been explicitly authorized.
 
 ## Deployment
 
+- The current app uses local fixtures and local UI state only. Do not add Convex
+  calls, schemas, functions, or backend contracts during this frontend phase.
 - The active backend is the Convex development deployment
   `dev:rosy-shepherd-21`.
 - Its cloud URL is `https://rosy-shepherd-21.convex.cloud`; its HTTP Actions URL
@@ -73,6 +111,8 @@ configuration and deployment have been explicitly authorized.
   Avoid speculative abstractions, compatibility layers, and temporary paths.
 - Grow the product in working end-to-end slices; do not create disconnected
   frontend and backend feature halves.
+- Keep frontend prototypes local. Do not modify `convex/**` unless the user
+  explicitly resumes backend work.
 - Keep generated files generated. Never hand-edit `convex/_generated/**`,
   `.expo/**`, `dist/**`, or native build output.
 - If `convex/_generated/ai/guidelines.md` exists, read it before Convex work.
@@ -104,6 +144,9 @@ configuration and deployment have been explicitly authorized.
   Inter. Only weights 400 and 500 are allowed.
 - Do not add dashboards, feeds, trophies, badges, levels, confetti, hype copy,
   or decorative motion.
+- Motion, sound, and haptics are specified in `DESIGN.md`. The needle is the
+  only spring, four sounds exist and no fifth may be added, a miss is silent and
+  unbuzzed, and nothing animates on a loop.
 - Verify meaningful interaction changes on iOS and Android when possible. State
   clearly when a platform was not verified.
 
@@ -112,6 +155,29 @@ configuration and deployment have been explicitly authorized.
 Run `make check` for ordinary changes. For backend behavior, add focused Convex
 tests or runtime evidence appropriate to the risk; lint and type checking do not
 prove persistence or concurrency behavior.
+
+### Tests
+
+The standard is not coverage. **A test must fail if the behavior it names is
+wrong.** Before writing one, decide what broken implementation it would catch;
+if the answer is none, do not write it.
+
+- Do not assert existence alone. `toBeTruthy`, `toBeDefined`, `not.toBeNull`,
+  and "it renders" are not assertions of behavior, and lint rejects them as a
+  test's only claim.
+- Do not write snapshot tests. A snapshot records what the code currently does,
+  which is the one thing already readable from the code.
+- Test values, not structure. Assert the bearing a rule produces, the copy a
+  person reads, the control they can press.
+- Prefer one test per product rule over many tests per function, and name the
+  test after the rule: `a missed deadline does not move the bearing`.
+- Domain math is tested exhaustively with the literal numbers from
+  `north-product-spec.html`, including the cases the spec warns about. Test the
+  sandbagging exploit before implementing any early-finish bonus.
+- Do not test private helpers, implementation details, or third-party libraries.
+- A bug fix starts with a test that reproduces the bug.
+- Never weaken or delete a failing test to make `make check` pass. A failing
+  test is a finding; report it.
 
 Update `AGENTS.md` only for durable agent rules, `DESIGN.md` only for durable
 visual-system decisions, `UBIQUITOUS_LANGUAGE.md` only for accepted domain

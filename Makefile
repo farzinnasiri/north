@@ -1,7 +1,7 @@
 ENV ?= development
 ENV_FILE := .env.$(ENV)
 
-.PHONY: install dev ios android web export-web doctor audit lint typecheck test design-lint check convex-dev convex-sync env-check
+.PHONY: install add dev go ios android web doctor audit atlas tokens tokens-check lint typecheck test design-lint check convex-dev convex-sync env-check
 
 env-check:
 	@test -f "$(ENV_FILE)" || (echo "Missing $(ENV_FILE). Copy it from $(ENV_FILE).example." && exit 1)
@@ -9,26 +9,39 @@ env-check:
 install:
 	npm install
 
-dev: env-check
-	@set -a; . ./$(ENV_FILE); set +a; npm run start
+add:
+	@test -n "$(PKG)" || (echo 'Usage: make add PKG="expo-image react-native-svg"' && exit 1)
+	npx expo install $(PKG)
 
-ios: env-check
-	@set -a; . ./$(ENV_FILE); set +a; npm run ios
+dev:
+	npm run start
 
-android: env-check
-	@set -a; . ./$(ENV_FILE); set +a; npm run android
+go:
+	npm run start -- --go --lan
 
-web: env-check
-	@set -a; . ./$(ENV_FILE); set +a; npm run web
+ios:
+	npm run ios
 
-export-web: env-check
-	@set -a; . ./$(ENV_FILE); set +a; npx expo export --platform web
+android:
+	npm run android
+
+web:
+	npm run web
 
 doctor:
 	npx expo-doctor
 
 audit:
 	npm audit --omit=dev
+
+atlas:
+	EXPO_UNSTABLE_ATLAS=true npx expo export --platform ios
+
+tokens:
+	npm run tokens
+
+tokens-check:
+	npm run tokens -- --check
 
 lint:
 	npm run lint
@@ -42,7 +55,7 @@ test:
 design-lint:
 	npm run design:lint
 
-check: lint typecheck test design-lint
+check: lint typecheck test design-lint tokens-check
 
 convex-dev: env-check
 	@set -a; . ./$(ENV_FILE); set +a; npx convex dev
