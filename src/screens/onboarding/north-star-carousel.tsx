@@ -1,265 +1,137 @@
-import { useMemo, useRef, useState } from 'react';
-import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
-import Animated, {
-  Extrapolation,
-  interpolate,
-  useAnimatedScrollHandler,
-  useAnimatedStyle,
-  useSharedValue,
-} from 'react-native-reanimated';
+import { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { cancelAnimation, Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { NorthText } from '@/components/ui/north-text';
 import { NorthStarPortrait } from '@/domains/onboarding/ui/north-star-portrait';
 import { NORTH_STAR_OPTIONS } from '@/domains/onboarding/onboarding';
 import type { NorthStarType } from '@/domains/onboarding/onboarding';
 import { selectionTick } from '@/platform/haptics';
-import { colors, radii, spacing } from '@/theme';
+import { colors, motion, radii, spacing } from '@/theme';
 
-const CARD_WIDTH = 252;
-const CARD_GAP = spacing.md;
-const SNAP = CARD_WIDTH + CARD_GAP;
-
-type NorthStarOption = (typeof NORTH_STAR_OPTIONS)[number];
-
-type ArchetypeCardProps = {
+function DeckCard({ star, index, active, position, width, reduced }: {
+  star: NorthStarType;
   index: number;
-  item: NorthStarOption;
-  onPress: () => void;
-  rank: number;
-  scrollX: SharedValue<number>;
-  selected: boolean;
-};
-
-function ArchetypeCard({
-  index,
-  item,
-  onPress,
-  rank,
-  scrollX,
-  selected,
-}: ArchetypeCardProps) {
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      scrollX.value,
-      [(index - 1) * SNAP, index * SNAP, (index + 1) * SNAP],
-      [0.56, 1, 0.56],
-      Extrapolation.CLAMP,
-    ),
-    transform: [{
-      scale: interpolate(
-        scrollX.value,
-        [(index - 1) * SNAP, index * SNAP, (index + 1) * SNAP],
-        [0.86, 1, 0.86],
-        Extrapolation.CLAMP,
-      ),
-    }],
-  }));
+  active: boolean;
+  position: SharedValue<number>;
+  width: number;
+  reduced: boolean;
+}) {
+  const item = NORTH_STAR_OPTIONS.find((option) => option.value === star)!;
+  const animatedStyle = useAnimatedStyle(() => {
+    const distance = index - position.get();
+    const depth = Math.abs(distance);
+    return {
+      opacity: reduced ? (active ? 1 : 0) : Math.max(0, 1 - Math.max(0, depth - 1)),
+      zIndex: 100 - Math.round(depth * 10),
+      transform: reduced ? [] : [
+        { translateX: distance * 28 },
+        { translateY: Math.min(depth, 2) * 10 },
+        { rotate: `${distance * 5}deg` },
+        { scale: Math.max(0.9, 1 - depth * 0.05) },
+      ],
+    };
+  });
 
   return (
-    <Animated.View style={[styles.cardSlot, animatedStyle]}>
-      {rank <= 3 ? (
-        <View
-          style={[
-            styles.recommendation,
-            rank === 1
-              ? styles.recommendationOne
-              : rank === 2
-                ? styles.recommendationTwo
-                : styles.recommendationThree,
-          ]}
-        >
-          <NorthText
-            style={[styles.recommendationText, rank === 3 && styles.recommendationTextDark]}
-            variant="label"
-          >
-            SUGGESTION {rank}
-          </NorthText>
-        </View>
-      ) : (
-        <View style={styles.recommendationSpacer} />
-      )}
-      <Pressable
-        accessibilityLabel={`${item.label}. ${rank <= 3 ? `Suggestion ${rank}.` : 'Available option.'} ${item.description}`}
-        accessibilityRole="radio"
-        accessibilityState={{ checked: selected }}
-        onPress={onPress}
-        style={({ pressed }) => [
-          styles.card,
-          selected && styles.cardSelected,
-          pressed && styles.cardPressed,
-        ]}
-      >
-        <NorthStarPortrait contentFit="contain" star={item.value} style={styles.portrait} />
-        <View style={styles.cardCopy}>
-          <NorthText style={styles.cardTitle} variant="heading">
-            {item.label}
-          </NorthText>
-          <NorthText style={styles.cardDescription} variant="small">
-            {item.description}
-          </NorthText>
-        </View>
-      </Pressable>
+    <Animated.View accessibilityElementsHidden={!active}
+      importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}
+      pointerEvents="none" style={[styles.card, { width }, animatedStyle]}>
+      <NorthStarPortrait contentFit="contain" star={star} style={styles.portrait} />
+      <View style={styles.copy}>
+        <NorthText variant="heading">{item.label}</NorthText>
+        <NorthText style={styles.description} variant="small">{item.description}</NorthText>
+      </View>
     </Animated.View>
   );
 }
 
-type NorthStarCarouselProps = {
-  onChoose: (star: NorthStarType) => void;
+export function NorthStarCarousel({ onView, ranked, value }: {
+  onView: (star: NorthStarType) => void;
   ranked: readonly NorthStarType[];
   value: NorthStarType;
-};
-
-/**
- * The top suggestion starts first, followed by suggestions two and three. The
- * remaining five are choices, but are deliberately not marked as recommended.
- */
-export function NorthStarCarousel({ onChoose, ranked, value }: NorthStarCarouselProps) {
-  const list = useRef<FlatList<NorthStarOption>>(null);
+}) {
   const [width, setWidth] = useState(360);
-  const scrollX = useSharedValue(0);
-  const displayOrder = useMemo(() => {
-    return ranked.map((type) => NORTH_STAR_OPTIONS.find((option) => option.value === type)!);
-  }, [ranked]);
-  const selectedIndex = Math.max(0, displayOrder.findIndex((option) => option.value === value));
-  const sidePadding = Math.max(0, (width - CARD_WIDTH) / 2);
+  const reduced = useReducedMotion();
+  const index = Math.max(0, ranked.indexOf(value));
+  const position = useSharedValue(index);
+  const start = useSharedValue(index);
+  const cardWidth = Math.min(300, width - 88);
 
-  const onScroll = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      scrollX.value = event.contentOffset.x;
-    },
-  });
+  useEffect(() => {
+    position.set(withTiming(index, { duration: reduced ? 0 : motion.settle, easing: Easing.bezier(0.23, 1, 0.32, 1) }));
+  }, [index, position, reduced]);
 
-  function chooseAtOffset(event: NativeSyntheticEvent<NativeScrollEvent>) {
-    const index = Math.max(
-      0,
-      Math.min(displayOrder.length - 1, Math.round(event.nativeEvent.contentOffset.x / SNAP)),
-    );
-    const next = displayOrder[index]?.value;
-    if (next && next !== value) {
-      void selectionTick();
-      onChoose(next);
-    }
-  }
-
-  function choose(index: number, type: NorthStarType) {
+  function browse(next: number) {
+    const star = ranked[next];
+    if (!star || star === value) return;
     void selectionTick();
-    onChoose(type);
-    list.current?.scrollToOffset({ animated: true, offset: index * SNAP });
+    onView(star);
   }
+
+  const pan = Gesture.Pan()
+    .activeOffsetX([-12, 12])
+    .failOffsetY([-16, 16])
+    .onStart(() => {
+      cancelAnimation(position);
+      start.set(position.get());
+    })
+    .onUpdate((event) => {
+      const next = start.get() - event.translationX / cardWidth;
+      const bounded = Math.max(0, Math.min(ranked.length - 1, next));
+      position.set(reduced ? index : bounded + (next - bounded) * 0.15);
+    })
+    .onEnd((event) => {
+      const direction = event.translationX < 0 ? 1 : -1;
+      const flick = Math.abs(event.velocityX) > 450;
+      const moved = Math.abs(event.translationX) > cardWidth * 0.2;
+      const next = Math.max(0, Math.min(ranked.length - 1,
+        index + (flick ? (event.velocityX < 0 ? 1 : -1) : moved ? direction : 0)));
+      position.set(withTiming(next, { duration: reduced ? 0 : motion.settle, easing: Easing.bezier(0.23, 1, 0.32, 1) }));
+      scheduleOnRN(browse, next);
+    })
+    .onFinalize((_event, success) => {
+      if (!success) position.set(withTiming(index, { duration: reduced ? 0 : motion.settle }));
+    });
 
   return (
-    <View
-      onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
-      style={styles.carousel}
-    >
-      <Animated.FlatList
-        contentContainerStyle={{ paddingHorizontal: sidePadding }}
-        data={displayOrder}
-        decelerationRate="fast"
-        disableIntervalMomentum
-        getItemLayout={(_, index) => ({ index, length: SNAP, offset: SNAP * index })}
-        horizontal
-        initialScrollIndex={selectedIndex}
-        keyExtractor={(item) => item.value}
-        onMomentumScrollEnd={chooseAtOffset}
-        onScroll={onScroll}
-        onScrollEndDrag={chooseAtOffset}
-        ref={list}
-        renderItem={({ index, item }) => (
-          <ArchetypeCard
-            index={index}
-            item={item}
-            onPress={() => choose(index, item.value)}
-            rank={ranked.indexOf(item.value) + 1}
-            scrollX={scrollX}
-            selected={item.value === value}
-          />
-        )}
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={SNAP}
-      />
-      <NorthText style={styles.hint} variant="small">
-        Swipe to compare. Stop on the one that feels right.
-      </NorthText>
+    <View onLayout={(event) => setWidth(event.nativeEvent.layout.width)} style={styles.carousel}>
+      <GestureDetector gesture={pan}>
+        <View style={styles.deck}>
+          {ranked.map((star, cardIndex) => (
+            <DeckCard key={star} star={star} index={cardIndex} active={index === cardIndex}
+              position={position} width={cardWidth} reduced={reduced} />
+          ))}
+        </View>
+      </GestureDetector>
+      <View style={[styles.navigation, { width: cardWidth }]}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Previous" disabled={index === 0}
+          onPress={() => browse(index - 1)} style={({ pressed }) => [styles.arrow, index === 0 && styles.disabled, pressed && styles.pressed]}>
+          <NorthText>←</NorthText>
+        </Pressable>
+        <NorthText accessibilityLiveRegion="polite" style={styles.position} variant="label">{index + 1} / {ranked.length}</NorthText>
+        <Pressable accessibilityRole="button" accessibilityLabel="Next" disabled={index === ranked.length - 1}
+          onPress={() => browse(index + 1)} style={({ pressed }) => [styles.arrow, index === ranked.length - 1 && styles.disabled, pressed && styles.pressed]}>
+          <NorthText>→</NorthText>
+        </Pressable>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.field,
-    borderColor: colors.lineSoft,
-    borderCurve: 'continuous',
-    borderRadius: radii.card,
-    borderWidth: 1,
-    flex: 1,
-    overflow: 'hidden',
-  },
-  cardCopy: {
-    gap: spacing.xs,
-    minHeight: 94,
-    paddingBottom: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-  },
-  cardDescription: {
-    color: colors.ash,
-  },
-  cardPressed: {
-    opacity: 0.9,
-  },
-  cardSelected: {
-    backgroundColor: colors.fieldRaised,
-    borderColor: colors.line,
-  },
-  cardSlot: {
-    height: 346,
-    marginRight: CARD_GAP,
-    width: CARD_WIDTH,
-  },
-  cardTitle: {
-    color: colors.paper,
-  },
-  carousel: {
-    marginHorizontal: -spacing.screen,
-  },
-  hint: {
-    color: colors.slate,
-    marginTop: spacing.xs,
-    textAlign: 'center',
-  },
-  portrait: {
-    alignSelf: 'center',
-    height: 216,
-    width: 236,
-  },
-  recommendation: {
-    alignItems: 'center',
-    borderCurve: 'continuous',
-    borderRadius: radii.control,
-    height: 24,
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-    marginHorizontal: spacing.lg,
-  },
-  recommendationOne: {
-    backgroundColor: colors.brassDim,
-  },
-  recommendationSpacer: {
-    height: 32,
-  },
-  recommendationText: {
-    color: colors.paper,
-  },
-  recommendationTextDark: {
-    color: colors.fieldDeep,
-  },
-  recommendationThree: {
-    backgroundColor: colors.slate,
-  },
-  recommendationTwo: {
-    backgroundColor: colors.meridian,
-  },
+  carousel: { alignItems: 'center', marginHorizontal: -spacing.screen },
+  deck: { alignItems: 'center', height: 358, width: '100%', marginTop: spacing.md },
+  card: { position: 'absolute', backgroundColor: colors.field, borderColor: colors.lineSoft, borderWidth: 1, borderRadius: radii.card, overflow: 'hidden' },
+  portrait: { height: 216, width: '100%' },
+  copy: { gap: spacing.xs, padding: spacing.md, minHeight: 114 },
+  description: { color: colors.ash },
+  navigation: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  arrow: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: radii.control, borderWidth: 1, borderColor: colors.lineSoft },
+  disabled: { opacity: 0.25 },
+  pressed: { opacity: motion.pressOpacity },
+  position: { color: colors.ash },
 });

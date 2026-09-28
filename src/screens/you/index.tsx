@@ -1,164 +1,160 @@
-import { useState } from 'react';
 import { Link } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
-import { NorthText } from '@/components/ui/north-text';
+import { GearMark } from '@/components/ui/gear-mark';
 import { NorthRow } from '@/components/ui/north-row';
 import { NorthScreen } from '@/components/ui/north-screen';
+import { NorthText } from '@/components/ui/north-text';
 import { Section } from '@/components/ui/section';
-import { Surface } from '@/components/ui/surface';
-import type { Axis } from '@/domains/bearing/initial-bearing';
-import { keptCount } from '@/domains/journey/journey';
+import { RealityTrace } from '@/domains/direction/ui/reality-trace';
 import { useJourney } from '@/domains/journey/store';
 import { NORTH_STAR_OPTIONS } from '@/domains/onboarding/onboarding';
 import { NorthStarPortrait } from '@/domains/onboarding/ui/north-star-portrait';
-import { colors, radii, spacing } from '@/theme';
+import { colors, spacing } from '@/theme';
 
-const AXIS_LABELS: Record<Axis, string> = {
-  agency: 'Agency',
-  appetite: 'Appetite',
-  connection: 'Connection',
-  craft: 'Craft',
-  desire: 'Desire',
-  frame: 'Frame',
-};
-
-/**
- * Who he said he was walking toward, and the picture onboarding drew of where
- * he stood. It is a record, not a scorecard: the readings are shown as they
- * were measured, without a verdict, a grade, or a comparison.
- */
+/** The identity and agreement the person authored, shown as a portrait before a profile. */
 export function You() {
+  const { height, width } = useWindowDimensions();
   const journey = useJourney((state) => state.journey);
-  const [now] = useState(() => Date.now());
 
   if (!journey) return null;
 
   const star = NORTH_STAR_OPTIONS.find((option) => option.value === journey.northStar);
-  const committed = new Date(journey.committedAt).toLocaleDateString();
+  const compact = height < 740 || width < 360;
+  const wide = width >= 700;
+  const identity = star?.label || 'Your North Star';
 
   return (
-    <NorthScreen contentStyle={styles.screen}>
+    <NorthScreen contentStyle={[styles.screen, wide && styles.screenWide]}>
       {star ? (
-        <View style={styles.star}>
-          <NorthStarPortrait contentFit="contain" star={star.value} style={styles.portrait} />
-          <View style={styles.starCopy}>
-            <NorthText variant="label">YOUR NORTH STAR</NorthText>
-            <NorthText variant="title">{star.label}</NorthText>
-            <NorthText>{star.description}</NorthText>
+        <View style={[styles.hero, compact && styles.heroCompact, wide && styles.heroWide]}>
+          <View style={styles.portraitFrame}>
+            <NorthStarPortrait contentFit="contain" star={star.value} style={styles.portrait} />
+          </View>
+          <Link asChild href="/settings">
+            <Pressable
+              accessibilityLabel="Settings"
+              accessibilityRole="button"
+              hitSlop={8}
+              style={styles.settingsButton}
+            >
+              <GearMark color={colors.ash} size={24} />
+            </Pressable>
+          </Link>
+          <View style={styles.heroCopy}>
+            <NorthText variant="label">NORTH STAR</NorthText>
+            <NorthText numberOfLines={2} style={styles.identity} variant="title">
+              {identity}
+            </NorthText>
           </View>
         </View>
       ) : null}
 
-      {journey.alterEgo ? (
-        <Section label="YOU CALL HIM" ruled>
-          <NorthText style={styles.paper} variant="heading">
-            {journey.alterEgo}
-          </NorthText>
-          <NorthText variant="small">
-            A direction you authored. Not a diagnosis of who you are now.
-          </NorthText>
+      <View style={[styles.content, wide && styles.contentWide]}>
+        <Section label="WHERE YOU STAND" style={styles.reality}>
+          <View style={[styles.trace, compact && styles.traceCompact]}>
+            <RealityTrace readings={journey.readings} />
+          </View>
         </Section>
-      ) : null}
 
-      <Section label="WHERE YOU STOOD" ruled>
-        <NorthText variant="small">
-          Measured once, at the start. Degrees off, by axis.
-        </NorthText>
-        <View style={styles.readings}>
-          {journey.readings.map((reading) => (
-            <View key={reading.axis} style={styles.reading}>
-              <NorthText style={styles.axis}>{AXIS_LABELS[reading.axis]}</NorthText>
-              <View style={styles.gauge}>
-                <View style={[styles.gaugeFill, { width: `${Math.min(100, reading.off)}%` }]} />
-              </View>
-              <NorthText style={styles.axisValue} variant="data">
-                {Math.round(reading.off)}
-              </NorthText>
-            </View>
-          ))}
-        </View>
-      </Section>
+        <Section label="THE CODE" ruled style={styles.code}>
+          <Link asChild href="/code">
+            <NorthRow
+              detail="An optional agreement you can return to."
+              label="Read the Code"
+            />
+          </Link>
+        </Section>
 
-      <Surface style={styles.contract}>
-        <NorthText variant="label">THE CONTRACT</NorthText>
-        <NorthText style={styles.paper}>
-          Committed by {journey.name} on {committed}.
-        </NorthText>
-        <NorthText variant="small">
-          North will not remind you, verify you, or punish you for returning late. You said you
-          would use it until you no longer need it.
-        </NorthText>
-      </Surface>
-
-      <Section label="RECORD" ruled>
-        <NorthRow label="Actions kept" value={`${keptCount(journey)}`} />
-        <NorthRow label="Actions closed" value={`${journey.closed.length}`} />
-        <NorthRow
-          label="Days since you committed"
-          value={`${Math.max(0, Math.floor((now - journey.committedAt) / 86400000))}`}
-        />
-      </Section>
-
-      <Link asChild href="/settings">
-        <NorthRow label="Settings" onPress={() => {}} />
-      </Link>
+      </View>
     </NorthScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  axis: {
-    color: colors.paper,
-    width: 96,
+  content: {
+    gap: spacing.xxl,
+    paddingBottom: spacing.xxxl,
+    paddingHorizontal: spacing.screen,
+    paddingTop: spacing.xl,
   },
-  axisValue: {
-    color: colors.meridianLight,
-    width: 32,
-    textAlign: 'right',
+  contentWide: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    gap: spacing.xxl,
+    paddingTop: spacing.xxl,
   },
-  contract: {
-    gap: spacing.sm,
-  },
-  gauge: {
-    backgroundColor: colors.lineSoft,
+  code: {
     flex: 1,
-    height: 2,
   },
-  gaugeFill: {
-    backgroundColor: colors.meridian,
-    height: 2,
+  hero: {
+    backgroundColor: colors.field,
+    height: 260,
+    overflow: 'hidden',
   },
-  paper: {
-    color: colors.paper,
+  heroCompact: {
+    height: 224,
+  },
+  heroCopy: {
+    bottom: spacing.xl,
+    gap: spacing.xs,
+    left: spacing.screen,
+    maxWidth: '62%',
+    paddingLeft: spacing.md,
+    position: 'absolute',
+    zIndex: 2,
+  },
+  heroWide: {
+    height: 300,
+  },
+  identity: {
+    fontSize: 40,
+    lineHeight: 40,
   },
   portrait: {
-    borderColor: colors.lineSoft,
-    borderRadius: radii.card,
-    borderWidth: 1,
-    height: 108,
-    width: 84,
+    height: '100%',
+    width: '100%',
   },
-  reading: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.md,
-    minHeight: 28,
+  portraitFrame: {
+    bottom: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    width: '68%',
   },
-  readings: {
-    gap: spacing.xs,
-    paddingTop: spacing.sm,
+  reality: {
+    flex: 1,
   },
   screen: {
-    gap: spacing.xl,
+    alignSelf: 'center',
+    gap: 0,
+    maxWidth: 920,
+    paddingBottom: 0,
+    paddingHorizontal: 0,
+    paddingTop: 0,
+    width: '100%',
   },
-  star: {
+  screenWide: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xl,
+  },
+  settingsButton: {
     alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.lg,
+    height: 48,
+    justifyContent: 'center',
+    position: 'absolute',
+    right: spacing.screen,
+    top: spacing.md,
+    width: 48,
+    zIndex: 4,
   },
-  starCopy: {
-    flex: 1,
-    gap: spacing.xs,
+  trace: {
+    alignSelf: 'center',
+    height: 280,
+    maxWidth: 380,
+    width: '100%',
+  },
+  traceCompact: {
+    height: 250,
   },
 });

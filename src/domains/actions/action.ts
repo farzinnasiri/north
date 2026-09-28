@@ -1,4 +1,4 @@
-import type { Axis } from '@/domains/bearing/initial-bearing';
+import type { Axis } from '@/domains/direction/initial-direction';
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
 export const MIN_DEADLINE_DAYS = 1;
@@ -21,7 +21,7 @@ export type OpenAction = {
 
 export type ClosedAction = OpenAction & {
   closedAt: number;
-  /** Degrees the Bearing moved. A missed Deadline moves it by zero. */
+  /** Degrees the Direction moved. A missed Deadline moves it by zero. */
   earned: number;
   kept: boolean;
 };

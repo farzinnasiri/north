@@ -14,6 +14,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Circle, G, Line, Path, Text as SvgText } from 'react-native-svg';
 
+import { useSignalTheme } from '@/components/ui/signal-theme';
 import type {
   MascotDuration,
   MascotExpressionTransition,
@@ -50,7 +51,7 @@ function transitionFor(
 
 function sceneLabel(scene: MascotScene): string {
   return scene.expression === 'compass'
-    ? `Mascot showing a bearing of ${Math.round(scene.bearing ?? 0)} degrees.`
+    ? `Mascot showing a direction of ${Math.round(scene.direction ?? 0)} degrees.`
     : `Mascot expression: ${scene.expression}.`;
 }
 
@@ -69,7 +70,8 @@ export type MascotProps = {
  */
 export function Mascot({ scene, size = 96, style, testID }: MascotProps) {
   const reduceMotion = useReducedMotion();
-  const target = eyeTargetFor(scene.expression, scene.bearing ?? 0);
+  const signal = useSignalTheme();
+  const target = eyeTargetFor(scene.expression, scene.direction ?? 0);
 
   const expressionProgress = useSharedValue(1);
   const fromCurve = useSharedValue(target.curve);
@@ -97,7 +99,7 @@ export function Mascot({ scene, size = 96, style, testID }: MascotProps) {
   const gestureKind = scene.gesture?.kind;
 
   useEffect(() => {
-    const next = eyeTargetFor(scene.expression, scene.bearing ?? 0);
+    const next = eyeTargetFor(scene.expression, scene.direction ?? 0);
     if (!mountedExpression.current) {
       mountedExpression.current = true;
       return;
@@ -147,7 +149,7 @@ export function Mascot({ scene, size = 96, style, testID }: MascotProps) {
     fromLeft,
     fromRight,
     reduceMotion,
-    scene.bearing,
+    scene.direction,
     scene.expression,
     scene.transition?.duration,
     scene.transition?.expression,
@@ -285,6 +287,7 @@ export function Mascot({ scene, size = 96, style, testID }: MascotProps) {
   }));
 
   const completion = Math.max(0, Math.min(1, scene.completion ?? 0));
+  const faceFill = colors.paper;
 
   return (
     <View
@@ -297,7 +300,14 @@ export function Mascot({ scene, size = 96, style, testID }: MascotProps) {
       <Animated.View style={[styles.body, bodyStyle]}>
         <Svg height={size} viewBox="0 0 260 260" width={size}>
           <AnimatedG animatedProps={outerProps}>
-            <Circle cx={CENTRE} cy={CENTRE} fill={colors.line} r={108} />
+            <Circle
+              cx={CENTRE}
+              cy={CENTRE}
+              fill={colors.field}
+              r={108}
+              stroke={colors.line}
+              strokeWidth={1}
+            />
             {Array.from({ length: 24 }, (_, index) => {
               const cardinal = index % 6 === 0;
               const major = index % 2 === 0;
@@ -305,7 +315,7 @@ export function Mascot({ scene, size = 96, style, testID }: MascotProps) {
               return (
                 <Line
                   key={index}
-                  stroke={inscribed ? colors.paper : cardinal ? colors.brassDim : colors.slate}
+                  stroke={inscribed ? colors.paper : cardinal ? signal.muted : colors.slate}
                   strokeWidth={inscribed || cardinal ? 2 : 1}
                   transform={`rotate(${index * 15} ${CENTRE} ${CENTRE})`}
                   x1={CENTRE}
@@ -315,12 +325,25 @@ export function Mascot({ scene, size = 96, style, testID }: MascotProps) {
                 />
               );
             })}
+            {scene.expression === 'compass' ? (
+              <G transform={`rotate(${scene.direction ?? 0} ${CENTRE} ${CENTRE})`}>
+                <Path d="M 130 18 L 138 33 L 130 42 L 122 33 Z" fill={signal.primary} />
+                <Circle cx={CENTRE} cy="42" fill={colors.paper} r="2.5" />
+              </G>
+            ) : null}
           </AnimatedG>
 
           <AnimatedG animatedProps={cardinalProps}>
-            <Circle cx={CENTRE} cy={CENTRE} fill={colors.lineSoft} r={96} />
+            <Circle
+              cx={CENTRE}
+              cy={CENTRE}
+              fill={colors.fieldDeep}
+              r={96}
+              stroke={colors.lineSoft}
+              strokeWidth={1}
+            />
             <G fill={colors.ash} fontFamily={typography.monoMedium} fontSize={9} textAnchor="middle">
-              <SvgText fill={colors.brass} x={130} y={44}>N</SvgText>
+              <SvgText fill={signal.primary} x={130} y={44}>N</SvgText>
               <SvgText x={220} y={133}>E</SvgText>
               <SvgText x={130} y={222}>S</SvgText>
               <SvgText x={40} y={133}>W</SvgText>
@@ -328,9 +351,16 @@ export function Mascot({ scene, size = 96, style, testID }: MascotProps) {
           </AnimatedG>
 
           <AnimatedG animatedProps={faceProps}>
-            <Circle cx={CENTRE} cy={CENTRE} fill={colors.fieldRaised} r={84} />
-            <AnimatedPath animatedProps={leftProps} fill={colors.paper} />
-            <AnimatedPath animatedProps={rightProps} fill={colors.paper} />
+            <Circle
+              cx={CENTRE}
+              cy={CENTRE}
+              fill={colors.fieldDeep}
+              r={84}
+              stroke={colors.lineSoft}
+              strokeWidth={1}
+            />
+            <AnimatedPath animatedProps={leftProps} fill={faceFill} />
+            <AnimatedPath animatedProps={rightProps} fill={faceFill} />
           </AnimatedG>
         </Svg>
       </Animated.View>

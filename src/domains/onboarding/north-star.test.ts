@@ -1,107 +1,100 @@
 import {
-  ROLE_MODELS,
-  axisTotals,
+  STAR_QUESTIONS,
   deriveNorthStar,
+  directionWeightsForNorthStar,
+  priorityTotals,
   rankNorthStars,
 } from '@/domains/onboarding/north-star';
 
-describe('deriving the North Star', () => {
-  it('lets a mans stated intent outweigh a single contrary role model', () => {
-    // Two committed picks and one unattached, against an unattached intent.
-    const star = deriveNorthStar({
-      answers: {
-        'boundaries-cost': 'positive',
-        'boundaries-terms': 'positive',
-        'power-regret': 'positive',
-        'power-worth': 'positive',
-        'relationships-hard': 'negative',
-        'relationships-role': 'negative',
-      },
-      roleModels: ['superman', 'shelby', 'batman'],
-    });
-
-    expect(star).toBe('rogue');
+describe('the five North Star preference questions', () => {
+  it('keeps all five outside Reality scoring and defines their selection limits', () => {
+    expect(STAR_QUESTIONS.map(({ id, min, max }) => ({ id, min, max }))).toStrictEqual([
+      { id: 'year-matters', max: 2, min: 2 },
+      { id: 'building-time', max: 1, min: 1 },
+      { id: 'commitment-freedom', max: 1, min: 1 },
+      { id: 'friction-unsaid', max: 1, min: 1 },
+      { id: 'ordinary-day', max: 2, min: 1 },
+    ]);
   });
 
-  it('follows the role models when intent is left unanswered on an axis', () => {
-    const totals = axisTotals({
-      answers: { 'power-regret': 'positive' },
-      roleModels: ['iroh', 'obama', 'peter-parker'],
-    });
-
-    expect(totals.relationships).toBe(3);
-    expect(totals.boundaries).toBe(-3);
+  it('uses balanced tradeoffs rather than virtue-versus-flaw binaries', () => {
+    expect(STAR_QUESTIONS[1].options.map((option) => option.label)).toStrictEqual([
+      'Protect my time, much more',
+      'Protect my time, a little more',
+      'They matter about the same',
+      'Build, a little more',
+      'Build, much more',
+    ]);
+    expect(STAR_QUESTIONS[2].options.map((option) => option.label)).toStrictEqual([
+      'A close life, much more',
+      'A close life, a little more',
+      'They matter about the same',
+      'Freedom, a little more',
+      'Freedom, much more',
+    ]);
+    expect(STAR_QUESTIONS[3].options.map((option) => option.label)).toStrictEqual([
+      'Say what matters, much more',
+      'Say what matters, a little more',
+      'They matter about the same',
+      'Keep the peace, a little more',
+      'Keep the peace, much more',
+    ]);
   });
 
-  it('sends the ambitious, committed and immovable man to the patriarch', () => {
-    expect(
-      deriveNorthStar({
-        answers: {
-          'boundaries-cost': 'positive',
-          'boundaries-terms': 'positive',
-          'power-regret': 'positive',
-          'power-worth': 'positive',
-          'relationships-hard': 'positive',
-          'relationships-role': 'positive',
-        },
-        roleModels: ['superman', 'shelby', 'wick'],
-      }),
-    ).toBe('patriarch');
-  });
-
-  it('sends the satisfied, unattached and accommodating man to the playboy', () => {
-    expect(
-      deriveNorthStar({
-        answers: {
-          'boundaries-cost': 'negative',
-          'boundaries-terms': 'negative',
-          'power-regret': 'negative',
-          'power-worth': 'negative',
-          'relationships-hard': 'negative',
-          'relationships-role': 'negative',
-        },
-        roleModels: ['belfort', 'stark', 'luffy'],
-      }),
-    ).toBe('playboy');
-  });
-
-  it('never lands an axis on zero, so a destination is always unambiguous', () => {
-    // Three picks at +/-1 plus one answer at +/-2 is always odd.
-    for (const first of ROLE_MODELS) {
-      const totals = axisTotals({
-        answers: {
-          'boundaries-cost': 'positive',
-          'boundaries-terms': 'positive',
-          'power-regret': 'positive',
-          'power-worth': 'positive',
-          'relationships-hard': 'positive',
-          'relationships-role': 'positive',
-        },
-        roleModels: [first.id, 'stark', 'iroh'],
-      });
-
-      expect(Math.abs(totals.power) % 2).toBe(1);
-      expect(Math.abs(totals.relationships) % 2).toBe(1);
-      expect(Math.abs(totals.boundaries) % 2).toBe(1);
+  it('defines one deliberate emphasis phrase inside every preference prompt', () => {
+    for (const question of STAR_QUESTIONS) {
+      expect(question.prompt).toContain(question.emphasis);
     }
   });
 
-  it('ranks the derived destination first and offers plausible neighbours', () => {
+  it('uses the five answers to rank all eight destinations without celebrity weights', () => {
     const choices = {
       answers: {
-        'boundaries-cost': 'positive',
-        'boundaries-terms': 'positive',
-        'power-regret': 'positive',
-        'power-worth': 'positive',
-        'relationships-hard': 'positive',
-        'relationships-role': 'positive',
-      } as const,
-      roleModels: ['superman', 'shelby', 'wick'],
-    };
+        'building-time': ['build-strong'],
+        'commitment-freedom': ['commit-strong'],
+        'friction-unsaid': ['plain-strong'],
+        'ordinary-day': ['lead-build'],
+        'year-matters': ['build', 'relationships'],
+      },
+    } as const;
     const ranked = rankNorthStars(choices);
 
     expect(ranked[0]).toBe(deriveNorthStar(choices));
     expect(ranked).toHaveLength(8);
     expect(new Set(ranked).size).toBe(8);
+    expect(priorityTotals(choices)).toStrictEqual({
+      building: 6,
+      candor: 3,
+      closeness: 4,
+      enjoyment: 0,
+      freedom: 1,
+      mastery: 1,
+      service: 0,
+      steadiness: 1,
+    });
+  });
+
+  it('lets freedom, ordinary enjoyment, and mobility point to a different valid life', () => {
+    expect(
+      deriveNorthStar({
+        answers: {
+          'building-time': ['time-strong'],
+          'commitment-freedom': ['freedom-strong'],
+          'friction-unsaid': ['peace-strong'],
+          'ordinary-day': ['projects-places', 'steady-life'],
+          'year-matters': ['freedom', 'enjoyment'],
+        },
+      }),
+    ).toBe('playboy');
+  });
+
+  it('keeps every Reality Axis live while changing emphasis by destination', () => {
+    const patriarch = directionWeightsForNorthStar('patriarch');
+    const modernMan = directionWeightsForNorthStar('modern-man');
+
+    expect(Object.values(patriarch).every((weight) => weight > 0)).toBe(true);
+    expect(Object.values(modernMan).every((weight) => weight > 0)).toBe(true);
+    expect(patriarch.craft).toBeGreaterThan(modernMan.craft);
+    expect(modernMan.connection).toBeGreaterThan(patriarch.connection);
   });
 });

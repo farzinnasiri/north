@@ -1,7 +1,7 @@
 # North
 
 North is currently a frontend-only Expo Router prototype. It includes the core
-mobile shell, native navigation, Home, Bearing, You, onboarding, closeout, and note
+mobile shell, native navigation, Home, Direction, You, onboarding, closeout, and note
 flows. All visible state is local and illustrative; the reserved Convex scaffold
 is not used by the running app.
 

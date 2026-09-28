@@ -1,17 +1,16 @@
-import type { Axis, AxisReading, BearingRule } from '@/domains/bearing/initial-bearing';
-
-export type Situation = 'studying' | 'working' | 'neither';
+import { initialDirection } from '@/domains/direction/initial-direction';
+import type { Axis, AxisReading, DirectionWeights } from '@/domains/direction/initial-direction';
 
 export type Profile = {
   name: string;
   age: number;
-  situation: Situation;
 };
 
 export type Answer = {
   id: string;
   axis: Axis;
-  off: number;
+  /** Context-only answers are kept for recall but excluded from the Axis mean. */
+  off: number | null;
   raw: unknown;
 };
 
@@ -26,18 +25,13 @@ export type NorthStarType =
   | 'playboy';
 
 export type OnboardingDraft = {
-  /** Optional name he gives the man he is walking toward. */
-  alterEgo: string;
   answers: Record<string, Answer>;
-  /** What he pictures himself doing, at three horizons. Never scored. */
-  futureSelf: Partial<Record<FutureHorizon, string[]>>;
   /** Id of an authored option, never free text. */
   honestThing: string;
   northStar: NorthStarType | null;
   profile: Profile;
-  roleModels: string[];
   signedAt: number | null;
-  starAnswers: Partial<Record<string, 'negative' | 'positive'>>;
+  starAnswers: Partial<Record<string, string[]>>;
 };
 
 /**
@@ -47,545 +41,399 @@ export type OnboardingDraft = {
  * minutes of momentum.
  */
 export const AVOIDED_OPTIONS: readonly { label: string; value: string }[] = [
-  { label: 'A conversation I keep not having', value: 'conversation' },
-  { label: 'Something I said I would start', value: 'unstarted' },
-  { label: 'A habit that is costing me', value: 'habit' },
-  { label: 'An apology I owe', value: 'apology' },
-  { label: 'My body', value: 'body' },
-  { label: 'Money I am not looking at', value: 'money' },
-];
-
-/**
- * Which of himself he expects to grow, at three horizons. Deliberately not
- * scored, and deliberately not part of `QUESTIONS`: it asks about the same
- * three domains — intellectual, adventurous, physical — as neutral multi-select
- * with no minimum and no combination privileged. Scoring this would reward one
- * specific silhouette, a man who reads, climbs, and lifts, over a man who
- * pictures something quieter, which is the exact stereotype this question
- * exists to avoid. It exists to shape which authored actions and lessons he is
- * later shown, not to move the Bearing — `getInitialBearing` only ever reads
- * `draft.answers`, so this field cannot reach it even by accident.
- */
-export type FutureHorizon = 'near' | 'mid' | 'far';
-
-export const FUTURE_HORIZONS: readonly {
-  horizon: FutureHorizon;
-  kicker: string;
-  title: string;
-}[] = [
-  {
-    horizon: 'near',
-    kicker: 'TWO YEARS FROM NOW',
-    title: 'A free evening. What does he do with it?',
-  },
-  {
-    horizon: 'mid',
-    kicker: 'FIVE YEARS FROM NOW',
-    title: 'A free weekend. What does he do with it?',
-  },
-  {
-    horizon: 'far',
-    kicker: 'TEN YEARS FROM NOW',
-    title: 'Looking back, what did he actually do?',
-  },
-];
-
-export const FUTURE_DOMAIN_OPTIONS: readonly { label: string; value: string }[] = [
-  { label: 'Reads, listens to something, follows an idea', value: 'intellectual' },
-  { label: 'Out doing something that scares him a little', value: 'adventurous' },
-  { label: 'Trains. Moves his body on purpose', value: 'physical' },
-  { label: 'None of this. Something else entirely', value: 'other' },
+  { label: 'A conversation I keep avoiding', value: 'conversation' },
+  { label: 'Something I keep saying I will start', value: 'unstarted' },
+  { label: 'A habit that keeps taking more than I mean to give', value: 'habit' },
+  { label: 'An apology or repair I owe', value: 'apology' },
+  { label: 'Taking care of my body or health', value: 'body' },
+  { label: 'Money I keep avoiding', value: 'money' },
+  { label: 'Something else', value: 'other' },
+  { label: 'I am not sure yet', value: 'unsure' },
 ];
 
 export type QuestionId =
-  | 'F1'
-  | 'F2'
-  | 'F3'
-  | 'F4'
-  | 'F5'
-  | 'F6'
-  | 'D1'
-  | 'D2'
-  | 'D3'
-  | 'D4'
-  | 'D5'
-  | 'C1'
-  | 'C2'
-  | 'C3'
-  | 'C4'
-  | 'C5'
-  | 'A1'
-  | 'A2'
-  | 'A3'
-  | 'A4'
-  | 'A5'
-  | 'A6'
-  | 'K1'
-  | 'K2'
-  | 'K3'
-  | 'K4'
-  | 'K5'
-  | 'G1'
-  | 'G2'
-  | 'G3'
-  | 'G4'
-  | 'G5'
-  | 'G6'
-  | 'G7'
-  | 'G8';
+  | 'F1' | 'F2' | 'F3' | 'F4'
+  | 'D5' | 'D6' | 'D7' | 'D8'
+  | 'C9' | 'C10' | 'C11' | 'C12'
+  | 'A13' | 'A14' | 'A15' | 'A16'
+  | 'K17' | 'K18' | 'K19' | 'K20'
+  | 'G21' | 'G22' | 'G23' | 'G24';
 
-type BaseQuestion = {
+export type OnboardingQuestion = {
   axis: Axis;
+  emphasis: string;
   id: QuestionId;
+  kind: 'choice';
+  options: readonly { label: string; off: number | null }[];
   prompt: string;
 };
-
-export type TimeSinceQuestion = BaseQuestion & {
-  kind: 'time-since';
-  options: readonly { label: string; off: number }[];
-};
-
-export type TwoDoorQuestion = BaseQuestion & {
-  kind: 'two-door';
-  options: readonly { label: string; off: number; value: string }[];
-};
-
-export type TallyQuestion = BaseQuestion & {
-  kind: 'tally';
-  multiplier: number;
-};
-
-export type SpectrumQuestion = BaseQuestion & {
-  kind: 'spectrum';
-  left: string;
-  right: string;
-};
-
-export type RecognitionQuestion = BaseQuestion & {
-  kind: 'recognition';
-  options: readonly { label: string; off: number }[];
-};
-
-/** Who he could actually call, chosen from a roster rather than typed. */
-export type RosterQuestion = BaseQuestion & {
-  exclusive: string;
-  kind: 'roster';
-  options: readonly { label: string; value: string }[];
-};
-export type StepperQuestion = BaseQuestion & { kind: 'stepper'; decrement: number };
-export type DayBarQuestion = BaseQuestion & { kind: 'day-bar' };
-export type MultiSelectQuestion = BaseQuestion & {
-  /** Base reading before anything costly is selected. */
-  base: number;
-  /** Added per costly selection. */
-  each: number;
-  /** Values that cost nothing. */
-  free: readonly string[];
-  kind: 'multi-select';
-  options: readonly { label: string; value: string }[];
-};
-export type DurationQuestion = BaseQuestion & {
-  kind: 'duration';
-  labels: readonly string[];
-  mode: 'duration' | 'gap';
-};
-export type RankQuestion = BaseQuestion & { kind: 'rank' };
-
-export type OnboardingQuestion =
-  | TimeSinceQuestion
-  | TwoDoorQuestion
-  | TallyQuestion
-  | SpectrumQuestion
-  | RecognitionQuestion
-  | RosterQuestion
-  | StepperQuestion
-  | DayBarQuestion
-  | MultiSelectQuestion
-  | DurationQuestion
-  | RankQuestion;
 
 export const QUESTIONS: readonly OnboardingQuestion[] = [
   {
     axis: 'frame',
+    emphasis: 'tell them you disagreed',
     id: 'F1',
-    kind: 'time-since',
-    prompt: "When did you last say what you actually thought to someone who wouldn't like it?",
+    kind: 'choice',
     options: [
-      { label: 'Today', off: 0 },
-      { label: 'This week', off: 20 },
-      { label: 'This month', off: 45 },
-      { label: 'Months ago', off: 75 },
-      { label: "I can't remember", off: 100 },
-    ],
-  },
-  {
-    axis: 'frame',
-    id: 'F2',
-    kind: 'two-door',
-    prompt: 'Someone says something you think is wrong. What actually happens?',
-    options: [
-      { label: 'I say it', off: 10, value: 'say-it' },
-      { label: 'I let it go', off: 90, value: 'let-it-go' },
-    ],
-  },
-  {
-    axis: 'frame',
-    id: 'F3',
-    kind: 'tally',
-    multiplier: 12,
-    prompt: "Last month, how many times did you agree to something you didn't want to do?",
-  },
-  {
-    axis: 'frame',
-    id: 'F4',
-    kind: 'spectrum',
-    left: 'Being liked',
-    prompt: 'Which do you actually optimise for?',
-    right: 'Being respected',
-  },
-  {
-    axis: 'frame',
-    id: 'F5',
-    kind: 'recognition',
-    options: [
-      { label: 'One person I hoped would see it', off: 90 },
-      { label: 'People I went to school with', off: 75 },
-      { label: 'Whoever happened to be watching', off: 55 },
-      { label: 'Nobody. I put it up and left', off: 20 },
-      { label: 'I do not post', off: 10 },
-    ],
-    prompt: 'The last thing you posted. Who was it actually for?',
-  },
-  {
-    axis: 'frame',
-    id: 'F6',
-    kind: 'time-since',
-    options: [
-      { label: 'Today', off: 90 },
-      { label: 'This week', off: 70 },
-      { label: 'This month', off: 45 },
-      { label: 'I cannot think of one', off: 15 },
-    ],
-    prompt: 'When did something small last make you angrier than it deserved?',
-  },
-  {
-    axis: 'desire',
-    id: 'D1',
-    kind: 'time-since',
-    prompt: "When did you last walk up to a woman you didn't know and start a conversation?",
-    options: [
-      { label: 'This week', off: 0 },
-      { label: 'This month', off: 25 },
-      { label: 'This year', off: 55 },
-      { label: 'Years ago', off: 80 },
+      { label: "I didn't have a chance", off: null },
       { label: 'Never', off: 100 },
+      { label: 'Rarely', off: 75 },
+      { label: 'About half the time', off: 50 },
+      { label: 'Most of the time', off: 25 },
+      { label: 'Every time', off: 0 },
     ],
+    prompt: 'In the past 30 days, when you thought someone was wrong, how often did you tell them you disagreed?',
   },
   {
-    axis: 'desire',
-    id: 'D2',
-    kind: 'tally',
-    multiplier: 10,
-    prompt: "Last month, how many times did you want to say something to someone and didn't?",
-  },
-  {
-    axis: 'desire',
-    id: 'D3',
-    kind: 'spectrum',
-    left: 'Not really my place',
-    prompt: "Do you think you're allowed to want what you want?",
-    right: 'Yes, without apology',
-  },
-  {
-    axis: 'desire',
-    id: 'D4',
-    kind: 'recognition',
-    prompt: "And what do you tell yourself about why you didn't?",
+    axis: 'frame',
+    emphasis: 'what did you do?',
+    id: 'F2',
+    kind: 'choice',
     options: [
-      { label: "She's probably taken", off: 40 },
-      { label: "I'd be bothering her", off: 55 },
-      { label: "It wasn't the right moment", off: 60 },
-      { label: "I don't look like that", off: 85 },
-      { label: "I wasn't really trying", off: 90 },
-      { label: "I don't do that sort of thing", off: 75 },
+      { label: 'I said no', off: 0 },
+      { label: 'I offered less than they asked for', off: 10 },
+      { label: 'I asked for time to decide', off: 10 },
+      { label: 'I said yes and was okay with it', off: 0 },
+      { label: "I said yes and wished I hadn't", off: 100 },
+      { label: 'No one has asked me lately', off: null },
     ],
+    prompt: 'The last time someone asked for more than you could give, what did you do?',
+  },
+  {
+    axis: 'frame',
+    emphasis: 'say yes',
+    id: 'F3',
+    kind: 'choice',
+    options: [
+      { label: 'None', off: 0 },
+      { label: 'Once', off: 20 },
+      { label: '2 to 3 times', off: 40 },
+      { label: '4 to 6 times', off: 60 },
+      { label: '7 to 10 times', off: 80 },
+      { label: '11 or more', off: 100 },
+    ],
+    prompt: 'In the past 30 days, how many times did you say yes and later wish you had said no?',
+  },
+  {
+    axis: 'frame',
+    emphasis: 'go along with someone else',
+    id: 'F4',
+    kind: 'choice',
+    options: [
+      { label: 'None', off: 0 },
+      { label: 'Once', off: 20 },
+      { label: '2 to 3 times', off: 40 },
+      { label: '4 to 6 times', off: 60 },
+      { label: '7 to 10 times', off: 80 },
+      { label: '11 or more', off: 100 },
+    ],
+    prompt: 'In the past 30 days, how many times did you go along with someone else so they would not be upset with you?',
   },
   {
     axis: 'desire',
+    emphasis: 'start the conversation',
     id: 'D5',
-    kind: 'tally',
-    multiplier: 25,
-    prompt: 'How many women are you close to, and have never told how you feel?',
+    kind: 'choice',
+    options: [
+      { label: "I didn't have a chance", off: null },
+      { label: 'Never', off: 100 },
+      { label: 'Rarely', off: 75 },
+      { label: 'About half the time', off: 50 },
+      { label: 'Most of the time', off: 25 },
+      { label: 'Every time', off: 0 },
+    ],
+    prompt: 'In the past 30 days, when you wanted to know someone better, how often did you start the conversation?',
+  },
+  {
+    axis: 'desire',
+    emphasis: 'might say no',
+    id: 'D6',
+    kind: 'choice',
+    options: [
+      { label: "I didn't have a chance", off: null },
+      { label: 'Never', off: 100 },
+      { label: 'Rarely', off: 75 },
+      { label: 'About half the time', off: 50 },
+      { label: 'Most of the time', off: 25 },
+      { label: 'Every time', off: 0 },
+    ],
+    prompt: 'In the past 30 days, how often did you ask for something they might say no to?',
+  },
+  {
+    axis: 'desire',
+    emphasis: 'before I try',
+    id: 'D7',
+    kind: 'choice',
+    options: [
+      { label: 'Strongly disagree', off: 0 },
+      { label: 'Disagree', off: 20 },
+      { label: 'Somewhat disagree', off: 40 },
+      { label: 'Somewhat agree', off: 60 },
+      { label: 'Agree', off: 80 },
+      { label: 'Strongly agree', off: 100 },
+    ],
+    prompt: "I decide I can't do it before I try.",
+  },
+  {
+    axis: 'desire',
+    emphasis: 'afraid they would say no',
+    id: 'D8',
+    kind: 'choice',
+    options: [
+      { label: 'None', off: 0 },
+      { label: 'Once', off: 25 },
+      { label: '2 to 3 times', off: 50 },
+      { label: '4 to 6 times', off: 75 },
+      { label: '7 or more', off: 100 },
+      { label: 'Nothing like that came up', off: null },
+    ],
+    prompt: 'In the past 30 days, how many times did being afraid they would say no stop you from doing something you still wanted to do?',
   },
   {
     axis: 'connection',
-    exclusive: 'nobody',
-    id: 'C1',
-    kind: 'roster',
+    emphasis: 'in trouble at 2 a.m.',
+    id: 'C9',
+    kind: 'choice',
     options: [
-      { label: 'A close friend', value: 'friend' },
-      { label: 'My brother or sister', value: 'sibling' },
-      { label: 'A parent', value: 'parent' },
-      { label: 'My partner', value: 'partner' },
-      { label: 'Someone I work with', value: 'colleague' },
-      { label: 'Honestly, nobody', value: 'nobody' },
+      { label: 'None', off: 100 },
+      { label: 'One', off: 75 },
+      { label: 'Two', off: 50 },
+      { label: '3 to 4', off: 25 },
+      { label: '5 or more', off: 0 },
+      { label: 'Not sure', off: null },
     ],
-    prompt: 'Who could you call at 2am and it would be fine?',
+    prompt: 'If you were in trouble at 2 a.m., how many people could you call?',
   },
   {
     axis: 'connection',
-    id: 'C2',
-    kind: 'time-since',
-    prompt: 'When did a friend last ask how you were and wait for the real answer?',
+    emphasis: 'keep listening after your first answer',
+    id: 'C10',
+    kind: 'choice',
     options: [
-      { label: 'This week', off: 0 },
-      { label: 'This month', off: 30 },
-      { label: 'Months ago', off: 60 },
-      { label: "I can't remember", off: 85 },
-      { label: 'Nobody does that', off: 100 },
+      { label: 'None', off: 100 },
+      { label: 'Once', off: 80 },
+      { label: '2 to 3 times', off: 60 },
+      { label: '4 to 6 times', off: 40 },
+      { label: '7 to 10 times', off: 20 },
+      { label: '11 or more', off: 0 },
     ],
+    prompt: 'In the past 30 days, how many times did someone close to you ask how you were and keep listening after your first answer?',
   },
   {
     axis: 'connection',
-    decrement: 14,
-    id: 'C3',
-    kind: 'stepper',
-    prompt: 'In the last week, how many conversations did you start?',
+    emphasis: 'personal conversations',
+    id: 'C11',
+    kind: 'choice',
+    options: [
+      { label: 'None', off: 100 },
+      { label: 'One', off: 80 },
+      { label: '2 to 3', off: 60 },
+      { label: '4 to 6', off: 40 },
+      { label: '7 to 10', off: 20 },
+      { label: '11 or more', off: 0 },
+    ],
+    prompt: 'In the past 7 days, how many personal conversations did you start with someone you know?',
   },
   {
     axis: 'connection',
-    id: 'C4',
-    kind: 'two-door',
-    prompt: 'Something good happens. Who do you tell first?',
+    emphasis: 'keep listening after their first answer',
+    id: 'C12',
+    kind: 'choice',
     options: [
-      { label: 'Someone specific', off: 15, value: 'someone' },
-      { label: 'Nobody, really', off: 95, value: 'nobody' },
+      { label: 'None', off: 100 },
+      { label: 'Once', off: 80 },
+      { label: '2 to 3 times', off: 60 },
+      { label: '4 to 6 times', off: 40 },
+      { label: '7 to 10 times', off: 20 },
+      { label: '11 or more', off: 0 },
     ],
-  },
-  {
-    axis: 'connection',
-    decrement: 20,
-    id: 'C5',
-    kind: 'stepper',
-    prompt: 'If you went quiet for a week, how many people would notice?',
+    prompt: 'In the past 30 days, how many times did you ask someone how they were and keep listening after their first answer?',
   },
   {
     axis: 'appetite',
-    id: 'A1',
-    kind: 'day-bar',
-    prompt: "Yesterday. How many hours went to watching other people live?",
-  },
-  {
-    axis: 'appetite',
-    base: 20,
-    each: 20,
-    free: ['gym', 'nothing'],
-    id: 'A2',
-    kind: 'multi-select',
+    emphasis: 'spend your free time the way you planned',
+    id: 'A13',
+    kind: 'choice',
     options: [
-      { label: 'Your phone', value: 'phone' },
-      { label: 'Porn', value: 'porn' },
-      { label: 'Weed', value: 'weed' },
-      { label: 'Food', value: 'food' },
-      { label: 'Drink', value: 'drink' },
-      { label: 'Games', value: 'games' },
-      { label: 'The gym', value: 'gym' },
-      { label: 'Nothing', value: 'nothing' },
+      { label: 'None', off: 100 },
+      { label: 'One day', off: 80 },
+      { label: '2 to 3 days', off: 60 },
+      { label: '4 to 5 days', off: 40 },
+      { label: '6 days', off: 20 },
+      { label: 'Every day', off: 0 },
+      { label: 'I did not make a plan', off: null },
     ],
-    prompt: 'What do you reach for when the day goes badly?',
+    prompt: 'In the past 7 days, on how many days did you spend your free time the way you planned?',
   },
   {
     axis: 'appetite',
-    id: 'A3',
-    kind: 'duration',
-    labels: ['An hour', 'A day', 'Three days', 'A week', 'Longer'],
-    mode: 'duration',
-    prompt: "Whatever you reach for most — how long could you go without it before you'd notice?",
-  },
-  {
-    axis: 'appetite',
-    id: 'A4',
-    kind: 'duration',
-    labels: ['5 min', '1 hr', '2 hrs', '3 hrs', '5 hrs'],
-    mode: 'gap',
-    prompt: 'You told yourself five more minutes. How long was it actually?',
-  },
-  {
-    axis: 'appetite',
-    base: 10,
-    each: 30,
-    free: ['none'],
-    id: 'A5',
-    kind: 'multi-select',
+    emphasis: 'five more minutes',
+    id: 'A14',
+    kind: 'choice',
     options: [
-      { label: 'A dating app boost or subscription', value: 'dating' },
-      { label: 'OnlyFans or similar', value: 'onlyfans' },
-      { label: 'A creator I will never meet', value: 'creator' },
-      { label: 'None of these', value: 'none' },
+      { label: 'Under 10 minutes', off: 0 },
+      { label: '10 to 29 minutes', off: 25 },
+      { label: '30 to 59 minutes', off: 50 },
+      { label: '1 to 2 hours', off: 75 },
+      { label: 'More than 2 hours', off: 100 },
+      { label: 'This has not happened lately', off: null },
+      { label: 'I do not use these apps', off: null },
     ],
-    prompt: 'Last month, which of these did you pay for?',
+    prompt: 'Think of the last time you opened TikTok, Instagram, X, YouTube, or a similar app and told yourself "five more minutes." How long did you stay?',
   },
   {
     axis: 'appetite',
-    id: 'A6',
-    kind: 'time-since',
+    emphasis: 'took more time or energy than you meant',
+    id: 'A15',
+    kind: 'choice',
     options: [
-      { label: 'Today', off: 100 },
-      { label: 'This week', off: 80 },
-      { label: 'This month', off: 55 },
-      { label: 'Longer than that', off: 25 },
-      { label: 'I do not bet', off: 0 },
+      { label: 'None', off: 0 },
+      { label: 'Once', off: 20 },
+      { label: '2 to 3 times', off: 40 },
+      { label: '4 to 6 times', off: 60 },
+      { label: '7 to 10 times', off: 80 },
+      { label: '11 or more', off: 100 },
     ],
-    prompt: 'When did you last put money on a game?',
+    prompt: 'In the past 30 days, how many times did you handle a bad day in a way that took more time or energy than you meant?',
+  },
+  {
+    axis: 'appetite',
+    emphasis: 'a habit cause a problem',
+    id: 'A16',
+    kind: 'choice',
+    options: [
+      { label: 'None', off: 0 },
+      { label: 'Once', off: 20 },
+      { label: '2 to 3 times', off: 40 },
+      { label: '4 to 6 times', off: 60 },
+      { label: '7 to 10 times', off: 80 },
+      { label: '11 or more', off: 100 },
+    ],
+    prompt: 'In the past 30 days, how many times did a habit cause a problem for your sleep, time, work, study, or someone close to you?',
   },
   {
     axis: 'craft',
-    decrement: 25,
-    id: 'K1',
-    kind: 'stepper',
-    prompt: 'How many things can you do well enough that someone would pay for them?',
+    emphasis: 'skills did you use',
+    id: 'K17',
+    kind: 'choice',
+    options: [
+      { label: 'None', off: 100 },
+      { label: 'One', off: 75 },
+      { label: 'Two', off: 50 },
+      { label: '3 to 4', off: 25 },
+      { label: '5 or more', off: 0 },
+      { label: 'Not sure', off: null },
+    ],
+    prompt: 'In the past year, how many skills did you use to make, fix, teach, or solve something for someone else?',
   },
   {
     axis: 'craft',
-    id: 'K2',
-    kind: 'time-since',
+    emphasis: 'finish something',
+    id: 'K18',
+    kind: 'choice',
+    options: [
+      { label: 'In the past 7 days', off: 0 },
+      { label: 'In the past 30 days', off: 20 },
+      { label: 'In the past 3 months', off: 40 },
+      { label: 'In the past year', off: 60 },
+      { label: 'Longer ago', off: 80 },
+      { label: 'I cannot remember', off: 100 },
+      { label: 'I have not had something like that lately', off: null },
+    ],
     prompt: 'When did you last finish something nobody made you finish?',
-    options: [
-      { label: 'This week', off: 0 },
-      { label: 'This month', off: 25 },
-      { label: 'This year', off: 55 },
-      { label: 'Longer', off: 80 },
-      { label: "I don't finish things", off: 100 },
-    ],
   },
   {
     axis: 'craft',
-    id: 'K3',
-    kind: 'spectrum',
-    left: 'No',
-    prompt: 'The body you have now. Is that the body of someone who keeps his word to himself?',
-    right: 'Yes',
+    emphasis: 'practice a skill',
+    id: 'K19',
+    kind: 'choice',
+    options: [
+      { label: 'None', off: 100 },
+      { label: 'One day', off: 80 },
+      { label: '2 days', off: 60 },
+      { label: '3 to 4 days', off: 40 },
+      { label: '5 to 6 days', off: 20 },
+      { label: 'Every day', off: 0 },
+      { label: 'I am not trying to improve a skill right now', off: null },
+    ],
+    prompt: 'In the past 7 days, on how many days did you practice a skill you want to improve?',
   },
   {
     axis: 'craft',
-    id: 'K4',
-    kind: 'rank',
-    prompt: "Put these in the order you actually spend time on them. Not the order you'd like.",
-  },
-  {
-    axis: 'craft',
-    id: 'K5',
-    kind: 'recognition',
+    emphasis: 'take care of your body',
+    id: 'K20',
+    kind: 'choice',
     options: [
-      { label: 'Who I was a year ago', off: 5 },
-      { label: 'People I actually know', off: 45 },
-      { label: 'People I went to school with', off: 70 },
-      { label: 'Strangers online who are winning', off: 95 },
-      { label: 'I try not to', off: 35 },
+      { label: 'None', off: 100 },
+      { label: 'One day', off: 80 },
+      { label: '2 days', off: 60 },
+      { label: '3 to 4 days', off: 40 },
+      { label: '5 to 6 days', off: 20 },
+      { label: 'Every day', off: 0 },
+      { label: 'I did not make a plan', off: null },
     ],
-    prompt: 'Whose life do you measure yours against?',
+    prompt: 'In the past 7 days, on how many days did you exercise or take care of your body as planned?',
   },
   {
     axis: 'agency',
-    id: 'G1',
-    kind: 'time-since',
+    emphasis: 'a step that mattered to you',
+    id: 'G21',
+    kind: 'choice',
     options: [
-      { label: 'Today', off: 0 },
-      { label: 'This week', off: 25 },
-      { label: 'This month', off: 55 },
-      { label: 'Longer than that', off: 80 },
-      { label: 'I am not sure I ever have', off: 100 },
+      { label: 'None', off: 100 },
+      { label: 'Once', off: 80 },
+      { label: '2 to 3 times', off: 60 },
+      { label: '4 to 6 times', off: 40 },
+      { label: 'Every day', off: 20 },
+      { label: 'More than once a day', off: 0 },
+      { label: 'Nothing like that came up', off: null },
     ],
-    prompt: 'When did you last do something because you decided to, not because it was expected?',
+    prompt: 'In the past 7 days, how many times did you take a step that mattered to you without anyone asking?',
   },
   {
     axis: 'agency',
-    id: 'G2',
-    kind: 'recognition',
+    emphasis: 'find a first step',
+    id: 'G22',
+    kind: 'choice',
     options: [
-      { label: 'Luck is most of it', off: 95 },
-      { label: 'Luck, and then what you make of it', off: 55 },
-      { label: 'It mostly comes down to what I do', off: 10 },
+      { label: 'Strongly disagree', off: 100 },
+      { label: 'Disagree', off: 80 },
+      { label: 'Somewhat disagree', off: 60 },
+      { label: 'Somewhat agree', off: 40 },
+      { label: 'Agree', off: 20 },
+      { label: 'Strongly agree', off: 0 },
     ],
-    prompt: 'Do you think you are a lucky person?',
+    prompt: 'When I do not know how to do something, I can usually find a first step.',
   },
   {
     axis: 'agency',
-    id: 'G3',
-    kind: 'two-door',
+    emphasis: 'What did you do next?',
+    id: 'G23',
+    kind: 'choice',
     options: [
-      { label: 'You have it or you do not', off: 85, value: 'innate' },
-      { label: 'It is earned, one thing at a time', off: 10, value: 'earned' },
+      { label: 'I tried another way right away', off: 0 },
+      { label: 'I asked for help and kept going', off: 0 },
+      { label: 'I took a break and came back', off: 15 },
+      { label: 'I stopped because the plan did not make sense anymore', off: 0 },
+      { label: 'I gave up even though I still wanted it', off: 100 },
+      { label: 'No plan has gone wrong lately', off: null },
     ],
-    prompt: 'Confidence.',
+    prompt: 'Think of the last plan that went wrong. What did you do next?',
   },
   {
     axis: 'agency',
-    id: 'G4',
-    kind: 'time-since',
+    emphasis: 'change what happens next',
+    id: 'G24',
+    kind: 'choice',
     options: [
-      { label: 'This week', off: 0 },
-      { label: 'This month', off: 30 },
-      { label: 'This year', off: 60 },
-      { label: 'Years ago', off: 85 },
-      { label: 'I avoid that', off: 100 },
+      { label: 'Strongly disagree', off: 100 },
+      { label: 'Disagree', off: 80 },
+      { label: 'Somewhat disagree', off: 60 },
+      { label: 'Somewhat agree', off: 40 },
+      { label: 'Agree', off: 20 },
+      { label: 'Strongly agree', off: 0 },
     ],
-    prompt: 'The last real risk you took, where it could have gone badly.',
-  },
-  {
-    axis: 'agency',
-    id: 'G5',
-    kind: 'two-door',
-    options: [
-      { label: 'Happy', off: 70, value: 'happy' },
-      { label: 'Satisfied', off: 20, value: 'satisfied' },
-    ],
-    prompt: 'Would you rather be happy or satisfied?',
-  },
-  {
-    axis: 'agency',
-    base: 0,
-    each: 0,
-    free: [],
-    id: 'G6',
-    kind: 'multi-select',
-    options: [
-      { label: 'Building something of his own', value: 'building' },
-      { label: 'Steady work he does not hate', value: 'steady' },
-      { label: 'It does not matter, he is free', value: 'free' },
-      { label: 'I cannot picture it', value: 'blank' },
-    ],
-    prompt: 'Picture him in five years. His days.',
-  },
-  {
-    axis: 'agency',
-    base: 0,
-    each: 0,
-    free: [],
-    id: 'G7',
-    kind: 'multi-select',
-    options: [
-      { label: 'One person he would take a bullet for', value: 'one' },
-      { label: 'A few he would die for', value: 'few' },
-      { label: 'A room that lights up when he walks in', value: 'room' },
-      { label: 'I cannot picture it', value: 'blank' },
-    ],
-    prompt: 'Picture him in five years. His people.',
-  },
-  {
-    axis: 'agency',
-    base: 0,
-    each: 0,
-    free: [],
-    id: 'G8',
-    kind: 'multi-select',
-    options: [
-      { label: 'Stronger than mine', value: 'stronger' },
-      { label: 'About the same', value: 'same' },
-      { label: 'I do not think about it', value: 'unthought' },
-      { label: 'I cannot picture it', value: 'blank' },
-    ],
-    prompt: 'Picture him in five years. His body.',
+    prompt: 'Even when luck or other people shape the result, I can usually change what happens next.',
   },
 ];
 
@@ -646,13 +494,10 @@ export const NORTH_STAR_OPTIONS: readonly {
 ];
 
 export const INITIAL_DRAFT: OnboardingDraft = {
-  alterEgo: '',
   answers: {},
-  futureSelf: {},
   honestThing: '',
   northStar: null,
-  profile: { age: 20, name: '', situation: 'working' },
-  roleModels: [],
+  profile: { age: 20, name: '' },
   signedAt: null,
   starAnswers: {},
 };
@@ -660,71 +505,28 @@ export const INITIAL_DRAFT: OnboardingDraft = {
 export function answerFor(
   question: OnboardingQuestion,
   raw: unknown,
-  off: number,
+  off: number | null,
 ): Answer {
   return {
     axis: question.axis,
     id: question.id,
-    off: Math.min(100, Math.max(0, off)),
+    off: off === null ? null : Math.min(100, Math.max(0, off)),
     raw,
   };
 }
 
-export function scoreQuestion(question: OnboardingQuestion, raw: unknown): number {
-  switch (question.kind) {
-    case 'time-since':
-      return question.options[raw as number].off;
-    case 'two-door': {
-      const value = (raw as { choice: string | null }).choice;
-      return question.options.find((option) => option.value === value)?.off ?? 0;
-    }
-    case 'tally':
-      return Math.min((raw as number) * question.multiplier, 100);
-    case 'spectrum':
-      return 100 - (raw as number);
-    case 'recognition':
-      return question.options[raw as number].off;
-    case 'roster': {
-      const picked = raw as string[];
-      if (picked.includes(question.exclusive)) return 100;
-      return Math.max(100 - picked.length * 20, 0);
-    }
-    case 'stepper':
-      return Math.max(100 - (raw as number) * question.decrement, 0);
-    case 'day-bar':
-      return Math.min(((raw as number) / 8) * 100, 100);
-    case 'multi-select': {
-      const picked = raw as string[];
-      // Future-self questions are scored on continuity: a man who cannot see
-      // himself in five years is the furthest off, whichever future he would
-      // otherwise have chosen. Hershfield's construct, not a preference.
-      if (question.each === 0) {
-        return picked.includes('blank') || picked.length === 0 ? 100 : 15;
-      }
-      const costly = picked.filter((item) => !question.free.includes(item));
-      return Math.min(question.base + costly.length * question.each, 100);
-    }
-    case 'duration': {
-      const value = raw as number;
-      return question.mode === 'duration'
-        ? [100, 75, 50, 25, 0][value]
-        : Math.min(((value - 5) / 175) * 100, 100);
-    }
-    case 'rank': {
-      const items = raw as string[];
-      const position = items.indexOf(SCREEN_ITEM);
-      // A missing item would otherwise score 125 and quietly corrupt the axis.
-      if (position === -1) return 0;
-      return (items.length - 1 - position) * 25;
-    }
-  }
+export function scoreQuestion(question: OnboardingQuestion, raw: unknown): number | null {
+  if (typeof raw !== 'number') return null;
+  return question.options[raw]?.off ?? null;
 }
 
 export function getAxisReadings(answers: Record<string, Answer>): AxisReading[] {
-  const axes: readonly Axis[] = ['frame', 'desire', 'connection', 'appetite', 'craft'];
+  const axes: readonly Axis[] = ['agency', 'frame', 'desire', 'connection', 'appetite', 'craft'];
 
   return axes.map((axis) => {
-    const values = Object.values(answers).filter((answer) => answer.axis === axis);
+    const values = Object.values(answers).filter(
+      (answer): answer is Answer & { off: number } => answer.axis === axis && answer.off !== null,
+    );
     const off = values.length === 0
       ? 0
       : values.reduce((total, answer) => total + answer.off, 0) / values.length;
@@ -732,23 +534,11 @@ export function getAxisReadings(answers: Record<string, Answer>): AxisReading[] 
   });
 }
 
-export function getInitialBearing(
+export function getInitialDirection(
   answers: Record<string, Answer>,
-  rule: BearingRule,
+  weights: DirectionWeights,
 ): number {
-  return rule(getAxisReadings(answers));
-}
-
-// Scoring finds this row by identity, so it must not be retyped anywhere.
-export const SCREEN_ITEM = 'Your screen';
-
-export function craftRankItems(situation: Situation): string[] {
-  const workLabel = situation === 'studying'
-    ? 'Your studies'
-    : situation === 'working'
-      ? 'Your work'
-      : 'What you are building';
-  return ['Your body', workLabel, 'Your skills', 'Your friends', SCREEN_ITEM];
+  return initialDirection(getAxisReadings(answers), weights);
 }
 
 export function northStarLabel(value: NorthStarType | null): string {

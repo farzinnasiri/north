@@ -23,8 +23,7 @@ export function Note() {
   return (
     <NorthScreen contentStyle={styles.screen}>
       <NorthText>
-        Keep only what will matter when you read it back. This is not a journal and nothing here
-        is graded.
+        Optional. Write what you want to remember.
       </NorthText>
       <NorthField
         accessibilityLabel="Action note"
@@ -35,13 +34,13 @@ export function Note() {
       />
       <View style={styles.actions}>
         <NorthButton
-          label="Keep the note"
+          label="Save note"
           onPress={() => {
             save(text.trim());
             router.back();
           }}
         />
-        <NorthButton label="Not now" onPress={() => router.back()} tone="quiet" />
+        <NorthButton label="Cancel" onPress={() => router.back()} tone="quiet" />
       </View>
     </NorthScreen>
   );

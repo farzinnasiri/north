@@ -6,6 +6,8 @@ import Animated, { useReducedMotion } from 'react-native-reanimated';
 import { motion } from '@/theme';
 
 type RevealProps = PropsWithChildren<{
+  /** Wait before this item follows the previous beat. Use motion tokens. */
+  delay?: number;
   /**
    * Off on a cold start. Entering animations belong to changes the person
    * caused, so a screen that simply opened passes `false` and appears.
@@ -25,16 +27,38 @@ type RevealProps = PropsWithChildren<{
  * this repo ended up with per-platform forks of the same fade; a transition
  * compiles to the same thing on both and leaves one file to reason about.
  */
-export function Reveal({ children, enabled = true, style, travel = 10 }: RevealProps) {
+export function Reveal({
+  children,
+  delay = 0,
+  enabled = true,
+  style,
+  travel = 10,
+}: RevealProps) {
   const reduceMotion = useReducedMotion();
   const [arrived, setArrived] = useState(!enabled);
 
   useEffect(() => {
     if (arrived) return;
-    // One state flip on the frame after mount, never a value per frame.
-    const frame = requestAnimationFrame(() => setArrived(true));
-    return () => cancelAnimationFrame(frame);
-  }, [arrived]);
+    let frame: number | undefined;
+    const arrive = () => {
+      // One state flip on the frame after mount, never a value per frame.
+      frame = requestAnimationFrame(() => setArrived(true));
+    };
+
+    if (reduceMotion || delay === 0) {
+      arrive();
+      return () => {
+        if (frame !== undefined) cancelAnimationFrame(frame);
+      };
+    }
+
+    const timer = setTimeout(arrive, delay);
+
+    return () => {
+      clearTimeout(timer);
+      if (frame !== undefined) cancelAnimationFrame(frame);
+    };
+  }, [arrived, delay, reduceMotion]);
 
   return (
     <Animated.View

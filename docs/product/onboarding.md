@@ -1,507 +1,829 @@
 # Onboarding
 
-Specification for North's onboarding. Self-contained: an implementing agent
-should not need any other conversation, only `DESIGN.md`,
-`UBIQUITOUS_LANGUAGE.md`, `north-product-spec.html`, and `north.html`.
-
-Settled 2026-08-11. Sections marked **OPEN** are not implementation
-requirements and must not be guessed.
-
-## What this produces
-
-Onboarding exists to produce exactly two things. Everything else in it is in
-service of those two, and anything that serves neither should be cut.
-
-1. **The initial Bearing** — one number, 0–180°, from twenty scored questions
-   across five Axes.
-2. **The North Star** — the kind of man he chooses to walk toward.
-
-It ends with a signed contract, which is what replaces notifications. The
-signature is load-bearing, not decoration.
-
-## Length and the promise
-
-Sixty-four screens, roughly sixteen minutes.
-
-`north.html`'s first-open screen currently promises "about four minutes." That
-copy is wrong for this flow and must be changed to the real number. A man told
-four minutes who is on minute eleven feels handled, and that is the wrong
-feeling to carry into signing a contract. State the truth and make the length
-the point:
-
-> This takes about sixteen minutes. It is the longest I will ever ask for.
-
-## The six Axes
+North onboarding v0.2 — 30-question candidate instrument.
 
-Grounded in Lerner's 5C model of positive youth development — validated
-repeatedly on emerging adults, which is exactly the primary audience — fused
-with the Boundaries crisis from the founder's typology, plus two dimensions
-neither framework has because neither was written for this decade.
-
-| Axis | Measures | Moved by |
-| --- | --- | --- |
-| **Frame** | Whether he holds a position or dissolves to be liked | Saying the unpopular thing, refusing, setting a term |
-| **Desire** | Whether he pursues what he wants or has pre-rejected himself | Approaching, asking, risking the no |
-| **Connection** | Whether he initiates and sustains bonds or waits to be reached | Reaching first, staying in touch, being honest with a friend |
-| **Appetite** | What owns his hours, and whether he governs it or it governs him | Going without, changing what he reaches for |
-| **Craft** | What he has built — capability and body both | Training, finishing, learning something that would survive losing everything else |
-| **Agency** | Whether he believes he is the one choosing | Any kept commitment; this is the Axis the whole product is built to move |
+Date: 2026-08-28
 
-Craft covers the body deliberately. The body is the first thing a man builds,
-and for most of this audience it is the door they came through.
+Status: implemented in the frontend prototype for cognitive testing; not a validated psychological instrument.
 
-**Agency was added on 2026-08-12** and is the only Axis that measures stance
-rather than conduct. Two men can give identical answers on the other five, and
-the one who believes he chose them is a different man from the one who believes
-it happened to him. It rests on four validated constructs — locus of control
-(Rotter), self-efficacy (Bandura), future self-continuity (Hershfield), and
-autonomy from self-determination theory — and it passes the movability test
-better than anything else here: Bandura's primary source of self-efficacy is a
-mastery experience, and a Closeout is a mastery experience. The product's core
-mechanic is the intervention for this Axis.
+## The decision
 
-**5C's Character is deliberately absent.** Integrity is what every Closeout
-measures. It is the medium the whole compass runs on, not one dimension of it.
-Scoring it separately would make the Bearing partly measure itself.
+North v0.2 contains exactly **30 substantive prompts** across the required onboarding:
 
-## The North Star
+- **24 Reality questions:** four candidates for each of six Axes.
+- **1 final Reality reflection:** the issue the person is stepping around.
+- **5 North Star questions:** values and desired-life tradeoffs.
 
-Uses the founder's eight-type framework as the destination picker.
+The following do not count as assessment questions:
 
-| Type | Poles | Shorthand |
-| --- | --- | --- |
-| The Patriarch | Ambitious, Committed, Disagreeable | Builder and protector |
-| The Modern Man | Ambitious, Committed, Agreeable | Career and equal partnership |
-| The Rogue | Ambitious, Bad Boy, Disagreeable | Dominant, high-risk, unattached |
-| The Laughing Wolf | Ambitious, Bad Boy, Agreeable | Charming socialite |
-| The Godfather | Satisfied, Committed, Disagreeable | Built it already, protects it now |
-| The Kind Father | Satisfied, Committed, Agreeable | Harmony above all |
-| The Freethinker | Satisfied, Bad Boy, Disagreeable | Own rules, own pleasure |
-| The Playboy | Satisfied, Bad Boy, Agreeable | Hedonism without the edge |
+- factual profile fields: name and age;
+- result explanations, quotes, progress pauses, and animations;
+- choosing among the final North Star candidates, because that is the outcome decision rather than another test item;
 
-**Hard rule: these are destinations he chooses, never diagnoses of what he is.**
+Required role-model picking is removed. If the product keeps it, it must replace one of the five North Star prompts rather than becoming question 31. A better use is to show figures as optional inspiration after the person chooses a North Star, with no hidden score.
 
-The source framework describes some types as non-viable and unmatched. North
-must never say that to a person about himself. It breaks *challenge the
-behaviour, never the man* and *flexible, not one template of a man*. Onboarding
-asks who he is walking **toward**. It never labels what he currently is, never
-scores his type, and never tells him a type is wrong.
+## What the 30 prompts do
 
-Present types through fictional and real entry points, per the product spec —
-the source material already supplies Tommy Shelby and Brando for the Godfather.
-Each type needs two or three recognisable figures, authored by hand.
+### Reality
 
-## Flow
+Reality is a present-state behavioral calibration used to:
 
-| # | Movement | Screens | Cost to him |
-| --- | --- | --- | --- |
-| 0 | The promise — the exit, stated before anything is asked | 1 | none |
-| 1 | Profile | 3 | taps |
-| 2 | The twenty questions | 20 | taps, drags, a little typing |
-| 3 | One honest thing | 1 | typing |
-| 4 | North Star | 2 | taps, then typing |
-| 5 | The reading — the needle settles, the Bearing is revealed | 1 | none |
-| 6 | The code, the letter, the signature | 3 | highest |
+1. show a careful picture of recent conduct;
+2. find an area that may need attention;
+3. personalize the first Action;
+4. establish a baseline that can be revisited later.
 
-Two orderings matter and are not negotiable:
+It is not a masculinity score, diagnosis, or stable personality type.
 
-- **The Bearing is revealed before the contract.** The number creates the stakes
-  the signature answers. Reversed, the signature is abstract.
-- **The quit statistic appears immediately before the signature**, never at the
-  start. Defiance requires something already invested to defend.
+### North Star
 
-### Movement 0 — the promise
+North Star clarifies desired priorities and tradeoffs. It helps order possible destinations, but the person makes the final choice. There is no psychologically “healthy” pole.
 
-No input. States that North is built to be outgrown, gives the honest time
-estimate, and offers the code as an optional read (per `north.html`, the code is
-offered once and never pushed).
+## Response-scale library
 
-### Movement 1 — profile
+Reusing a small number of scales lowers cognitive load. Controls should show the full written options; do not hide meaning behind an unlabeled slider.
 
-Three questions. Each must change something downstream or be cut; an unused
-field costs trust in an app whose pitch is that it does not waste touches.
+### Scale A — opportunity frequency
 
-| Field | Interaction | What it changes |
-| --- | --- | --- |
-| Name | Single-line text, given name only | Addressed by name in the letter, the contract, and the Exit |
-| Age | Native wheel picker, 16–60 | Personalises the quit statistic; gates content references |
-| Situation | Three buttons: studying, working, neither | Selects Craft content; "neither" is not treated as failure anywhere |
+Use when a behavior can only occur if a relevant situation happened.
 
-## The thirty-five questions
+1. I didn't have a chance
+2. Never
+3. Rarely
+4. About half the time
+5. Most of the time
+6. Every time
 
-Five per Axis, six for Frame and Appetite, eight for Agency. One question per
-screen, one commit action per screen.
+`I didn't have a chance` is missing/contextual data, not the lowest or highest score.
 
-The Axes no longer hold equal counts, so the flow groups questions by their own
-`axis` field rather than by arithmetic on an index.
+### Scale B — count in a recall window
 
-**Every input is an instrument reading, not a form control.** This is the rule
-that makes the variety coherent rather than decorative: North is a compass, and
-each of these is a gauge being taken. Nothing here is a quiz, nothing is scored
-aloud, and nothing is celebrated.
+Use for memorable but not exactly recalled events.
 
-`off` is the score each question contributes: **0 means on-course for that Axis,
-100 means maximally off.** Higher is further from north.
+1. None
+2. Once
+3. 2–3 times
+4. 4–6 times
+5. 7–10 times
+6. 11 or more
 
-### Frame
+Adjust the upper bands only after pilot distributions show they are unrealistic.
 
-**F1 · Time-since arc**
-> When did you last say what you actually thought to someone who wouldn't like it?
+### Scale C — agreement
 
-Drag a marker around a quarter-arc. Stops: today, this week, this month, months
-ago, I can't remember. `off` = 0 / 20 / 45 / 75 / 100.
+Use only for short first-person beliefs.
 
-**F2 · Two-door**
-> Someone says something you think is wrong. What actually happens?
+1. Strongly disagree
+2. Disagree
+3. Somewhat disagree
+4. Somewhat agree
+5. Agree
+6. Strongly agree
 
-Full-bleed split screen, two panels, no neutral option and no third door.
-"I say it." / "I let it go." `off` = 10 / 90. The absence of a middle is the
-design: a five-point scale collects a middle answer from exactly the men who
-most need a real one.
+The lack of a midpoint is acceptable here because each statement is concrete enough to lean on. `Not sure` should be available separately during testing and treated as missing, not as a hidden midpoint.
 
-**F3 · Tally**
-> Last month, how many times did you agree to something you didn't want to do?
+### Scale D — count of people
 
-Tap once per instance. Marks accumulate as small mono strokes, counting up.
-There is no maximum and no cap message. `off` = min(count × 12, 100).
+1. None
+2. One
+3. Two
+4. 3–4
+5. 5 or more
+6. Not sure
 
-**F4 · Spectrum drag**
-> Which do you actually optimise for?
+### Scale E — balanced tradeoff
 
-Two poles, "Being liked" and "Being respected," with a draggable marker and no
-labelled midpoint. `off` = position from the respected end, 0–100.
+1. A, much more
+2. A, a little more
+3. They matter about the same
+4. B, a little more
+5. B, much more
 
-### Desire
+A midpoint belongs here because equal priority can be a genuine value.
 
-**D1 · Time-since arc**
-> When did you last walk up to a woman you didn't know and start a conversation?
+## The 30 candidate prompts
 
-Stops: this week, this month, this year, years ago, never. `off` = 0 / 25 / 55 /
-80 / 100. Expect a large share to answer "never" — 45% of men aged 18–25 have
-never done it once. The "never" stop must be rendered with exactly the same
-weight as the others. No ember, no emphasis, no comment.
+Candidate wording is deliberately plain and mostly at a fifth-grade reading level. It is implemented so the team can run cognitive tests; shipping it does not make it a validated instrument.
 
-**D2 · Tally**
-> Last month, how many times did you want to say something to someone and didn't?
+---
 
-Same primitive as F3. `off` = min(count × 10, 100).
+## Reality: Frame
 
-**D3 · Spectrum drag**
-> Do you think you're allowed to want what you want?
+Working definition: **stating a view, need, or limit with respect when another person may dislike it.** Frame is not dominance, anger, bluntness, or winning an argument.
 
-Poles: "Not really my place" and "Yes, without apology." `off` = position from
-the apology-free end.
+### 1. Saying what you think
 
-**D4 · Recognition list**
-> And what do you tell yourself about why you didn't?
+**Prompt**
+In the past 30 days, when you thought someone was wrong, how often did you tell them you disagreed?
 
-Single-select from authored excuses, each written in his own inner voice:
+**Response**
+Scale A — I didn't have a chance; Never; Rarely; About half the time; Most of the time; Every time.
 
-- She's probably taken.
-- I'd be bothering her.
-- It wasn't the right moment.
-- I don't look like that.
-- I wasn't really trying.
-- I don't do that sort of thing.
+**Why it exists**
+Samples respectful self-expression under interpersonal cost.
 
-`off` = 40 / 55 / 60 / 85 / 90 / 75. Recognising his own excuse in a list
-someone else wrote is the strongest *seen* moment available in the whole flow.
-Do not add "none of these" — it is an escape hatch from the point of the
-question.
+**Scoring hypothesis**
+More frequent respectful expression suggests stronger Frame. No opportunity is not scored.
 
-### Connection
+### 2. A request that was too much
 
-**C1 · Name slots**
-> Who would you call at 2am? Take your time.
+**Prompt**
+The last time someone asked for more than you could give, what did you do?
 
-Five empty slots, first-name entry, all optional. The empty slots are the
-answer. No prompt to fill them, no encouragement, no count displayed. `off` =
-100 − (filled × 20). This is the quietest and hardest screen in the flow; give
-it more vertical space than any other and no time pressure.
+**Options**
 
-**C2 · Time-since arc**
-> When did a friend last ask how you were and wait for the real answer?
+1. I said no.
+2. I offered less than they asked for.
+3. I asked for time to decide.
+4. I said yes and was okay with it.
+5. I said yes and wished I hadn't.
+6. No one has asked me lately.
 
-Stops: this week, this month, months ago, I can't remember, nobody does that.
-`off` = 0 / 30 / 60 / 85 / 100. Context: 21% of men received emotional support
-from a friend in the past week, against 41% of women.
+**Why it exists**
+Separates a deliberate no, a negotiated limit, chosen generosity, and regretful compliance.
 
-**C3 · Stepper**
-> In the last week, how many conversations did you start?
+**Scoring hypothesis**
+Option 5 is the clearest needs-attention response. Options 1–4 are different valid choices and should not be forced onto one simple good/bad line. Option 6 is not scored.
 
-Large mono numeral, minus and plus either side, floor of zero. `off` =
-max(100 − count × 14, 0).
+### 3. A yes you regretted
 
-**C4 · Two-door**
-> Something good happens. Who do you tell first?
+**Prompt**
+In the past 30 days, how many times did you say yes and later wish you had said no?
 
-"Someone specific." / "Nobody, really." If he picks the first, a single name
-field appears in place — still one question, one screen. `off` = 15 / 95.
+**Response**
+Scale B — None through 11 or more.
 
-### Appetite
+**Why it exists**
+Measures a concrete cost of weak boundaries without treating every act of help as a problem.
 
-**A1 · Day bar**
-> Yesterday. How many hours went to watching other people live?
+**Scoring hypothesis**
+Higher frequency suggests more attention may be needed.
 
-A horizontal bar representing twenty-four hours. He drags to fill the portion
-that went to feeds, streams, and other people's lives. The filled region reads
-in mono hours as he drags. `off` = min(hours / 8 × 100, 100).
+### 4. Changing a choice to avoid upset
 
-**A2 · Multi-select**
-> What do you reach for when the day goes badly?
+**Prompt**
+In the past 30 days, how many times did you go along with someone else so they would not be upset with you?
 
-Multi-select, unlimited: your phone, porn, weed, food, drink, games, the gym,
-nothing. Multi-select rather than single is deliberate — forcing one answer
-invites the flattering one. `off` = base 20 + 20 per selection from the first
-six, capped at 100; "the gym" and "nothing" add 0.
+**Response**
+Scale B — None through 11 or more.
 
-**A3 · Duration slider**
-> Whatever you reach for most — how long could you go without it before you'd notice?
+**Why it exists**
+Samples approval-driven reversal rather than a general preference for peace.
 
-Continuous slider labelled in mono: an hour, a day, three days, a week, longer.
-`off` = 100 / 75 / 50 / 25 / 0.
+**Testing concern**
+Cognitive interviews must determine whether people include healthy compromise. If they do, revise to anchor regret or continued disagreement.
 
-**A4 · Gap slider**
-> You told yourself five more minutes. How long was it actually?
+---
 
-Slider from five minutes to five hours, mono readout. The gap between what he
-said and what happened is the score, and the screen never names that out loud.
-`off` = min((minutes − 5) / 175 × 100, 100).
+## Reality: Desire
 
-### Craft
+Working definition: **taking reasonable steps toward something the person wants despite uncertainty or possible rejection.** Desire is not entitlement, heterosexual approach behavior, risk for its own sake, or getting every desired outcome.
 
-**K1 · Stepper**
-> How many things can you do well enough that someone would pay for them?
+### 5. Starting contact
 
-Same primitive as C3. `off` = max(100 − count × 25, 0).
+**Prompt**
+In the past 30 days, when you wanted to know someone better, how often did you start the conversation?
 
-**K2 · Time-since arc**
-> When did you last finish something nobody made you finish?
+**Response**
+Scale A.
 
-Stops: this week, this month, this year, longer, I don't finish things. `off` =
-0 / 25 / 55 / 80 / 100.
+**Why it exists**
+Preserves the approach-behavior insight without assuming gender, romance, relationship status, or stranger approach.
 
-**K3 · Mirror slider**
-> The body you have now. Is that the body of someone who keeps his word to himself?
+### 6. Making a reasonable ask
 
-Single unlabelled slider between "No" and "Yes" with no numbers and no midpoint
-mark. Deliberately not a weight, a photo, or a body-fat estimate — North is
-measuring conduct, not physique. `off` = position from the "Yes" end.
+**Prompt**
+In the past 30 days, how often did you ask for something they might say no to?
 
-**K4 · Rank**
-> Put these in the order you actually spend time on them. Not the order you'd like.
+**Response**
+Scale A.
 
-Drag to reorder: your body, your work or study, your skills, your friends,
-your screen. `off` derives from the position of "your screen" — first place
-scores 100, last scores 0, evenly spaced between.
+**Why it exists**
+Measures approach in work, study, friendship, dating, and ordinary life.
 
-### Interaction primitives to build
+**Testing concern**
+Probe what users count as “reasonable” and whether the phrase changes their answer.
 
-Nine reusable inputs cover all twenty questions. Build these as components in
-`src/components/ui/`, not per-question:
+### 7. Ruling yourself out
 
-| Primitive | Used by |
-| --- | --- |
-| Time-since arc | F1, D1, C2, K2 |
-| Two-door | F2, C4 |
-| Tally | F3, D2 |
-| Spectrum drag | F4, D3, K3 |
-| Recognition list | D4 |
-| Name slots | C1 |
-| Stepper | C3, K1 |
-| Duration / gap slider | A3, A4 |
-| Day bar | A1 |
-| Multi-select | A2 |
-| Rank | K4 |
+**Statement**
+I decide I can't do it before I try.
 
-Every one of them is buildable with the installed stack: Reanimated 4 for
-transitions and drag values, `react-native-gesture-handler` for the arc, drag,
-and rank gestures, `react-native-svg` for the arc and day bar.
+**Response**
+Scale C — Strongly disagree through Strongly agree.
 
-## Movement 3 — one honest thing
+**Why it exists**
+Samples automatic self-rejection in direct first-person language.
 
-A single free-text screen, placed after the twenty so that he answers it having
-already invested.
+**Scoring hypothesis**
+Agreement suggests more attention may be needed. It should never outweigh actual behavior by itself.
 
-> Name one thing you know you should have dealt with by now.
+### 8. Fear stopping a wanted step
 
-**Never scored.** It exists for ownership, and it is quoted back to him at the
-Exit. Free text cannot be scored deterministically and v1 has no LLM; any
-attempt to score prose here is out of scope and must not be added.
+**Prompt**
+In the past 30 days, how many times did being afraid they would say no stop you from doing something you still wanted to do?
 
-## The future-self domains
+**Options**
 
-**Added on 2026-08-12.** Three screens, immediately after the alter ego and
-before the reading — one for each horizon: two years, five years, ten years.
-Each asks the same neutral question in a different frame ("a free evening,"
-"a free weekend," "looking back") and offers the same four options as a
-multi-select with no minimum and no maximum:
+1. None
+2. Once
+3. 2–3 times
+4. 4–6 times
+5. 7 or more
+6. Nothing like that came up
 
-- Reads, listens to something, follows an idea (intellectual)
-- Goes somewhere or does something that scares him a little (adventurous)
-- Trains. Moves his body on purpose (physical)
-- None of this. Something else entirely
+**Why it exists**
+Distinguishes fear-driven inhibition from freely choosing not to act.
 
-**Never scored, and structurally cannot be.** These live outside `QUESTIONS`
-entirely, in their own `futureSelf` field on the draft, so `getInitialBearing`
-— which only ever reads `draft.answers` — cannot reach them even by accident.
-This is deliberate: scoring intellectual, adventurous, and physical would
-reward one specific silhouette — a man who reads, climbs, and lifts — over a
-man who pictures something quieter, which is the exact stereotype this
-question exists to avoid. Picking one domain, all three, or "something else
-entirely" are equally valid answers, and the UI presents them with equal
-weight: no chip is pre-selected, none is styled as the recommended choice, and
-selecting more is not visually rewarded.
+**Scoring hypothesis**
+Frequency is scored; no opportunity is not.
 
-The data exists to shape which authored actions and lessons he is later shown
-— the state machine described in the product spec's content engine section —
-not to move the Bearing. That selection logic is not yet built.
+---
 
-## Movement 5 — the reading
+## Reality: Connection
 
-The compass is the progress indicator for the entire flow. The needle begins
-unsettled and drifting; each answer makes it more determined. This screen is
-the needle finally coming to rest.
+Working definition: **having accessible mutual support and taking part in maintaining close relationships.** Connection is not popularity, charisma, contact count, or being the centre of a room.
 
-It is the only place in onboarding where the needle spring from `DESIGN.md`
-runs. Under reduced motion it cross-fades to the final Bearing instead of
-sweeping, per the Motion section.
+### 9. The 2 a.m. call
 
-State the number plainly and state what it costs. No congratulation, no
-commiseration, and no interpretation of what the number says about him.
+**Prompt**
+If you were in trouble at 2 a.m., how many people could you call?
 
-## Movement 6 — the contract
+**Response**
+Scale D — None; One; Two; 3–4; 5 or more; Not sure.
 
-Three screens, in order.
+**Why it exists**
+Keeps one of North's strongest concrete images while measuring people rather than relationship categories.
 
-1. **The code.** The manifesto from `north.html`, verbatim. Offered, scrollable,
-   skippable.
-2. **The letter.** Addressed to him by name. States plainly that he will outgrow
-   this and that North intends to end. Immediately before the signature, and
-   only here, the population statistic:
+### 10. Someone waiting for the real answer
 
-   > Forty-five percent of men your age have never once walked up to a woman and
-   > said something. Not rejected. Never tried.
-   >
-   > Most men who start something like this stop before day twelve.
+**Prompt**
+In the past 30 days, how many times did someone close to you ask how you were and keep listening after your first answer?
 
-   Aimed at the population, never at him. This technique tapers as he
-   progresses and must not appear again after roughly day forty.
+**Response**
+Scale B.
 
-3. **The signature.** Drawn, not typed — `react-native-gesture-handler` pan into
-   an SVG path. A typed name is a form field; a drawn signature is an act. This
-   is the single highest-cost interaction in the product and the only place in
-   onboarding where a sound plays (`contract-signed`, per `DESIGN.md`).
+**Why it exists**
+Samples received emotional support in memorable, human language.
 
-## Scoring
+### 11. Starting personal conversations
 
-Per-question `off` values are given above and are settled.
+**Prompt**
+In the past 7 days, how many personal conversations did you start with someone you know?
 
-```
-axisReading(axis) = mean(off) over that axis's four questions   // 0-100
-```
+**Response**
+None; One; 2–3; 4–6; 7–10; 11 or more.
 
-**OPEN — the Bearing formula.** How five Axis readings collapse into one 0–180°
-Bearing is not decided and must not be guessed. It is a values statement about
-what North thinks a man is, not an implementation detail: equal weighting says
-all five matter identically, and any other weighting says something specific.
+**Why it exists**
+Measures active maintenance instead of waiting to be included.
 
-Implement the seam, not the answer:
+**Testing concern**
+Examples may be needed to separate a meaningful check-in from a routine work message.
 
-```ts
-type AxisReading = { axis: Axis; off: number };          // 0-100
-type BearingRule = (readings: AxisReading[]) => number;  // 0-180
-```
+### 12. Giving the real listen
 
-Ship a single documented placeholder rule behind that type, keep it in the
-`bearing` domain, and make it trivially replaceable. Do not spread scoring logic
-across screens.
+**Prompt**
+In the past 30 days, how many times did you ask someone how they were and keep listening after their first answer?
 
-## Voice
+**Response**
+Scale B.
 
-From `north.html`, non-negotiable:
+**Why it exists**
+Balances received connection with given connection. The Axis should not only ask what other people do for the user.
 
-- Direct, warm, unsentimental. Somewhere between Mark Manson and David Goggins.
-- Never "just", "simply", or "easy" — they condescend to a man finding it hard.
-- Never king, brother, warrior, legend, champ.
-- No caps, no exclamation marks, no emoji, no hype.
-- Sentence case, ending in a full stop.
+---
 
-**Name the condition, locate the agency in him.** The rules of being a man
-changed and nobody handed him the new ones; saying so is what earns his trust in
-the first two minutes. But grievance and agency cannot coexist in this product —
-if onboarding tells him the problem is entirely outside him, he has no reason to
-use a compass, and every mechanism North has depends on him believing his own
-conduct moves the needle.
+## Reality: Self-command
 
-> Write: The rules changed and nobody handed you the new ones. That's real. It's
-> also not a reason to stop moving.
->
-> Not: Modern women broke the deal.
+Working definition: **keeping choice over attention and behavior when an easy reward or bad feeling pulls in another direction.** Self-command is about control and consequence, not whether an object is morally approved.
 
-## Motion, sound, haptics, accessibility
+### 13. Using time as planned
 
-Bound by `DESIGN.md`. Restated because this flow is where they are most likely
-to be broken:
+**Prompt**
+In the past 7 days, on how many days did you spend your free time the way you planned?
 
-- **Silence.** No sound plays anywhere in onboarding except `contract-signed` at
-  the signature. There is no fifth sound and no question ever makes a noise.
-- **Haptics.** `selectionAsync` on discrete stops, ticks, and steps;
-  `impactAsync(Light)` on commit. **Never a success notification** — that
-  belongs to Closeout alone, and there is no haptic for a "bad" answer.
-- **Motion.** Screen transitions use `quick`; the needle spring runs only on the
-  reading screen. Nothing loops, nothing pulses, nothing celebrates.
-- **One brass element per screen.** Normally the commit action. If a gauge is
-  brass, the button is not.
-- **Reduced motion.** All drag inputs remain fully operable; only the transitions
-  are removed. The needle cross-fades.
-- **Targets** at least 44pt. Every drag input must also be operable by tapping a
-  stop or using accessibility increment and decrement actions — a slider that
-  only responds to dragging is unusable with a screen reader.
-- **No icons.** Content carries none.
+**Options**
 
-## Data
+1. None
+2. One day
+3. 2–3 days
+4. 4–5 days
+5. 6 days
+6. Every day
+7. I did not make a plan
 
-```ts
-type Axis = 'frame' | 'desire' | 'connection' | 'appetite' | 'craft';
+**Why it exists**
+Provides a positive regulation item rather than asking only about vice and failure.
 
-type Profile = { name: string; age: number; situation: 'studying' | 'working' | 'neither' };
-type Answer = { id: string; axis: Axis; off: number; raw: unknown };
-type Onboarding = {
-  profile: Profile;
-  answers: Answer[];
-  honestThing: string;      // never scored
-  northStar: NorthStarType;
-  signedAt: number;
-};
-```
+**Scoring hypothesis**
+`I did not make a plan` is a planning/context state. It is not automatically the worst response.
 
-Persist per screen, not at the end. A man who loses twelve minutes of answers to
-a phone call does not start again. Version the persisted shape now — this is
-transient local state today and Convex owns it later.
+### 14. Five more minutes
 
-## Safety — **OPEN, and a ship blocker for this flow**
+**Prompt**
+Think of the last time you opened TikTok, Instagram, X, YouTube, or a similar app and told yourself "five more minutes." How long did you stay?
 
-The product spec lists the safety floor as unresolved. This flow is where it
-bites hardest: C1 asks a lonely man to count the people who would take his call
-at 2am, and a meaningful share will fill in zero.
+**Options**
 
-Onboarding must not ship without a decided response to a distress signal. That
-decision is the founder's, not an implementation detail, and it should cover at
-minimum: which answers constitute a signal, what North does when it sees one,
-and where the line sits between a coach and a clinician.
+1. Under 10 minutes
+2. 10–29 minutes
+3. 30–59 minutes
+4. 1–2 hours
+5. More than 2 hours
+6. This has not happened lately
+7. I do not use these apps
 
-What must **not** happen by default: no crisis-hotline interstitial dropped in
-by an implementer, no scoring change, and no comment on the answer. Until the
-policy is decided, C1 and C2 record their answers and say nothing.
+**Why it exists**
+Preserves one of the most recognizable and useful North questions: the gap between an intended limit and what happened.
 
-## Open
+**Scoring hypothesis**
+Only options 1–5 form a severity order. Options 6–7 are contextual branches.
 
-- The Bearing formula, and whether the five Axes weigh equally.
-- The safety response above.
-- Whether the `off` weightings need calibrating against real answers. They are
-  authored judgements and should be revisited once there is data — deterministic
-  and testable, but not yet validated.
-- Recalibration: which subset of these twenty runs again after a long absence.
-  The product spec requires a partial re-run; the subset is not chosen.
-- Whether the eight types need a ninth entry for a man who recognises none.
+### 15. Coping that ran long
+
+**Prompt**
+In the past 30 days, how many times did you handle a bad day in a way that took more time or energy than you meant?
+
+**Response**
+Scale B.
+
+**Why it exists**
+Measures impaired control without assigning moral points to phone, food, porn, alcohol, games, work, or exercise.
+
+**Optional unscored follow-up**
+What did you reach for? This can personalize Actions but must not add a penalty by category.
+
+### 16. A habit causing a real cost
+
+**Prompt**
+In the past 30 days, how many times did a habit cause a problem for your sleep, time, work, study, or someone close to you?
+
+**Response**
+Scale B.
+
+**Why it exists**
+Anchors Self-command to functional consequence rather than shame.
+
+**Testing concern**
+This lists several consequences. Cognitive interviews must test whether the examples help recall or make the item too broad. If too broad, split in the pilot pool and keep the stronger version.
+
+---
+
+## Reality: Craft
+
+Working definition: **building capability through self-directed practice and follow-through.** Craft is not income, job status, body appearance, or productivity at any cost.
+
+### 17. Skills used for another person
+
+**Prompt**
+In the past year, how many skills did you use to make, fix, teach, or solve something for someone else?
+
+**Options**
+
+1. None
+2. One
+3. Two
+4. 3–4
+5. 5 or more
+6. Not sure
+
+**Why it exists**
+Keeps the demonstrated-skill idea while including unpaid, early-career, student, care, and practical capability.
+
+### 18. Finishing something nobody required
+
+**Prompt**
+When did you last finish something nobody made you finish?
+
+**Options**
+
+1. In the past 7 days
+2. In the past 30 days
+3. In the past 3 months
+4. In the past year
+5. Longer ago
+6. I cannot remember
+7. I have not had something like that lately
+
+**Why it exists**
+Preserves one of the cleanest existing measures of self-directed completion.
+
+**Scoring hypothesis**
+The first six are ordered evidence. The final option is lack of opportunity/context and should not automatically equal failure.
+
+### 19. Deliberate practice
+
+**Prompt**
+In the past 7 days, on how many days did you practice a skill you want to improve?
+
+**Options**
+
+1. None
+2. One day
+3. 2 days
+4. 3–4 days
+5. 5–6 days
+6. Every day
+7. I am not trying to improve a skill right now
+
+**Why it exists**
+Measures investment in capability rather than current status.
+
+### 20. Following through on body care
+
+**Prompt**
+In the past 7 days, on how many days did you exercise or take care of your body as planned?
+
+**Options**
+
+1. None
+2. One day
+3. 2 days
+4. 3–4 days
+5. 5–6 days
+6. Every day
+7. I did not make a plan
+
+**Why it exists**
+Keeps the body inside Craft without judging appearance, strength, disability, weight, or illness.
+
+**Testing concern**
+“Physical care” must be tested across training, walking, mobility work, rehabilitation, sleep routines, and health limitations.
+
+---
+
+## Reality: Agency
+
+Working definition: **seeing and taking a useful next step, while recognizing that luck and other people also affect outcomes.** Agency is not denying circumstance, taking reckless risks, or believing confidence slogans.
+
+### 21. A self-chosen step
+
+**Prompt**
+In the past 7 days, how many times did you take a step that mattered to you without anyone asking?
+
+**Options**
+
+1. None
+2. Once
+3. 2–3 times
+4. 4–6 times
+5. Every day
+6. More than once a day
+7. Nothing like that came up
+
+**Why it exists**
+Preserves the strongest part of the current autonomy item while excluding trivial choices.
+
+### 22. Finding a first step
+
+**Statement**
+When I do not know how to do something, I can usually find a first step.
+
+**Response**
+Scale C.
+
+**Why it exists**
+Measures practical self-efficacy instead of asking whether confidence is innate or earned.
+
+### 23. What happened after a setback
+
+**Prompt**
+Think of the last plan that went wrong. What did you do next?
+
+**Options**
+
+1. I tried another way right away.
+2. I asked for help and kept going.
+3. I took a break and came back.
+4. I stopped because the plan did not make sense anymore.
+5. I gave up even though I still wanted it.
+6. No plan has gone wrong lately.
+
+**Why it exists**
+Separates adaptation, help-seeking, recovery, sensible stopping, and helpless withdrawal.
+
+**Scoring hypothesis**
+Options 1–4 are different forms of agency. Option 5 is the clearest needs-attention response. Option 6 is not scored.
+
+### 24. Influence without denying luck
+
+**Statement**
+Even when luck or other people shape the result, I can usually change what happens next.
+
+**Response**
+Scale C.
+
+**Why it exists**
+Lets realistic beliefs about luck coexist with perceived control.
+
+---
+
+## Final Reality reflection
+
+### 25. What is costing you now?
+
+**Prompt**
+Which one is costing you most right now?
+
+**Options**
+
+1. A conversation I keep avoiding
+2. Something I keep saying I will start
+3. A habit that keeps taking more than I mean to give
+4. An apology or repair I owe
+5. Taking care of my body or health
+6. Money I keep avoiding
+7. Something else
+8. I am not sure yet
+
+**Status**
+Unscored.
+
+**Why it exists**
+This is the bridge from measurement to the person's first useful Action. It belongs before the Reality reveal.
+
+**Product use**
+The chosen answer should affect the first Action family. If it does not, remove the collection.
+
+---
+
+## North Star
+
+These five questions do not measure health or present worth. They clarify desired priorities. They may order candidate North Stars, but the person chooses the destination.
+
+### 26. What makes a year matter?
+
+**Prompt**
+At the end of a good year, which two would matter most to you?
+
+**Options — choose exactly two**
+
+1. I built or improved something that matters.
+2. My closest relationships became stronger.
+3. I had more freedom over my time.
+4. I became more skilled and capable.
+5. I made life steadier for myself or other people.
+6. I enjoyed more of my ordinary days.
+7. I helped people or a community I care about.
+
+**Why it exists**
+Elicits direct priorities without labeling one masculine style as superior.
+
+**Scoring rule**
+Preference signal only. No answer moves Reality or Direction closer/further by itself.
+
+### 27. Building versus protecting time
+
+**Prompt**
+If you had to give something up, which way would you go?
+
+**A**
+Protect more of my time, even if I build less.
+
+**B**
+Build more, even if it takes more of my time.
+
+**Response**
+Scale E — A, much more; A, a little more; They matter about the same; B, a little more; B, much more.
+
+**Why it exists**
+Both answers carry a real cost. This is a tradeoff rather than ambition versus failure.
+
+### 28. Commitment versus flexibility
+
+**Prompt**
+I want more room in my life for…
+
+**A**
+A close life with another person, even if I have less freedom.
+
+**B**
+More freedom, even if I share my life less.
+
+**Response**
+Scale E.
+
+**Why it exists**
+Clarifies relationship centrality without calling commitment responsible and freedom selfish, or vice versa.
+
+**Branching note**
+People who do not want a romantic partnership can still interpret A as a deeply shared life. Test that interpretation; revise if it remains romance-bound.
+
+### 29. Friction versus leaving something unsaid
+
+**Prompt**
+If you had to give something up, which way would you go?
+
+**A**
+Say what matters, even if the other person may not like it.
+
+**B**
+Keep the peace, even if I do not say what matters.
+
+**Response**
+Scale E.
+
+**Why it exists**
+Uses matched negative consequences so neither pole is presented as painless virtue.
+
+**Testing concern**
+This must not become a second Frame score. It is only a preferred cost in the desired life.
+
+### 30. An ordinary day at age + 5
+
+**Dynamic prompt**
+`{Name}`, it is five years from now. You are `{Age + 5}`. Which ordinary day feels closest to the life you want?
+
+**Options — choose up to two**
+
+1. I lead or build something, and I own how it turns out.
+2. I do skilled work with people I respect.
+3. I work on my own and control more of my time.
+4. I care for people, a home, or a community.
+5. I move between projects, places, or new experiences.
+6. I have steady work and plenty of life outside it.
+7. Something else fits me better.
+8. I cannot see it clearly yet.
+
+**Why it exists**
+Replaces three repetitive, status-biased future-self questions with one ordinary-life visualization.
+
+**Scoring rule**
+Content guides North Star ordering and future Action themes. “Cannot see it clearly” may indicate future-self clarity, but it must not be converted into a severe Agency penalty without separate validation.
+
+## Provisional scoring model
+
+> **Prototype compatibility:** the current UI maps these ordinal answers into an
+> internal 0–100 Reality shape. Reality presents broad interpretations rather
+> than exact degrees. The internal values are product indices, not validated
+> psychological measurements.
+
+
+### Before validation
+
+Do not present exact Axis degrees as validated measurements.
+
+For prototype research only:
+
+1. Map each ordinal scored response to an internal 0–4 or 0–5 position.
+2. Keep `no opportunity`, `not applicable`, `not sure`, and contextual branches missing—not good or bad.
+3. Require at least three answered items before showing an Axis interpretation.
+4. Show item evidence and broad language, not scientific precision.
+5. Keep question 25 and questions 26–30 outside Reality scoring.
+6. Never average North Star preferences into a “healthy masculinity” result.
+
+### Prototype North Star ordering
+
+North Star preferences accumulate across eight plain priorities: building,
+closeness, freedom, mastery, steadiness, enjoyment, service, and candor. Each
+authored archetype has a distinct priority profile. The profiles order the
+archetypes; they never diagnose the person, and the first archetype is not
+selected for him.
+
+The eight archetypes are The Patriarch, The Modern Man, The Rogue, The Laughing
+Wolf, The Godfather, The Kind Father, The Freethinker, and The Playboy. They are
+destinations the person can choose, not labels North assigns to him.
+
+### Prototype initial Direction
+
+The initial Direction is a weighted gap between the six Reality readings and
+the chosen North Star. Every Axis has a baseline weight of 1, so choosing a
+North Star cannot erase an inconvenient Reality reading. Each destination
+increases the weight of the Axes most relevant to that life. The weighted
+0–100 gap maps linearly onto the 0–180 degree compass arc.
+
+This is transparent product math, not a validated psychometric claim. It must
+still be reviewed after cognitive interviews and pilot evidence.
+
+Possible pre-validation Axis outputs:
+
+- Pattern looks steady
+- Mixed evidence
+- May need attention
+- Not enough information
+
+These labels also require user testing; they are safer hypotheses, not validated cutoffs.
+
+### After pilot evidence
+
+Because the Axes are likely formative action indices rather than reflective personality traits:
+
+- justify item weights through content importance and prediction of useful Actions;
+- test weight sensitivity;
+- test short-term stability where behavior should be stable;
+- test responsiveness after relevant behavior changes;
+- test whether the result improves Action relevance and completion;
+- do not optimize Cronbach alpha at the cost of construct coverage.
+
+The development process should follow intended-use validity and content/response-process evidence described in the [AERA/APA/NCME Standards](https://www.testingstandards.net/uploads/7/6/6/4/76643089/9780935302356.pdf), [APA assessment guidelines](https://www.apa.org/about/policy/guidelines-psychological-assessment-evaluation.pdf), [COSMIN content-validity guidance](https://www.cosmin.nl/wp-content/uploads/COSMIN-methodology-for-content-validity-user-manual-v1.pdf), and the [CDC cognitive-interviewing model](https://www.cdc.gov/nchs/ccqder/question-evaluation/cognitive-interviewing.html).
+
+## Required onboarding flow
+
+The user answers exactly 30 substantive prompts, but the experience does not become 30 identical cards.
+
+Before this flow, acquisition uses two short surfaces: a sparse welcome with an
+immediate Sign in route, then a three-frame product preview of Reality, North
+Star, and Action. The preview uses product-shaped examples rather than generic
+feature claims and has one Continue action. It does not add a prompt to
+the instrument.
+
+### Arrival
+
+1. Welcome and value promise.
+2. Explain privacy and honesty: no answer makes someone a better or worse man.
+3. Name and age as a compact factual setup.
+
+### Reality: 24 questions
+
+4. Questions 1–4 — Frame behaviors.
+5. Continue directly into the next set; the persistent instrument marks chapter progress without adding a dedicated pause screen.
+6. Questions 5–8 — Desire behaviors.
+7. Continue into the next set.
+8. Questions 9–12 — Connection behaviors.
+9. Midpoint payoff: show factual progress, not a moral conclusion.
+10. Questions 13–16 — Self-command behaviors.
+11. Continue into the next set.
+12. Questions 17–20 — Craft behaviors.
+13. Continue into the next set.
+14. Questions 21–24 — Agency behaviors.
+
+Do not reveal Axis labels or explain what answer is preferred before the questions. Dedicated quotation screens are omitted: they add length, break answering rhythm, and risk priming the next set.
+
+### Reality payoff
+
+15. Question 25 — what is costing the person most.
+16. Honest calibration animation: each Axis resolves separately, then the shape connects.
+17. Reality explanation, evidence, and Save image. Do not open a share sheet during onboarding.
+18. Explicit transition: “That is where you are. Now choose where you want to go.”
+
+### North Star: five questions
+
+19. Questions 26–30.
+20. One truthful curation animation that says it is organizing stated preferences.
+21. Present all eight candidates in ranked order, beginning **unselected**, with tradeoffs.
+22. Let the person inspect all candidates and explicitly choose.
+
+### Completion
+
+23. Calculate Direction from both Reality and the chosen North Star; do not add a simulated loading screen.
+24. Show the closing letter without unsupported social or retention claims.
+25. Sign the Contract.
+26. Preview the first Action with the chosen North Star and starting Axis. Question 25 selects the closest matching authored Action; the chosen North Star orders later Actions by weighting the remaining Reality gaps.
+27. Create the account, then offer Profile color once after first sign-up. Never interrupt sign-in with color selection.
+28. Enter the Action flow.
+29. Keep the Code outside the required completion path, available from You.
+
+## Interaction rules
+
+1. Every question starts unselected.
+2. Selecting an answer never auto-advances. The person confirms with the same fixed Continue action.
+3. One press can advance at most one step; input remains locked through transition completion.
+4. A Back action restores the saved answer and permits correction. It remains in the fixed bottom action lane beneath Continue rather than in top chrome.
+5. Show `Question n of 30`, but do not show a moral score during answering.
+6. Keep the question and first options in the eye lane; long display copy does not begin at the top edge.
+7. Use sentence case for questions and options; reserve condensed uppercase for short labels/actions.
+8. Do not color one option as virtuous before selection.
+9. Ordinal scales keep their order. Non-ordinal lists may rotate during pilot testing to detect order effects.
+10. Sensitive optional branches explain why the information is asked and allow Skip without penalty.
+
+## What is deliberately removed from the required 30
+
+- walking up to an unknown woman;
+- number of women not told feelings;
+- liked versus respected as a Reality score;
+- anger recency inside Frame;
+- moral penalties for phone, porn, food, weed, alcohol, games, or exercise;
+- paid dating/sexual/creator content;
+- gambling recency;
+- body appearance as proof of keeping one's word;
+- confidence-is-innate versus confidence-is-earned;
+- happy versus satisfied;
+- three repetitive future-self screens;
+- required celebrity/fictional-character scoring;
+- six virtue-versus-flaw North Star binaries.
+
+This content can only return through a justified optional branch, an unscored reflection, or a validated safety purpose.
+
+## Cognitive interview checklist
+
+For every candidate, ask target users:
+
+1. What is this question asking in your own words?
+2. What event or period did you think about?
+3. How did you choose between the two closest answers?
+4. Was an honest answer missing?
+5. Which answer looked like the answer North wanted?
+6. Did the item feel relevant to someone with your work, relationship, orientation, health, and culture?
+7. Would you answer differently if another person could see it?
+
+Revise the item if respondents do not retrieve the intended behavior or if the status-preferred answer dominates their reasoning. The item-generation and reduction sequence follows the development process summarized by [Boateng et al.](https://pmc.ncbi.nlm.nih.gov/articles/PMC6004510/) and the response-process method used by the [CDC](https://www.cdc.gov/nchs/ccqder/question-evaluation/cognitive-interviewing.html).
+
+## Validation gates before external release
+
+1. Product owner accepts the six working Axis definitions.
+2. A psychometrician reviews the 30-item candidate bank for content coverage and construct contamination.
+3. Cognitive interviews identify no systematic missing answers or obvious status answers.
+4. The team accepts that v0.2 will not display scientifically precise degrees before validation.
+5. Every collected response has a declared product use: Axis calibration, Action personalization, or North Star preference.
+
+The prototype exists to test these gates. Do not describe its readings as validated until the remaining gates are met.

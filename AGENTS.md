@@ -71,7 +71,7 @@ checking directly:
 ```bash
 make install
 make add PKG="expo-image"
-make dev
+make dev # web app at https://north.localhost
 make go
 make ios
 make android
@@ -86,6 +86,13 @@ make check
 
 Add dependencies with `make add`, never bare `npm install`; it routes through
 `expo install` so versions stay aligned with the SDK.
+
+### Local development with Portless
+
+- For North's browser build, run `make dev` and open `https://north.localhost`; the Makefile runs Expo Web through Portless.
+- Use that named URL as the canonical origin for browser QA; do not select, expose, or hard-code the internal localhost port assigned by Portless.
+- Native Expo development continues to use `make ios`, `make android`, or `make go`. Portless is for the browser-facing local server and does not replace Metro's device connection workflow.
+- Keep `make dev` running while testing. Invoke `npm run web` directly only when specifically diagnosing Portless itself. `make web` is an alias for `make dev`.
 
 `ENV=development` is the default. Pass `ENV=production` only when production
 configuration and deployment have been explicitly authorized.
@@ -128,12 +135,12 @@ configuration and deployment have been explicitly authorized.
 - One action remains live until it is closed; there is no daily reset.
 - No notifications or reminders.
 - Completion uses the honor system. Do not add proof or verification.
-- Inactivity does not move the bearing backward. A miss yields no movement, not
+- Inactivity does not move the direction backward. A miss yields no movement, not
   punishment.
 - Content is authored and selected deterministically in v1; do not add an LLM.
 - Success is reaching north, holding it for 30 days, and being able to leave.
 - Open product questions remain open. In particular, do not guess the life axes,
-  bearing formula, mascot behavior, safety policy, or post-exit state.
+  direction formula, mascot behavior, safety policy, or post-exit state.
 
 ## UI expectations
 
@@ -167,10 +174,10 @@ if the answer is none, do not write it.
   test's only claim.
 - Do not write snapshot tests. A snapshot records what the code currently does,
   which is the one thing already readable from the code.
-- Test values, not structure. Assert the bearing a rule produces, the copy a
+- Test values, not structure. Assert the direction a rule produces, the copy a
   person reads, the control they can press.
 - Prefer one test per product rule over many tests per function, and name the
-  test after the rule: `a missed deadline does not move the bearing`.
+  test after the rule: `a missed deadline does not move the direction`.
 - Domain math is tested exhaustively with the literal numbers from
   `north-product-spec.html`, including the cases the spec warns about. Test the
   sandbagging exploit before implementing any early-finish bonus.

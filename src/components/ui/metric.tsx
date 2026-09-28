@@ -1,6 +1,7 @@
 import { View } from 'react-native';
 
 import { NorthText } from '@/components/ui/north-text';
+import { useSignalTheme } from '@/components/ui/signal-theme';
 import { colors, spacing } from '@/theme';
 
 /**
@@ -9,28 +10,41 @@ import { colors, spacing } from '@/theme';
  */
 const TONES = {
   default: colors.paper,
-  earned: colors.meridianLight,
   overdue: colors.emberText,
 } as const;
 
 type MetricProps = {
   align?: 'left' | 'right';
+  inverted?: boolean;
   label: string;
   tone?: 'default' | 'earned' | 'overdue';
   value: string;
 };
 
-export function Metric({ align = 'left', label, tone = 'default', value }: MetricProps) {
+export function Metric({
+  align = 'left',
+  inverted = false,
+  label,
+  tone = 'default',
+  value,
+}: MetricProps) {
+  const signal = useSignalTheme();
   const textAlign = align === 'right' ? 'right' : 'left';
+  const valueColor = tone === 'earned'
+    ? inverted ? signal.primary : signal.light
+    : TONES[tone];
 
   return (
     <View style={{ alignItems: align === 'right' ? 'flex-end' : 'flex-start', gap: spacing.xs }}>
-      <NorthText variant="label" style={{ textAlign }}>
+      <NorthText
+        variant="label"
+        style={{ color: inverted ? colors.ash : colors.slate, textAlign }}
+      >
         {label}
       </NorthText>
       <NorthText
         variant="data"
-        style={{ color: TONES[tone], textAlign }}
+        style={{ color: valueColor, textAlign }}
       >
         {value}
       </NorthText>

@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import Stack from 'expo-router/stack';
 
 import { AppShell } from '@/shell/app-shell';
-import { colors } from '@/theme';
+import { colors, typography } from '@/theme';
 
 export default function RootLayout() {
   return (
@@ -14,8 +14,10 @@ export default function RootLayout() {
           headerShadowVisible: false,
           headerStyle: { backgroundColor: colors.fieldDeep },
           headerTintColor: colors.paper,
+          headerTitleStyle: { fontFamily: typography.editorialMedium, fontSize: 22 },
         }}
       >
+        <Stack.Screen name="(auth)" options={{ animation: 'fade', headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="onboarding"
@@ -24,7 +26,7 @@ export default function RootLayout() {
         <Stack.Screen
           name="action"
           options={{
-            contentStyle: { backgroundColor: colors.field },
+            contentStyle: { backgroundColor: colors.fieldDeep },
             presentation: 'formSheet',
             sheetAllowedDetents: [0.86, 1],
             sheetGrabberVisible: true,
@@ -34,7 +36,7 @@ export default function RootLayout() {
         <Stack.Screen
           name="closeout"
           options={{
-            contentStyle: { backgroundColor: colors.field },
+            contentStyle: { backgroundColor: colors.fieldDeep },
             presentation: 'formSheet',
             sheetAllowedDetents: [0.72, 1],
             sheetGrabberVisible: true,
@@ -44,7 +46,7 @@ export default function RootLayout() {
         <Stack.Screen
           name="note"
           options={{
-            contentStyle: { backgroundColor: colors.field },
+            contentStyle: { backgroundColor: colors.fieldDeep },
             presentation: 'formSheet',
             sheetAllowedDetents: [0.58, 1],
             sheetGrabberVisible: true,

@@ -1,5 +1,5 @@
 import { DAY_MS } from '@/domains/actions/action';
-import type { AxisReading } from '@/domains/bearing/initial-bearing';
+import type { AxisReading } from '@/domains/direction/initial-direction';
 import type { Journey } from '@/domains/journey/journey';
 import {
   actionState,
@@ -18,11 +18,10 @@ const AT = Date.UTC(2026, 2, 1, 9, 0);
 
 const readings: AxisReading[] = [{ axis: 'frame', off: 60 }];
 
-function start(bearing = 47): Journey {
+function start(direction = 47): Journey {
   return beginJourney({
-    alterEgo: 'Atlas',
     at: AT,
-    bearing,
+    direction,
     honestThing: 'conversation',
     name: 'Farzin',
     northStar: 'patriarch',
@@ -54,18 +53,18 @@ describe('the action loop', () => {
     expect(state.kind === 'overdue' && state.days).toBe(8);
   });
 
-  it('moves the bearing only when he says he kept his word', () => {
+  it('moves the direction only when he says he kept his word', () => {
     const kept = closeAction(withOpen(start()), { at: AT + DAY_MS, kept: true });
     const missed = closeAction(withOpen(start()), { at: AT + DAY_MS, kept: false });
 
-    expect(kept.bearing).toBe(46.1);
-    expect(missed.bearing).toBe(47);
+    expect(kept.direction).toBe(46.1);
+    expect(missed.direction).toBe(47);
   });
 
-  it('records a let-go action without moving the bearing backwards', () => {
+  it('records a let-go action without moving the direction backwards', () => {
     const journey = letGo(withOpen(start()), AT + 20 * DAY_MS);
 
-    expect(journey.bearing).toBe(47);
+    expect(journey.direction).toBe(47);
     expect(journey.open).toBeNull();
     expect(keptCount(journey)).toBe(0);
     expect(journey.closed).toHaveLength(1);
@@ -99,10 +98,10 @@ describe('the action loop', () => {
 });
 
 describe('reaching north', () => {
-  it('starts hold north the day the bearing reaches zero', () => {
+  it('starts hold north the day the direction reaches zero', () => {
     const journey = closeAction(withOpen(start(0.5), 1), { at: AT, kept: true });
 
-    expect(journey.bearing).toBe(0);
+    expect(journey.direction).toBe(0);
     expect(northState(journey, AT)).toStrictEqual({ daysHeld: 0, daysLeft: 30, kind: 'holding' });
   });
 

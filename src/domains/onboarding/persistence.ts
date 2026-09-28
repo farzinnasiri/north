@@ -11,7 +11,7 @@ const KEY = 'north.onboarding.draft';
  * has not been signed yet, so restarting it is honest and a half-migrated
  * Reality would be worse than a fresh one.
  */
-const VERSION = 8;
+const VERSION = 12;
 
 type Stored = {
   version: number;

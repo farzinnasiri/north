@@ -1,6 +1,8 @@
 import type { AuthoredAction } from '@/domains/content/catalogue';
 import { CATALOGUE } from '@/domains/content/catalogue';
-import type { Axis, AxisReading } from '@/domains/bearing/initial-bearing';
+import type { Axis, AxisReading } from '@/domains/direction/initial-direction';
+import type { NorthStarType } from '@/domains/onboarding/onboarding';
+import { directionWeightsForNorthStar } from '@/domains/onboarding/north-star';
 
 /**
  * Fixed order for ties. Two Axes reading identically must resolve the same way
@@ -19,10 +21,27 @@ const AXIS_ORDER: readonly Axis[] = [
 type SelectionInput = {
   /** Authored ids already closed, in the order they were closed. */
   closed: readonly string[];
+  /** The unscored issue the person said is costing him most right now. */
+  honestThing?: string;
+  northStar?: NorthStarType | null;
   /** Authored ids passed over with a Swap. */
   passed: readonly string[];
   readings: readonly AxisReading[];
 };
+
+const HONEST_THING_ACTION: Readonly<Partial<Record<string, string>>> = {
+  apology: 'connection-true-answer',
+  body: 'craft-body',
+  conversation: 'frame-say-it',
+  habit: 'appetite-put-it-down',
+  money: 'agency-choose',
+  unstarted: 'craft-finish',
+};
+
+export function axisForHonestThing(value: string): Axis | null {
+  const action = CATALOGUE.find((candidate) => candidate.id === HONEST_THING_ACTION[value]);
+  return action?.axis ?? null;
+}
 
 /**
  * The state machine, not a shuffle. It walks his Axes worst-first and offers
@@ -33,13 +52,26 @@ type SelectionInput = {
  * Once everything has been seen the corpus repeats, oldest first. That is a
  * property of a small authored set, not a design goal.
  */
-export function nextAction({ closed, passed, readings }: SelectionInput): AuthoredAction {
+export function nextAction({
+  closed,
+  honestThing = '',
+  northStar = null,
+  passed,
+  readings,
+}: SelectionInput): AuthoredAction {
   const seen = new Set([...closed, ...passed]);
+  const reflectedAction = seen.size === 0
+    ? CATALOGUE.find((action) => action.id === HONEST_THING_ACTION[honestThing])
+    : undefined;
+  if (reflectedAction) return reflectedAction;
+
+  const weights = northStar ? directionWeightsForNorthStar(northStar) : null;
   const worstFirst = [...AXIS_ORDER].sort((left, right) => {
-    const difference = offFor(readings, right) - offFor(readings, left);
+    const rightGap = offFor(readings, right) * (weights?.[right] ?? 1);
+    const leftGap = offFor(readings, left) * (weights?.[left] ?? 1);
+    const difference = rightGap - leftGap;
     return difference !== 0 ? difference : AXIS_ORDER.indexOf(left) - AXIS_ORDER.indexOf(right);
   });
-
   for (const axis of worstFirst) {
     const unseen = CATALOGUE.find((action) => action.axis === axis && !seen.has(action.id));
     if (unseen) return unseen;

@@ -6,16 +6,16 @@
   <title>North — cardinal face mascot</title>
   <style>
     :root {
-      color-scheme: dark;
-      --field-deep: #0F1319;
-      --field: #12161C;
-      --field-raised: #1A1F27;
-      --line: #2A3038;
-      --line-soft: #20262E;
-      --brass: #C9A227;
-      --paper: #F2F0EB;
-      --ash: #9BA3AD;
-      --slate: #7E8288;
+      color-scheme: light;
+      --field-deep: #F2EFE7;
+      --field: #E9E4DA;
+      --field-raised: #DCD5C8;
+      --line: #B8B0A1;
+      --line-soft: #D8D1C5;
+      --brass: #7D5525;
+      --paper: #181814;
+      --ash: #54534C;
+      --slate: #69675F;
       --quick: 150ms;
       --settle: 240ms;
       --ease: cubic-bezier(0.32, 0.72, 0, 1);
@@ -46,7 +46,7 @@
       font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 11px;
       font-weight: 400;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.055em;
       text-transform: uppercase;
     }
 
@@ -54,10 +54,11 @@
 
     h1 {
       margin: 0;
-      font-size: clamp(25px, 6vw, 34px);
+      font-family: Newsreader, Georgia, serif;
+      font-size: clamp(36px, 7vw, 54px);
       font-weight: 500;
-      letter-spacing: -0.02em;
-      line-height: 1.2;
+      letter-spacing: -0.035em;
+      line-height: 1.04;
     }
 
     .intro {
@@ -76,7 +77,7 @@
       overflow: hidden;
       background: var(--field);
       border: 1px solid var(--line-soft);
-      border-radius: 12px;
+      border-radius: 4px;
     }
 
     .mascot {

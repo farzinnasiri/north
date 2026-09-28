@@ -1,188 +1,207 @@
+import type { Axis, DirectionWeights } from '@/domains/direction/initial-direction';
 import type { NorthStarType } from '@/domains/onboarding/onboarding';
 
 /**
- * The North Star is suggested from concrete answers, then chosen from all eight.
- *
- * Titles alone flatter, so the app asks small, concrete questions before it
- * orders the destinations. The ranking is evidence for a suggestion, never a
- * diagnosis or a reason to hide the alternatives.
- *
- * Three independent axes, each a binary, give the eight types:
- *   power         ambitious (+) or satisfied (-)
- *   relationships committed (+) or unattached (-)
- *   boundaries    disagreeable (+) or agreeable (-)
+ * North Star answers describe priorities, not health or personality. Each
+ * answer adds weight to ordinary life priorities; the resulting profile only
+ * orders the eight authored candidates. The person still makes the choice.
  */
-export type StarAxis = 'boundaries' | 'power' | 'relationships';
+export type StarPriority =
+  | 'building'
+  | 'closeness'
+  | 'freedom'
+  | 'mastery'
+  | 'steadiness'
+  | 'enjoyment'
+  | 'service'
+  | 'candor';
 
-export type AxisWeights = Record<StarAxis, number>;
+export type PriorityWeights = Record<StarPriority, number>;
 
-export type RoleModel = {
-  id: string;
-  known: string;
-  name: string;
-  weights: AxisWeights;
+export type StarOption = {
+  label: string;
+  value: string;
+  weights: Partial<PriorityWeights>;
 };
 
-/** Three picks at ±1 each, so role models inform but never outvote intent. */
-export const ROLE_MODELS: readonly RoleModel[] = [
-  { id: 'batman', known: '', name: 'Batman', weights: { boundaries: 1, power: 1, relationships: -1 } },
-  { id: 'peter-parker', known: '', name: 'Spider-Man', weights: { boundaries: -1, power: 1, relationships: 1 } },
-  { id: 'superman', known: '', name: 'Superman', weights: { boundaries: 1, power: 1, relationships: 1 } },
-  { id: 'miles-morales', known: '', name: 'Miles Morales', weights: { boundaries: -1, power: 1, relationships: 1 } },
-  { id: 'obama', known: '', name: 'Obama', weights: { boundaries: -1, power: 1, relationships: 1 } },
-  { id: 'stark', known: '', name: 'Tony Stark', weights: { boundaries: -1, power: 1, relationships: -1 } },
-  { id: 'lebron', known: '', name: 'LeBron James', weights: { boundaries: 1, power: 1, relationships: 1 } },
-  { id: 'mrbeast', known: '', name: 'MrBeast', weights: { boundaries: -1, power: 1, relationships: 1 } },
-  { id: 'shelby', known: '', name: 'Tommy Shelby', weights: { boundaries: 1, power: 1, relationships: 1 } },
-  { id: 'kratos', known: '', name: 'Kratos', weights: { boundaries: 1, power: -1, relationships: 1 } },
-  { id: 'iroh', known: '', name: 'Uncle Iroh', weights: { boundaries: -1, power: -1, relationships: 1 } },
-  { id: 'bourdain', known: '', name: 'Bourdain', weights: { boundaries: 1, power: -1, relationships: -1 } },
-  { id: 'wick', known: '', name: 'John Wick', weights: { boundaries: 1, power: 1, relationships: -1 } },
-  { id: 'belfort', known: '', name: 'Jordan Belfort', weights: { boundaries: -1, power: -1, relationships: -1 } },
-  { id: 'zuko', known: '', name: 'Zuko', weights: { boundaries: 1, power: 1, relationships: 1 } },
-  { id: 'luffy', known: '', name: 'Luffy', weights: { boundaries: 1, power: 1, relationships: -1 } },
-];
-
-export const ROLE_MODEL_PICKS = 3;
-
 export type StarQuestion = {
-  axis: StarAxis;
+  body?: string;
+  emphasis: string;
   id: string;
-  /** Answer that pushes the axis positive. */
-  positive: string;
-  /** Answer that pushes the axis negative. */
-  negative: string;
+  max: number;
+  min: number;
+  options: readonly StarOption[];
   prompt: string;
 };
 
-/** Intent is weighted 2 against each role model's 1. */
-export const STAR_WEIGHT = 2;
+const weights = (values: Partial<PriorityWeights> = {}): Partial<PriorityWeights> => values;
 
-/**
- * Two questions per crisis rather than one. Each pair is written straight from
- * the poles — the Ambitious man's value is what he builds, the Satisfied man's
- * is that he is already enough; the Committed man is responsible for another
- * person, the Bad Boy is not; the Disagreeable man sets the terms, the
- * Agreeable man keeps the peace. Asking twice from different angles resolves a
- * man who answers the first one aspirationally.
- */
 export const STAR_QUESTIONS: readonly StarQuestion[] = [
   {
-    axis: 'power',
-    id: 'power-regret',
-    negative: 'Having built it and missed the years',
-    positive: 'Not having built anything',
-    prompt: 'Ten years from now, which would bother you more?',
+    body: 'Pick two.',
+    emphasis: 'which two would matter most to you',
+    id: 'year-matters',
+    max: 2,
+    min: 2,
+    prompt: 'At the end of a good year, which two would matter most to you?',
+    options: [
+      { label: 'I built or improved something that matters', value: 'build', weights: weights({ building: 2 }) },
+      { label: 'My closest relationships became stronger', value: 'relationships', weights: weights({ closeness: 2 }) },
+      { label: 'I had more freedom over my time', value: 'freedom', weights: weights({ freedom: 2 }) },
+      { label: 'I became more skilled and capable', value: 'skill', weights: weights({ mastery: 2 }) },
+      { label: 'I made life steadier for myself or other people', value: 'steadiness', weights: weights({ steadiness: 2 }) },
+      { label: 'I enjoyed more of my ordinary days', value: 'enjoyment', weights: weights({ enjoyment: 2 }) },
+      { label: 'I helped people or a community I care about', value: 'help', weights: weights({ service: 2 }) },
+    ],
   },
   {
-    axis: 'power',
-    id: 'power-worth',
-    negative: 'I am enough as I am',
-    positive: 'I am what I build',
-    prompt: 'Closer to the truth',
+    body: 'A: Protect more of my time, even if I build less.\n\nB: Build more, even if it takes more of my time.',
+    emphasis: 'which way would you go',
+    id: 'building-time',
+    max: 1,
+    min: 1,
+    prompt: 'If you had to give something up, which way would you go?',
+    options: [
+      { label: 'Protect my time, much more', value: 'time-strong', weights: weights({ freedom: 2, enjoyment: 1 }) },
+      { label: 'Protect my time, a little more', value: 'time-somewhat', weights: weights({ freedom: 1 }) },
+      { label: 'They matter about the same', value: 'equal', weights: weights() },
+      { label: 'Build, a little more', value: 'build-somewhat', weights: weights({ building: 1 }) },
+      { label: 'Build, much more', value: 'build-strong', weights: weights({ building: 2, mastery: 1 }) },
+    ],
   },
   {
-    axis: 'relationships',
-    id: 'relationships-role',
-    negative: 'Someone who never ties me down',
-    positive: 'Someone I am responsible to',
-    prompt: 'The person you end up with is',
+    body: 'A: A close life with another person, even if I have less freedom.\n\nB: More freedom, even if I share my life less.',
+    emphasis: 'more room in your life',
+    id: 'commitment-freedom',
+    max: 1,
+    min: 1,
+    prompt: 'Where do you want more room in your life?',
+    options: [
+      { label: 'A close life, much more', value: 'commit-strong', weights: weights({ closeness: 2, steadiness: 1 }) },
+      { label: 'A close life, a little more', value: 'commit-somewhat', weights: weights({ closeness: 1 }) },
+      { label: 'They matter about the same', value: 'equal', weights: weights() },
+      { label: 'Freedom, a little more', value: 'freedom-somewhat', weights: weights({ freedom: 1 }) },
+      { label: 'Freedom, much more', value: 'freedom-strong', weights: weights({ freedom: 2, enjoyment: 1 }) },
+    ],
   },
   {
-    axis: 'relationships',
-    id: 'relationships-hard',
-    negative: 'I go quiet and let it end',
-    positive: 'I stay and deal with it',
-    prompt: 'When it gets difficult',
+    body: 'A: Say what matters, even if the other person may not like it.\n\nB: Keep the peace, even if I do not say what matters.',
+    emphasis: 'which way would you go',
+    id: 'friction-unsaid',
+    max: 1,
+    min: 1,
+    prompt: 'If you had to give something up, which way would you go?',
+    options: [
+      { label: 'Say what matters, much more', value: 'plain-strong', weights: weights({ candor: 2, freedom: 1 }) },
+      { label: 'Say what matters, a little more', value: 'plain-somewhat', weights: weights({ candor: 1 }) },
+      { label: 'They matter about the same', value: 'equal', weights: weights() },
+      { label: 'Keep the peace, a little more', value: 'peace-somewhat', weights: weights({ closeness: 1 }) },
+      { label: 'Keep the peace, much more', value: 'peace-strong', weights: weights({ closeness: 2, steadiness: 1 }) },
+    ],
   },
   {
-    axis: 'boundaries',
-    id: 'boundaries-terms',
-    negative: 'I would rather keep the peace',
-    positive: 'I say what I will and will not do',
-    prompt: 'When people want something from you',
-  },
-  {
-    axis: 'boundaries',
-    id: 'boundaries-cost',
-    negative: 'It keeps me up',
-    positive: 'It is the cost',
-    prompt: 'Being disliked for a decision you believe in',
+    emphasis: 'ordinary day',
+    id: 'ordinary-day',
+    max: 2,
+    min: 1,
+    prompt: '{name}, it is five years from now. You are {age}. Which ordinary day feels closest to the life you want?',
+    options: [
+      { label: 'I lead or build something, and I own how it turns out', value: 'lead-build', weights: weights({ building: 2, candor: 1 }) },
+      { label: 'I do skilled work with people I respect', value: 'skilled-team', weights: weights({ closeness: 1, mastery: 2 }) },
+      { label: 'I work on my own and control more of my time', value: 'independent', weights: weights({ freedom: 2, mastery: 1 }) },
+      { label: 'I care for people, a home, or a community', value: 'care', weights: weights({ service: 2, steadiness: 1 }) },
+      { label: 'I move between projects, places, or new experiences', value: 'projects-places', weights: weights({ enjoyment: 1, freedom: 2 }) },
+      { label: 'I have steady work and plenty of life outside it', value: 'steady-life', weights: weights({ enjoyment: 1, steadiness: 2 }) },
+      { label: 'Something else fits me better', value: 'other', weights: weights() },
+      { label: 'I cannot see it clearly yet', value: 'unclear', weights: weights() },
+    ],
   },
 ];
 
-const TYPE_BY_POLES: Record<string, NorthStarType> = {
-  '---': 'playboy',
-  '--+': 'freethinker',
-  '-+-': 'kind-father',
-  '-++': 'godfather',
-  '+--': 'laughing-wolf',
-  '+-+': 'rogue',
-  '++-': 'modern-man',
-  '+++': 'patriarch',
-};
-
 export type StarChoices = {
-  roleModels: readonly string[];
-  /** Keyed by question id, since each axis is now asked twice. */
-  answers: Partial<Record<string, 'negative' | 'positive'>>;
+  answers: Partial<Record<string, readonly string[]>>;
 };
 
-export function axisTotals(choices: StarChoices): AxisWeights {
-  const totals: AxisWeights = { boundaries: 0, power: 0, relationships: 0 };
+const EMPTY_PRIORITIES: PriorityWeights = {
+  building: 0,
+  candor: 0,
+  closeness: 0,
+  enjoyment: 0,
+  freedom: 0,
+  mastery: 0,
+  service: 0,
+  steadiness: 0,
+};
 
-  for (const id of choices.roleModels) {
-    const model = ROLE_MODELS.find((candidate) => candidate.id === id);
-    if (!model) continue;
-    totals.power += model.weights.power;
-    totals.relationships += model.weights.relationships;
-    totals.boundaries += model.weights.boundaries;
-  }
+export function priorityTotals(choices: StarChoices): PriorityWeights {
+  const totals = { ...EMPTY_PRIORITIES };
 
   for (const question of STAR_QUESTIONS) {
-    const answer = choices.answers[question.id];
-    if (!answer) continue;
-    totals[question.axis] += answer === 'positive' ? STAR_WEIGHT : -STAR_WEIGHT;
+    for (const value of choices.answers[question.id] ?? []) {
+      const option = question.options.find((candidate) => candidate.value === value);
+      if (!option) continue;
+      for (const [priority, weight] of Object.entries(option.weights)) {
+        totals[priority as StarPriority] += weight ?? 0;
+      }
+    }
   }
 
   return totals;
 }
 
-/**
- * Three role models at ±1 sum to an odd number, and the intent answers add an
- * even amount, so no axis can land on zero and the destination is never
- * ambiguous.
- */
-const POLES: readonly { key: string; type: NorthStarType }[] = Object.entries(TYPE_BY_POLES).map(
-  ([key, type]) => ({ key, type }),
-);
+type CandidateProfile = {
+  direction: Partial<Record<Axis, number>>;
+  priorities: Partial<PriorityWeights>;
+  type: NorthStarType;
+};
 
-/**
- * Ranked destinations rather than a single verdict. The best-fitting type is
- * rarely the only plausible one — a man whose boundaries reading is nearly even
- * belongs almost as much to the neighbouring type — and handing him one answer
- * asks him to accept a label he had no part in. All eight stay available; their
- * order carries the suggestion without hiding alternatives.
- */
+/** Distinct authored destination profiles, not diagnoses or personality types. */
+const CANDIDATES: readonly CandidateProfile[] = [
+  { type: 'patriarch', priorities: { building: 3, mastery: 1, candor: 1 }, direction: { craft: 2, agency: 1.5, frame: 1.25 } },
+  { type: 'modern-man', priorities: { closeness: 3, steadiness: 1, service: 1 }, direction: { connection: 2, frame: 1.5, agency: 1.25 } },
+  { type: 'rogue', priorities: { freedom: 3, mastery: 1, candor: 1 }, direction: { agency: 2, craft: 1.5, frame: 1.25 } },
+  { type: 'laughing-wolf', priorities: { closeness: 2, enjoyment: 2, service: 1 }, direction: { connection: 2, desire: 1.25, frame: 1.25 } },
+  { type: 'godfather', priorities: { service: 3, steadiness: 2 }, direction: { connection: 1.5, agency: 1.5, frame: 1.25 } },
+  { type: 'kind-father', priorities: { steadiness: 3, enjoyment: 1, closeness: 1 }, direction: { agency: 1.75, connection: 1.5, appetite: 1.25 } },
+  { type: 'freethinker', priorities: { mastery: 3, building: 2 }, direction: { craft: 2, agency: 1.5, desire: 1.25 } },
+  { type: 'playboy', priorities: { freedom: 2, enjoyment: 2, mastery: 1 }, direction: { desire: 1.75, agency: 1.75, craft: 1.25 } },
+];
+
+function candidateScore(totals: PriorityWeights, profile: CandidateProfile): number {
+  return Object.entries(profile.priorities).reduce(
+    (score, [priority, weight]) => score + totals[priority as StarPriority] * (weight ?? 0),
+    0,
+  );
+}
+
 export function rankNorthStars(choices: StarChoices, count = 8): NorthStarType[] {
-  const totals = axisTotals(choices);
+  const totals = priorityTotals(choices);
 
-  return POLES.map(({ key, type }) => {
-    const sign = (index: number) => (key[index] === '+' ? 1 : -1);
-    const agreement =
-      sign(0) * totals.power + sign(1) * totals.relationships + sign(2) * totals.boundaries;
-    return { agreement, type };
-  })
-    .sort((a, b) => b.agreement - a.agreement)
+  return CANDIDATES.map((profile, authoredOrder) => ({
+    authoredOrder,
+    score: candidateScore(totals, profile),
+    type: profile.type,
+  }))
+    .sort((a, b) => b.score - a.score || a.authoredOrder - b.authoredOrder)
     .slice(0, count)
     .map((entry) => entry.type);
 }
 
 export function deriveNorthStar(choices: StarChoices): NorthStarType {
-  const totals = axisTotals(choices);
-  const key =
-    (totals.power >= 0 ? '+' : '-') +
-    (totals.relationships >= 0 ? '+' : '-') +
-    (totals.boundaries >= 0 ? '+' : '-');
-  return TYPE_BY_POLES[key] ?? 'modern-man';
+  return rankNorthStars(choices, 1)[0] ?? 'modern-man';
+}
+
+/** Every Axis remains live; the chosen destination only changes emphasis. */
+export function directionWeightsForNorthStar(type: NorthStarType): DirectionWeights {
+  const profile = CANDIDATES.find((candidate) => candidate.type === type);
+  const baseline: DirectionWeights = {
+    agency: 1,
+    appetite: 1,
+    connection: 1,
+    craft: 1,
+    desire: 1,
+    frame: 1,
+  };
+
+  return { ...baseline, ...profile?.direction };
 }

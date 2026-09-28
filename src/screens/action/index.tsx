@@ -38,6 +38,8 @@ export function StartAction() {
     if (!journey) return null;
     return nextAction({
       closed: journey.closed.map((action) => action.actionId),
+      honestThing: journey.honestThing,
+      northStar: journey.northStar,
       passed: journey.passed,
       readings: journey.readings,
     });
@@ -55,7 +57,7 @@ export function StartAction() {
             <NorthText variant="label">THE NEXT ACTION</NorthText>
             <ActionBrief action={proposal} />
             <View style={styles.actions}>
-              <NorthButton label="This is the one" onPress={() => go('naming')} />
+              <NorthButton label="Take this one" onPress={() => go('naming')} />
               <NorthButton
                 disabled={swaps === 0}
                 label={swaps === 0 ? 'No swaps left this month' : `Swap it · ${swaps} left`}
@@ -74,10 +76,7 @@ export function StartAction() {
             </View>
             <View style={styles.head}>
               <NorthText variant="title">Name it in your own words.</NorthText>
-              <NorthText>
-                What does it mean for you, this week? Write the version you will recognise when
-                you come back to it.
-              </NorthText>
+              <NorthText>What does this mean for you this week?</NorthText>
             </View>
             <NorthField
               accessibilityLabel="Your named action"
@@ -105,10 +104,7 @@ export function StartAction() {
             </View>
             <View style={styles.head}>
               <NorthText variant="title">How long are you giving yourself?</NorthText>
-              <NorthText>
-                One to seven days. Choose the length you will actually keep, not the one that
-                sounds impressive tonight.
-              </NorthText>
+              <NorthText>Choose one to seven days.</NorthText>
             </View>
             <InstrumentSlider
               accessibilityLabel="Deadline in days"
@@ -125,7 +121,7 @@ export function StartAction() {
               <NorthButton label="Back" onPress={() => go('naming')} tone="quiet" />
             </View>
             <NorthText style={styles.footnote} variant="small">
-              Nothing will remind you. The deadline is a promise you are making to yourself.
+              North will not remind you.
             </NorthText>
           </>
         ) : null}

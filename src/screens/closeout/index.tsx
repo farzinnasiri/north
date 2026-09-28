@@ -7,9 +7,10 @@ import { NorthField } from '@/components/ui/north-field';
 import { NorthScreen } from '@/components/ui/north-screen';
 import { NorthText } from '@/components/ui/north-text';
 import { Surface } from '@/components/ui/surface';
-import { degreesForClose } from '@/domains/bearing/movement';
+import { degreesForClose } from '@/domains/direction/movement';
 import { useJourney } from '@/domains/journey/store';
 import { closeoutNotification } from '@/platform/haptics';
+import { playSoundCue } from '@/platform/sound';
 import { colors, spacing } from '@/theme';
 
 /**
@@ -21,6 +22,7 @@ export function Closeout() {
   const journey = useJourney((state) => state.journey);
   const close = useJourney((state) => state.close);
   const [note, setNote] = useState(journey?.open?.note ?? '');
+  const soundEnabled = journey?.preferences.sound ?? false;
 
   const open = journey?.open;
   if (!open) return null;
@@ -29,9 +31,7 @@ export function Closeout() {
     <NorthScreen contentStyle={styles.screen}>
       <View style={styles.head}>
         <NorthText variant="title">Did you do what you named?</NorthText>
-        <NorthText>
-          There is nothing to upload and nobody checking. Answer once, honestly, and move on.
-        </NorthText>
+        <NorthText>No proof needed.</NorthText>
       </View>
 
       <Surface>
@@ -44,12 +44,12 @@ export function Closeout() {
       <NorthField
         accessibilityLabel="Optional note"
         onChangeText={setNote}
-        placeholder="One honest line, if it helps. Never required."
+        placeholder="Add a note if you want."
         value={note}
       />
 
       <View style={styles.actions}>
-        <NorthButton label="I kept my word" onPress={keep} />
+        <NorthButton label="Yes, it's done" onPress={keep} />
         <NorthButton label="Not yet" onPress={() => router.back()} tone="quiet" />
       </View>
 
@@ -62,6 +62,7 @@ export function Closeout() {
   function keep() {
     void closeoutNotification();
     close({ at: Date.now(), kept: true, note: note.trim() === '' ? null : note.trim() });
+    playSoundCue('close-out', soundEnabled);
     router.back();
   }
 }

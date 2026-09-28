@@ -33,13 +33,15 @@ iOS and Android.
 | --- | --- | --- |
 | Navigation | Expo Router, native `Stack`, `NativeTabs` | Real `UITabBar` and Material bottom bar rather than a JavaScript reimplementation |
 | Sheets | Expo Router `presentation: 'formSheet'` with detents | Already native; a sheet library would add a dependency to reimplement it worse |
-| Styling | React Native `StyleSheet` with tokens from `src/theme.ts` | Fastest available, no build step, and North has one theme and about ten primitives. A styling library would be paying setup and runtime cost for variant and theming features that have no use here |
+| Styling | React Native `StyleSheet` with tokens from `src/theme.ts` | Fastest available, no build step, and North has one structural theme plus four authored Signal families. A styling library would be paying setup and runtime cost for variants the product does not need |
 | Tokens | `DESIGN.md` frontmatter is the source; `src/theme.ts` is generated | The two drifted while both were hand-maintained. One direction, checked by `make check` |
 | Animation | Reanimated 4 with `react-native-worklets` | New-Architecture-only and current. Use the CSS API for state-driven transitions, shared values for the needle and gestures, `entering`/`exiting`/`layout` for mount and reorder |
 | Gestures | `react-native-gesture-handler` | Required by Reanimated gesture work and by signature capture |
 | Vector drawing | `react-native-svg` | The compass, signature, and Mascot are bespoke product instruments. Mascot paths and its three rotors animate through Reanimated without a second rendering system |
-| Icons | None in content. `NativeTabs` `sf`/`md` props for chrome | Neither prototype contains a single content icon, and that is not an accident. Native tab icons cost nothing and match each platform |
-| Sound | `expo-audio`, players preloaded once at start | Four one-shot cues. Loading on press is audibly late |
+| Icons | One bespoke Settings gear in content. `NativeTabs` `sf`/`md` props for chrome | The gear is a universally learned route into Settings; native tab icons cost nothing and match each platform. An icon-font dependency remains unjustified |
+| View capture | `react-native-view-shot` | Captures the bounded Reality card as PNG on native and the web review surface without capturing surrounding controls |
+| Photo save | `expo-media-library` | Adds the captured Reality card to Photos with write-only photo permission rather than requesting broad library access |
+| Sound | `expo-audio`, three app-lifetime players | Navigation must not clip a cue; loading on press is audibly late |
 | Haptics | `expo-haptics`, `performAndroidHapticsAsync` on Android | Avoids needing the `VIBRATE` permission and matches iOS semantics |
 | Client state | Zustand | About 1KB, no boilerplate, and the smallest thing that survives contact with a real app |
 | Local persistence | `expo-sqlite` `localStorage` polyfill | Ships with Expo, works in Expo Go, and AsyncStorage is removed from React Native core |
@@ -57,7 +59,7 @@ specifically, not in the abstract.
 | --- | --- |
 | Effect-TS | Its payoff is typed errors, resource safety, retries, and fibers — all of which are backend concerns. `src/` is a frontend prototype with no network, no async, and no concurrency. It would add a large runtime and a second mental model for no current benefit. If it ever earns a place, that place is `convex/domains/` |
 | NativeWind, Uniwind, Tailwind | A utility-class model competing with a token model, plus a build step. North already has tokens |
-| Unistyles | A good library whose features are variants and theming. North has one theme |
+| Unistyles | A good library whose features are broad variants and theming. North changes one semantic Signal family through a tiny context, not its structure |
 | Tamagui | Brings its own design system, which is the thing `DESIGN.md` already is |
 | shadcn/ui, react-native-reusables | A copy-paste catalogue of dialogs, cards, badges, and accordions — most of which `DESIGN.md` explicitly bans — that also requires NativeWind |
 | React Native Skia | Adds roughly 3–5MB of native binaries. North draws one dial that rotates. The right tool for shaders and large datasets, and enormously oversized for this |
@@ -69,7 +71,7 @@ specifically, not in the abstract.
 | `expo-av` | Deprecated in favour of `expo-audio` and `expo-video` |
 | AsyncStorage | Removed from React Native core |
 | `expo-notifications` | A product invariant, not a technical preference. North never chases a person |
-| Platform semantic colors (`Color`, `PlatformColor`) | North is a fixed dark palette. System colors would fight the tokens, and Reanimated cannot consume them anyway |
+| Platform semantic colors (`Color`, `PlatformColor`) | North has one fixed mineral palette. System colors would fight the tokens, and Reanimated cannot consume them anyway |
 | Moti | A wrapper over Reanimated whose ergonomics the Reanimated 4 CSS API now provides directly |
 | `@react-native-picker/picker` | Added for the onboarding age field and removed on 2026-08-11. Picking one number from forty-five renders as a wheel on iOS and a full-height list on web, and it was the only piece of system chrome in a flow built from hairlines and marks. Replaced by `NumberTape`, a measuring tape read against a fixed index. Use a native picker only where the system look is genuinely correct |
 | TanStack Query | When the backend resumes, Convex's own hooks are the data layer |
@@ -85,7 +87,7 @@ not once.
 | Android `.aab` | 15MB |
 | JavaScript bundle | 1.2MB |
 | Cold start to interactive, mid-range Android | 1.2s |
-| Sound assets, all four combined | 60KB |
+| Sound assets, all three combined | 20KB |
 
 Standing rules that protect them: no barrel files, because re-exporting defeats
 tree shaking; `expo-image` rather than `Image` if raster assets ever appear;
@@ -106,7 +108,7 @@ providing no signal, and they make coverage numbers actively misleading.
 The standard is therefore stated as a property rather than a count: **a test
 must fail if the behaviour it names is wrong.** The practical consequences:
 
-- The bearing rules are the highest-risk logic in the product and get exhaustive
+- The direction rules are the highest-risk logic in the product and get exhaustive
   tests using the literal numbers from `north-product-spec.html` — 1.0° base,
   −0.05° per deadline day, 0.65° at seven days, 0° for a missed deadline, and no
   backward movement. The spec explicitly warns about a sandbagging exploit if an
@@ -142,8 +144,13 @@ two advisory warnings. The command still exits zero.
 
 ## Open
 
-- **Tab structure.** `Home / Bearing / You` appears in neither prototype, and a
-  permanent tab bar is a standing invitation to go somewhere other than the one
-  live action. Unresolved, and deliberately not settled by this document.
 - **Dynamic Type cap.** `DESIGN.md` requires honouring system text size up to a
   capped multiplier. The cap is not yet chosen.
+
+## Settled after the initial stack decision
+
+- **Main navigation, 2026-08-25.** The three destinations are `Now / Direction /
+  You`. Shipping targets retain `NativeTabs`; current iOS may minimize the bar
+  on downward scroll. Web gets an opaque development-only instrument dock so
+  the hierarchy can be reviewed without replacing native chrome. The product
+  rationale and motion rules live in `docs/product/main-surface-design.md`.

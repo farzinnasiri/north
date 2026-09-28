@@ -1,8 +1,9 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { NorthText } from '@/components/ui/north-text';
+import { useSignalTheme } from '@/components/ui/signal-theme';
 import { selectionTick } from '@/platform/haptics';
-import { colors, motion, spacing } from '@/theme';
+import { colors, motion, radii, spacing } from '@/theme';
 
 type Choice = {
   detail?: string;
@@ -19,27 +20,34 @@ type ChoiceInstrumentProps = {
 };
 
 /**
- * Every row carries a selector on the right — an open ring that fills brass
- * when chosen. The previous version signalled selection with nothing but a
- * change of text colour, which read as prose rather than a control: people
- * looked at the screen and did not know they were meant to tap it. The ring is
- * the affordance; the hairlines keep it quiet.
+ * The trailing graduation makes each plate read as part of an instrument. A
+ * choice raises the plate and turns that graduation into the Signal, joining
+ * the selected answer to the enabled action without generic form chrome.
  */
 function Selector({ multiple, selected }: { multiple: boolean; selected: boolean }) {
+  const signal = useSignalTheme();
+
   return (
-    <View style={[styles.ring, multiple && styles.ringSquare, selected && styles.ringOn]}>
-      {selected ? <View style={[styles.pip, multiple && styles.pipSquare]} /> : null}
-    </View>
+    <View
+      style={[
+        styles.mark,
+        multiple && styles.markMultiple,
+        selected && styles.markOn,
+        selected && { backgroundColor: signal.primary, borderColor: signal.primary },
+      ]}
+    />
   );
 }
 
 function Row({
   choice,
+  compact,
   multiple,
   onPress,
   selected,
 }: {
   choice: Choice;
+  compact: boolean;
   multiple: boolean;
   onPress: () => void;
   selected: boolean;
@@ -49,10 +57,17 @@ function Row({
       accessibilityRole={multiple ? 'checkbox' : 'radio'}
       accessibilityState={{ checked: selected }}
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.row,
+        compact && styles.rowCompact,
+        selected && styles.rowOn,
+        pressed && styles.pressed,
+      ]}
     >
       <View style={styles.copy}>
-        <NorthText style={selected ? styles.chosen : styles.unchosen}>{choice.label}</NorthText>
+        <NorthText style={selected ? styles.chosen : styles.unchosen}>
+          {choice.label}
+        </NorthText>
         {choice.detail ? <NorthText variant="small">{choice.detail}</NorthText> : null}
       </View>
       <Selector multiple={multiple} selected={selected} />
@@ -106,7 +121,11 @@ function Door({
       accessibilityRole="radio"
       accessibilityState={{ checked: selected }}
       onPress={onPress}
-      style={({ pressed }) => [styles.door, pressed && styles.doorPressed]}
+      style={({ pressed }) => [
+        styles.door,
+        selected && styles.doorOn,
+        pressed && styles.doorPressed,
+      ]}
     >
       <NorthText style={selected ? styles.doorChosen : styles.doorLabel} variant="heading">
         {choice.label}
@@ -123,6 +142,10 @@ export function ChoiceInstrument({
   presentation = 'marks',
   values,
 }: ChoiceInstrumentProps) {
+  const { height, width } = useWindowDimensions();
+  const compact = width < 360;
+  const compactRows = height < 1000;
+
   function choose(value: string) {
     void selectionTick();
     if (!multiple) {
@@ -149,10 +172,17 @@ export function ChoiceInstrument({
 
   if (presentation === 'doors') {
     return (
-      <View style={styles.doors}>
+      <View style={[styles.doors, compact && styles.doorsCompact]}>
         {options.map((option, index) => (
           <View key={option.value} style={styles.doorCell}>
-            {index > 0 ? <View style={styles.seam} /> : null}
+            {index > 0 ? (
+              <View
+                style={[
+                  styles.seam,
+                  compact ? styles.seamHorizontal : styles.seamVertical,
+                ]}
+              />
+            ) : null}
             <Door
               choice={option}
               onPress={() => choose(option.value)}
@@ -165,10 +195,11 @@ export function ChoiceInstrument({
   }
 
   return (
-    <View style={styles.list}>
+    <View style={[styles.list, compactRows && styles.listCompact]}>
       {options.map((option) => (
         <Row
           choice={option}
+          compact={compactRows}
           key={option.value}
           multiple={multiple}
           onPress={() => choose(option.value)}
@@ -184,13 +215,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderColor: colors.line,
     borderCurve: 'continuous',
-    borderRadius: 10,
+    backgroundColor: colors.field,
+    borderRadius: radii.control,
     borderWidth: 1,
     gap: 1,
     // A chip has no intrinsic width cap by default, so a label longer than the
     // row grows the chip to its natural single-line width instead of wrapping
     // — past both screen edges on a long sentence. This forces a wrap instead.
-    maxWidth: '92%',
+    flexShrink: 1,
+    maxWidth: '100%',
+    minHeight: 44,
+    minWidth: 0,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
@@ -198,20 +233,24 @@ const styles = StyleSheet.create({
     color: colors.slate,
   },
   chipOn: {
-    backgroundColor: colors.fieldRaised,
+    backgroundColor: colors.brass,
     borderColor: colors.brass,
   },
   chipText: {
     color: colors.ash,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   chipTextOn: {
-    color: colors.paper,
+    color: colors.brassOn,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   chips: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
   },
   chosen: {
     color: colors.paper,
@@ -219,93 +258,123 @@ const styles = StyleSheet.create({
   copy: {
     flex: 1,
     gap: spacing.xs,
+    minWidth: 0,
   },
   door: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    backgroundColor: colors.field,
+    borderColor: colors.line,
+    borderRadius: radii.card,
+    borderWidth: 1,
     flex: 1,
-    gap: spacing.lg,
+    gap: spacing.md,
     justifyContent: 'center',
+    minHeight: 88,
     minWidth: 0,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
   },
   doorCell: {
-    flex: 1,
     minWidth: 0,
   },
   doorChosen: {
-    color: colors.paper,
+    color: colors.brassOn,
+    flexShrink: 1,
     maxWidth: '100%',
-    textAlign: 'center',
+    textAlign: 'left',
+    width: '100%',
   },
   doorLabel: {
-    color: colors.ash,
+    color: colors.paper,
+    flexShrink: 1,
     maxWidth: '100%',
-    textAlign: 'center',
+    textAlign: 'left',
+    width: '100%',
   },
   doorPressed: {
-    backgroundColor: colors.field,
+    opacity: motion.pressOpacity,
+  },
+  doorOn: {
+    backgroundColor: colors.brass,
+    borderColor: colors.brass,
   },
   doorRule: {
+    backgroundColor: colors.line,
+    height: 3,
+    width: 28,
+  },
+  doorRuleOn: {
+    backgroundColor: colors.brassOn,
+    width: 64,
+  },
+  doors: {
+    gap: spacing.md,
+    minHeight: 188,
+  },
+  doorsCompact: {
+    minHeight: 176,
+  },
+  list: {
+    gap: spacing.sm,
+    minWidth: 0,
+    width: '100%',
+  },
+  listCompact: {
+    gap: 6,
+  },
+  pressed: {
+    opacity: motion.pressOpacity,
+  },
+  mark: {
     backgroundColor: colors.line,
     height: 2,
     width: 22,
   },
-  doorRuleOn: {
-    backgroundColor: colors.brass,
-    width: 44,
-  },
-  doors: {
-    flexDirection: 'row',
-    marginHorizontal: -spacing.screen,
-    minHeight: 220,
-  },
-  list: {
-    borderTopColor: colors.lineSoft,
-    borderTopWidth: 1,
-  },
-  pip: {
-    backgroundColor: colors.brass,
-    borderRadius: 5,
-    height: 10,
-    width: 10,
-  },
-  pipSquare: {
-    borderRadius: 2,
-  },
-  pressed: {
-    backgroundColor: colors.field,
-    opacity: motion.pressOpacity,
-  },
-  ring: {
-    alignItems: 'center',
+  markMultiple: {
+    backgroundColor: 'transparent',
     borderColor: colors.line,
-    borderRadius: 11,
+    borderRadius: 3,
     borderWidth: 1,
-    height: 22,
-    justifyContent: 'center',
-    width: 22,
+    height: 18,
+    width: 18,
   },
-  ringOn: {
-    borderColor: colors.brass,
-  },
-  ringSquare: {
-    borderRadius: 4,
+  markOn: {
+    height: 3,
+    width: 32,
   },
   row: {
     alignItems: 'center',
-    borderBottomColor: colors.lineSoft,
-    borderBottomWidth: 1,
+    backgroundColor: colors.field,
+    borderColor: colors.line,
+    borderRadius: radii.card,
+    borderWidth: 1,
     flexDirection: 'row',
     gap: spacing.lg,
-    minHeight: 64,
-    paddingHorizontal: spacing.xs,
+    minHeight: 72,
+    minWidth: 0,
+    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
+  },
+  rowCompact: {
+    minHeight: 44,
+    paddingVertical: spacing.sm,
+  },
+  rowOn: {
+    backgroundColor: colors.fieldRaised,
   },
   seam: {
     backgroundColor: colors.lineSoft,
+    position: 'absolute',
+  },
+  seamHorizontal: {
+    height: 1,
+    left: 0,
+    right: 0,
+    top: 0,
+  },
+  seamVertical: {
     bottom: 0,
     left: 0,
-    position: 'absolute',
     top: 0,
     width: 1,
   },

@@ -8,6 +8,7 @@ import {
   closeAction,
   letGo,
   openAction,
+  setJourneyName,
   setPreferences,
   spendSwap,
 } from '@/domains/journey/journey';
@@ -40,6 +41,7 @@ type JourneyStore = {
   open: (action: OpenAction) => void;
   pendingMovement: PendingMovement | null;
   preferences: (preferences: Preferences) => void;
+  rename: (name: string) => void;
   settleNeedle: () => void;
   swap: (actionId: string, at: number) => void;
 };
@@ -68,7 +70,7 @@ export const useJourney = create<JourneyStore>((set, get) => ({
       changedAt: at,
       journey: persist(next),
       pendingMovement:
-        next.bearing === journey.bearing ? null : { from: journey.bearing, to: next.bearing },
+        next.direction === journey.direction ? null : { from: journey.direction, to: next.direction },
     });
   },
 
@@ -103,6 +105,12 @@ export const useJourney = create<JourneyStore>((set, get) => ({
     const journey = get().journey;
     if (!journey) return;
     set({ journey: persist(setPreferences(journey, preferences)) });
+  },
+
+  rename: (name) => {
+    const journey = get().journey;
+    if (!journey) return;
+    set({ journey: persist(setJourneyName(journey, name)) });
   },
 
   settleNeedle: () => set({ pendingMovement: null }),

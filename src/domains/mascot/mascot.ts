@@ -3,9 +3,11 @@
  * complete destination scene; the mascot owns how it gets there.
  */
 export type MascotExpression =
+  | 'blink'
   | 'neutral'
   | 'focused'
   | 'loading'
+  | 'pointer'
   | 'proud'
   | 'sad'
   | 'concerned'
@@ -52,8 +54,8 @@ export type MascotGesture = {
 };
 
 export type MascotScene = {
-  /** Bearing used when the eyes become the compass needle. */
-  bearing?: number;
+  /** Direction used when the eyes become the compass needle. */
+  direction?: number;
   /** 0-1. Inscribes completed graduations around the outer bezel. */
   completion?: number;
   expression: MascotExpression;

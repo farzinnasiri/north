@@ -12,8 +12,8 @@ import Svg, { Circle, G, Line, Polygon } from 'react-native-svg';
 import { colors, motion } from '@/theme';
 
 type CompassProgressProps = {
-  /** Running bearing estimate from the answers so far, 0-180. */
-  bearing: number;
+  /** Running direction estimate from the answers so far, 0-180. */
+  direction: number;
   /** Questions answered, 0-20. Fills the ring. */
   answered: number;
   total?: number;
@@ -30,12 +30,12 @@ type CompassProgressProps = {
  */
 export function CompassProgress({
   answered,
-  bearing,
+  direction,
   size = 72,
   total = 20,
 }: CompassProgressProps) {
   const reduceMotion = useReducedMotion();
-  const rotation = useSharedValue(bearing);
+  const rotation = useSharedValue(direction);
   const centre = size / 2;
   const rim = centre - 2;
   const ratio = Math.min(1, answered / total);
@@ -43,16 +43,16 @@ export function CompassProgress({
 
   useEffect(() => {
     if (reduceMotion) {
-      rotation.value = withTiming(bearing, { duration: motion.settle });
+      rotation.value = withTiming(direction, { duration: motion.settle });
       return;
     }
-    rotation.value = withSpring(bearing, {
+    rotation.value = withSpring(direction, {
       damping: motion.needleDamping,
       mass: motion.needleMass,
       overshootClamping: true,
       stiffness: motion.needleStiffness,
     });
-  }, [bearing, reduceMotion, rotation]);
+  }, [direction, reduceMotion, rotation]);
 
   const needle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${rotation.value}deg` }],

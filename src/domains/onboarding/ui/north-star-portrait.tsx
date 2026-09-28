@@ -9,14 +9,14 @@ import type { NorthStarType } from '@/domains/onboarding/onboarding';
  * so a renamed file breaks in a single module.
  */
 const PORTRAITS: Record<NorthStarType, number> = {
-  'patriarch': require('../../../../assets/archetypes/patriarch.png'),
+  patriarch: require('../../../../assets/archetypes/patriarch.png'),
   'modern-man': require('../../../../assets/archetypes/modern-man.png'),
-  'rogue': require('../../../../assets/archetypes/rogue.png'),
+  rogue: require('../../../../assets/archetypes/rogue.png'),
   'laughing-wolf': require('../../../../assets/archetypes/laughing-wolf.png'),
-  'godfather': require('../../../../assets/archetypes/godfather.png'),
+  godfather: require('../../../../assets/archetypes/godfather.png'),
   'kind-father': require('../../../../assets/archetypes/kind-father.png'),
-  'freethinker': require('../../../../assets/archetypes/freethinker.png'),
-  'playboy': require('../../../../assets/archetypes/playboy.png'),
+  freethinker: require('../../../../assets/archetypes/freethinker.png'),
+  playboy: require('../../../../assets/archetypes/playboy.png'),
 };
 
 type NorthStarPortraitProps = {

@@ -1,4 +1,4 @@
-import type { AxisReading } from '@/domains/bearing/initial-bearing';
+import type { AxisReading } from '@/domains/direction/initial-direction';
 import { CATALOGUE } from '@/domains/content/catalogue';
 import { nextAction } from '@/domains/content/selection';
 
@@ -16,6 +16,57 @@ describe('choosing the next action', () => {
     const chosen = nextAction({ closed: [], passed: [], readings });
 
     expect(chosen.axis).toBe('desire');
+  });
+
+  it('uses what he said is costing him to choose the first action', () => {
+    const chosen = nextAction({
+      closed: [],
+      honestThing: 'conversation',
+      northStar: 'patriarch',
+      passed: [],
+      readings,
+    });
+
+    expect(chosen.id).toBe('frame-say-it');
+  });
+
+  it('uses the closest authored action within the reflected area', () => {
+    const chosen = nextAction({
+      closed: [],
+      honestThing: 'body',
+      northStar: 'modern-man',
+      passed: [],
+      readings,
+    });
+
+    expect(chosen.id).toBe('craft-body');
+  });
+
+  it('lets the chosen North Star order subsequent Actions', () => {
+    const closeReadings: AxisReading[] = [
+      { axis: 'frame', off: 60 },
+      { axis: 'desire', off: 10 },
+      { axis: 'connection', off: 20 },
+      { axis: 'appetite', off: 10 },
+      { axis: 'craft', off: 50 },
+      { axis: 'agency', off: 10 },
+    ];
+
+    const patriarch = nextAction({
+      closed: ['frame-say-it'],
+      northStar: 'patriarch',
+      passed: [],
+      readings: closeReadings,
+    });
+    const modernMan = nextAction({
+      closed: ['frame-say-it'],
+      northStar: 'modern-man',
+      passed: [],
+      readings: closeReadings,
+    });
+
+    expect(patriarch.axis).toBe('craft');
+    expect(modernMan.axis).toBe('frame');
   });
 
   it('gives the same action for the same inputs, every time', () => {

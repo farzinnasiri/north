@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.control,
     borderWidth: 1,
     justifyContent: 'center',
-    minHeight: 56,
+    minHeight: 62,
     overflow: 'hidden',
     width: '100%',
   },
@@ -170,9 +170,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   label: {
-    fontFamily: typography.monoMedium,
-    fontSize: 12,
-    letterSpacing: 1.6,
+    fontFamily: typography.editorialMedium,
+    fontSize: 20,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
   },
   outlined: {
     color: colors.brass,

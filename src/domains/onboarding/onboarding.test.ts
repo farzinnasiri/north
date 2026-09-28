@@ -1,11 +1,12 @@
-import { placeholderBearingRule } from '@/domains/bearing/initial-bearing';
+import type { DirectionWeights } from '@/domains/direction/initial-direction';
+import { directionWeightsForNorthStar } from '@/domains/onboarding/north-star';
 import {
-  FUTURE_DOMAIN_OPTIONS,
-  FUTURE_HORIZONS,
+  AVOIDED_OPTIONS,
+  NORTH_STAR_OPTIONS,
   QUESTIONS,
   answerFor,
   getAxisReadings,
-  getInitialBearing,
+  getInitialDirection,
   scoreQuestion,
 } from '@/domains/onboarding/onboarding';
 
@@ -15,197 +16,172 @@ function question(id: string) {
   return match;
 }
 
-describe('onboarding readings', () => {
-  it('averages the four literal readings within each Axis', () => {
-    const frame = QUESTIONS.filter((question) => question.axis === 'frame');
-    const answers = Object.fromEntries(
-      [0, 20, 40, 100].map((off, index) => {
-        const answer = answerFor(frame[index], index, off);
-        return [answer.id, answer];
-      }),
-    );
+describe('the 24-question Reality bank', () => {
+  it('asks four behavior questions for each Axis', () => {
+    expect(QUESTIONS).toHaveLength(24);
 
-    expect(getAxisReadings(answers)[0]).toStrictEqual({ axis: 'frame', off: 40 });
+    for (const axis of ['frame', 'desire', 'connection', 'appetite', 'craft', 'agency'] as const) {
+      expect(QUESTIONS.filter((entry) => entry.axis === axis)).toHaveLength(4);
+    }
   });
 
-  it('keeps the unsettled Bearing rule behind one replaceable seam', () => {
-    const answers = Object.fromEntries(
-      QUESTIONS.map((question) => {
-        const answer = answerFor(question, 'answer', 50);
-        return [answer.id, answer];
-      }),
-    );
-
-    expect(getInitialBearing(answers, placeholderBearingRule)).toBe(90);
-  });
-
-  it('scores Frame from the settled literal readings', () => {
-    expect([0, 1, 2, 3, 4].map((value) => scoreQuestion(question('F1'), value))).toStrictEqual([
-      0, 20, 45, 75, 100,
-    ]);
-    expect(scoreQuestion(question('F2'), { choice: 'say-it' })).toBe(10);
-    expect(scoreQuestion(question('F2'), { choice: 'let-it-go' })).toBe(90);
-    expect([0, 3, 9].map((value) => scoreQuestion(question('F3'), value))).toStrictEqual([
-      0, 36, 100,
-    ]);
-    expect([0, 100].map((value) => scoreQuestion(question('F4'), value))).toStrictEqual([
-      100, 0,
-    ]);
-  });
-
-  it('scores Desire from the settled literal readings', () => {
-    expect([0, 1, 2, 3, 4].map((value) => scoreQuestion(question('D1'), value))).toStrictEqual([
-      0, 25, 55, 80, 100,
-    ]);
-    expect([0, 4, 11].map((value) => scoreQuestion(question('D2'), value))).toStrictEqual([
-      0, 40, 100,
-    ]);
-    expect([0, 100].map((value) => scoreQuestion(question('D3'), value))).toStrictEqual([
-      100, 0,
-    ]);
-    expect([0, 1, 2, 3, 4, 5].map((value) => scoreQuestion(question('D4'), value))).toStrictEqual([
-      40, 55, 60, 85, 90, 75,
+  it('uses the accepted plain-language candidate prompts', () => {
+    expect(QUESTIONS.map((entry) => entry.prompt)).toStrictEqual([
+      'In the past 30 days, when you thought someone was wrong, how often did you tell them you disagreed?',
+      'The last time someone asked for more than you could give, what did you do?',
+      'In the past 30 days, how many times did you say yes and later wish you had said no?',
+      'In the past 30 days, how many times did you go along with someone else so they would not be upset with you?',
+      'In the past 30 days, when you wanted to know someone better, how often did you start the conversation?',
+      'In the past 30 days, how often did you ask for something they might say no to?',
+      "I decide I can't do it before I try.",
+      'In the past 30 days, how many times did being afraid they would say no stop you from doing something you still wanted to do?',
+      'If you were in trouble at 2 a.m., how many people could you call?',
+      'In the past 30 days, how many times did someone close to you ask how you were and keep listening after your first answer?',
+      'In the past 7 days, how many personal conversations did you start with someone you know?',
+      'In the past 30 days, how many times did you ask someone how they were and keep listening after their first answer?',
+      'In the past 7 days, on how many days did you spend your free time the way you planned?',
+      'Think of the last time you opened TikTok, Instagram, X, YouTube, or a similar app and told yourself "five more minutes." How long did you stay?',
+      'In the past 30 days, how many times did you handle a bad day in a way that took more time or energy than you meant?',
+      'In the past 30 days, how many times did a habit cause a problem for your sleep, time, work, study, or someone close to you?',
+      'In the past year, how many skills did you use to make, fix, teach, or solve something for someone else?',
+      'When did you last finish something nobody made you finish?',
+      'In the past 7 days, on how many days did you practice a skill you want to improve?',
+      'In the past 7 days, on how many days did you exercise or take care of your body as planned?',
+      'In the past 7 days, how many times did you take a step that mattered to you without anyone asking?',
+      'When I do not know how to do something, I can usually find a first step.',
+      'Think of the last plan that went wrong. What did you do next?',
+      'Even when luck or other people shape the result, I can usually change what happens next.',
     ]);
   });
 
-  it('scores Connection from the settled literal readings', () => {
-    // "Honestly, nobody" is the furthest-off reading regardless of anything else.
-    expect(scoreQuestion(question('C1'), ['nobody'])).toBe(100);
-    expect(scoreQuestion(question('C1'), ['friend', 'sibling'])).toBe(60);
-    expect(
-      scoreQuestion(question('C1'), ['friend', 'sibling', 'parent', 'partner', 'colleague']),
-    ).toBe(0);
-    expect([0, 1, 2, 3, 4].map((value) => scoreQuestion(question('C2'), value))).toStrictEqual([
-      0, 30, 60, 85, 100,
-    ]);
-    expect([0, 4, 8].map((value) => scoreQuestion(question('C3'), value))).toStrictEqual([
-      100, 44, 0,
-    ]);
-    expect(scoreQuestion(question('C4'), { choice: 'someone', name: 'Sam' })).toBe(15);
-    expect(scoreQuestion(question('C4'), { choice: 'nobody' })).toBe(95);
+  it('defines one deliberate emphasis phrase inside every prompt', () => {
+    for (const entry of QUESTIONS) {
+      expect(entry.prompt).toContain(entry.emphasis);
+    }
   });
 
-  it('scores Appetite from the settled literal readings', () => {
-    expect([0, 4, 8, 24].map((value) => scoreQuestion(question('A1'), value))).toStrictEqual([
-      0, 50, 100, 100,
-    ]);
-    // The gym and "nothing" are free; everything else adds twenty.
-    expect(scoreQuestion(question('A2'), ['gym'])).toBe(20);
-    expect(scoreQuestion(question('A2'), ['phone', 'games', 'gym'])).toBe(60);
-    // Paying for attention: none is free, each paid channel adds thirty.
-    expect(scoreQuestion(question('A5'), ['none'])).toBe(10);
-    expect(scoreQuestion(question('A5'), ['dating', 'onlyfans'])).toBe(70);
-    expect([0, 1, 2, 3, 4].map((value) => scoreQuestion(question('A3'), value))).toStrictEqual([
+  it('does not bring back the rejected moralised or status-biased items', () => {
+    const copy = QUESTIONS.flatMap((entry) => [
+      entry.prompt,
+      ...('options' in entry ? entry.options.map((option) => option.label) : []),
+    ]).join(' ').toLowerCase();
+
+    for (const rejected of [
+      'walk up to a woman',
+      'lucky person',
+      'happy or satisfied',
+      'someone would pay',
+      'keeps his word',
+      'put money on a game',
+    ]) {
+      expect(copy).not.toContain(rejected);
+    }
+  });
+
+  it('keeps context answers out of the score instead of treating them as failure', () => {
+    expect(scoreQuestion(question('F1'), 0)).toBeNull();
+    expect(scoreQuestion(question('F2'), 5)).toBeNull();
+    expect(scoreQuestion(question('D8'), 5)).toBeNull();
+    expect(scoreQuestion(question('A14'), 5)).toBeNull();
+    expect(scoreQuestion(question('A14'), 6)).toBeNull();
+    expect(scoreQuestion(question('G23'), 5)).toBeNull();
+  });
+
+  it('scores ordered behavior responses without changing their displayed order', () => {
+    expect([1, 2, 3, 4, 5].map((value) => scoreQuestion(question('F1'), value))).toStrictEqual([
       100, 75, 50, 25, 0,
     ]);
-    expect([5, 92.5, 180, 300].map((value) => scoreQuestion(question('A4'), value))).toStrictEqual([
-      0, 50, 100, 100,
+    expect([0, 1, 2, 3, 4, 5].map((value) => scoreQuestion(question('D7'), value))).toStrictEqual([
+      0, 20, 40, 60, 80, 100,
+    ]);
+    expect([0, 1, 2, 3, 4].map((value) => scoreQuestion(question('C9'), value))).toStrictEqual([
+      100, 75, 50, 25, 0,
+    ]);
+    expect([0, 1, 2, 3, 4].map((value) => scoreQuestion(question('A14'), value))).toStrictEqual([
+      0, 25, 50, 75, 100,
+    ]);
+    expect([0, 1, 2, 3, 4].map((value) => scoreQuestion(question('G23'), value))).toStrictEqual([
+      0, 0, 15, 0, 100,
     ]);
   });
 
-  it('scores Craft from the settled literal readings', () => {
-    expect([0, 2, 4, 8].map((value) => scoreQuestion(question('K1'), value))).toStrictEqual([
-      100, 50, 0, 0,
-    ]);
-    expect([0, 1, 2, 3, 4].map((value) => scoreQuestion(question('K2'), value))).toStrictEqual([
-      0, 25, 55, 80, 100,
-    ]);
-    expect([0, 100].map((value) => scoreQuestion(question('K3'), value))).toStrictEqual([
-      100, 0,
-    ]);
-    expect(scoreQuestion(question('K4'), [
-      'Your screen', 'Your body', 'Your work', 'Your skills', 'Your friends',
-    ])).toBe(100);
-    expect(scoreQuestion(question('K4'), [
-      'Your body', 'Your work', 'Your skills', 'Your friends', 'Your screen',
-    ])).toBe(0);
+  it('ignores unscored context when averaging an Axis', () => {
+    const first = answerFor(question('F1'), 0, scoreQuestion(question('F1'), 0));
+    const second = answerFor(question('F2'), 4, scoreQuestion(question('F2'), 4));
+    const third = answerFor(question('F3'), 0, scoreQuestion(question('F3'), 0));
+
+    expect(getAxisReadings({ F1: first, F2: second, F3: third })).toContainEqual({
+      axis: 'frame',
+      off: 50,
+    });
   });
 
-  it('reads unspoken interest and being unmissed as the newer failures', () => {
-    // Every woman he is close to and has said nothing to costs twenty-five.
-    expect(scoreQuestion(question('D5'), 0)).toBe(0);
-    expect(scoreQuestion(question('D5'), 2)).toBe(50);
-    expect(scoreQuestion(question('D5'), 8)).toBe(100);
+  it('uses the chosen North Star to weight the same Reality answers', () => {
+    const offByAxis = {
+      agency: 50,
+      appetite: 50,
+      connection: 0,
+      craft: 100,
+      desire: 50,
+      frame: 50,
+    } as const;
+    const answers = Object.fromEntries(QUESTIONS.map((entry) => {
+      const answer = answerFor(entry, 0, offByAxis[entry.axis]);
+      return [answer.id, answer];
+    }));
 
-    // Nobody noticing a week of silence is the furthest-off reading.
-    expect(scoreQuestion(question('C5'), 0)).toBe(100);
-    expect(scoreQuestion(question('C5'), 5)).toBe(0);
+    const patriarch = getInitialDirection(answers, directionWeightsForNorthStar('patriarch'));
+    const modernMan = getInitialDirection(answers, directionWeightsForNorthStar('modern-man'));
+
+    expect(patriarch).toBeGreaterThan(modernMan);
   });
 
-  it('scores measuring yourself against strangers as further off than against your past self', () => {
-    const against = (index: number) => scoreQuestion(question('K5'), index);
+  it('maps an equal weighted Reality gap onto the compass arc', () => {
+    const answers = Object.fromEntries(QUESTIONS.map((entry) => {
+      const answer = answerFor(entry, 0, 50);
+      return [answer.id, answer];
+    }));
+    const equalWeights: DirectionWeights = {
+      agency: 1,
+      appetite: 1,
+      connection: 1,
+      craft: 1,
+      desire: 1,
+      frame: 1,
+    };
 
-    expect(against(0)).toBeLessThan(against(3));
-    expect(against(3)).toBe(95);
-  });
-
-  it('reads a man who cannot picture his future self as the furthest off', () => {
-    // Hershfield: continuity, not which future he would pick. Every future-self
-    // question scores the same way, so the trio measures one construct.
-    for (const id of ['G6', 'G7', 'G8']) {
-      expect(scoreQuestion(question(id), ['blank'])).toBe(100);
-      expect(scoreQuestion(question(id), [])).toBe(100);
-    }
-
-    expect(scoreQuestion(question('G6'), ['building'])).toBe(15);
-    expect(scoreQuestion(question('G7'), ['one', 'few'])).toBe(15);
-    expect(scoreQuestion(question('G8'), ['stronger'])).toBe(15);
-  });
-
-  it('scores an external locus of control as further off than an internal one', () => {
-    const luck = (index: number) => scoreQuestion(question('G2'), index);
-
-    expect(luck(0)).toBe(95);
-    expect(luck(2)).toBe(10);
-    expect(luck(0)).toBeGreaterThan(luck(1));
-    expect(luck(1)).toBeGreaterThan(luck(2));
-  });
-
-  it('treats confidence as earned rather than innate', () => {
-    // Bandura: mastery experiences are the primary source, which is what a
-    // closed action is. Believing it is innate is the off-course reading.
-    expect(scoreQuestion(question('G3'), { choice: 'earned' })).toBe(10);
-    expect(scoreQuestion(question('G3'), { choice: 'innate' })).toBe(85);
-  });
-
-  it('gives every axis at least five readings', () => {
-    const axes = ['agency', 'appetite', 'connection', 'craft', 'desire', 'frame'] as const;
-
-    for (const axis of axes) {
-      expect(QUESTIONS.filter((entry) => entry.axis === axis).length).toBeGreaterThanOrEqual(5);
-    }
+    expect(getInitialDirection(answers, equalWeights)).toBe(90);
   });
 });
 
-describe('the future-self domains', () => {
-  it('carries no scoring metadata, so no domain or combination can be rewarded', () => {
-    // If someone later adds an `off` field to sneak scoring in, this fails —
-    // that is the point: this question must stay structurally unscoreable.
-    for (const option of FUTURE_DOMAIN_OPTIONS) {
-      expect(Object.keys(option).sort()).toStrictEqual(['label', 'value']);
-    }
+describe('the North Star archetypes', () => {
+  it('keeps the original eight authored archetypes and reference figures', () => {
+    expect(NORTH_STAR_OPTIONS.map((option) => option.label)).toStrictEqual([
+      'The Patriarch',
+      'The Modern Man',
+      'The Rogue',
+      'The Laughing Wolf',
+      'The Godfather',
+      'The Kind Father',
+      'The Freethinker',
+      'The Playboy',
+    ]);
+
+    expect(NORTH_STAR_OPTIONS[0].figures).toStrictEqual(['Aragorn', "T'Challa", 'Marcus Aurelius']);
   });
+});
 
-  it('never appears in the scored question set', () => {
-    const futureSelfIds = FUTURE_DOMAIN_OPTIONS.map((option) => option.value);
-    const questionIds = QUESTIONS.map((entry) => entry.id);
-
-    for (const id of futureSelfIds) {
-      expect(questionIds).not.toContain(id);
-    }
-  });
-
-  it('offers three distinct horizons, each with its own prompt', () => {
-    expect(FUTURE_HORIZONS.map((entry) => entry.horizon)).toStrictEqual(['near', 'mid', 'far']);
-    expect(new Set(FUTURE_HORIZONS.map((entry) => entry.title)).size).toBe(3);
-  });
-
-  it('offers the same neutral domains at every horizon, intellectual and adventurous and physical alike', () => {
-    expect(FUTURE_DOMAIN_OPTIONS.map((option) => option.value)).toStrictEqual([
-      'intellectual',
-      'adventurous',
-      'physical',
-      'other',
+describe('the final Reality reflection', () => {
+  it('offers the eight accepted unscored answers', () => {
+    expect(AVOIDED_OPTIONS.map((option) => option.label)).toStrictEqual([
+      'A conversation I keep avoiding',
+      'Something I keep saying I will start',
+      'A habit that keeps taking more than I mean to give',
+      'An apology or repair I owe',
+      'Taking care of my body or health',
+      'Money I keep avoiding',
+      'Something else',
+      'I am not sure yet',
     ]);
   });
 });

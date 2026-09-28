@@ -1,15 +1,15 @@
 import type { ClosedAction, OpenAction } from '@/domains/actions/action';
 import { daysOverdue, isOverdue } from '@/domains/actions/action';
 import { swapsLeft } from '@/domains/actions/swaps';
-import type { AxisReading } from '@/domains/bearing/initial-bearing';
+import type { AxisReading } from '@/domains/direction/initial-direction';
 import {
   HOLD_NORTH_DAYS,
   NEAR_NORTH_DEGREES,
-  bearingAfterClose,
-  bearingAfterMiss,
+  directionAfterClose,
+  directionAfterMiss,
   daysHeldAtNorth,
   degreesForClose,
-} from '@/domains/bearing/movement';
+} from '@/domains/direction/movement';
 import type { NorthStarType } from '@/domains/onboarding/onboarding';
 
 export type Preferences = {
@@ -18,14 +18,13 @@ export type Preferences = {
 };
 
 /**
- * Everything North knows about a person after the Contract is committed. It is
+ * Everything North knows about a person after onboarding is completed. It is
  * one record because the product is one continuous line from the first Open
  * Action to the Exit, and splitting it would only invite two of them to
  * disagree about where he stands.
  */
 export type Journey = {
-  alterEgo: string;
-  bearing: number;
+  direction: number;
   closed: ClosedAction[];
   committedAt: number;
   honestThing: string;
@@ -36,16 +35,15 @@ export type Journey = {
   passed: string[];
   preferences: Preferences;
   readings: AxisReading[];
-  /** When the Bearing first reached north, which starts Hold North. */
+  /** When the Direction first reached north, which starts Hold North. */
   reachedNorthAt: number | null;
-  startingBearing: number;
+  startingDirection: number;
   swapsUsedAt: number[];
 };
 
 type BeginInput = {
-  alterEgo: string;
   at: number;
-  bearing: number;
+  direction: number;
   honestThing: string;
   name: string;
   northStar: NorthStarType | null;
@@ -53,17 +51,15 @@ type BeginInput = {
 };
 
 export function beginJourney({
-  alterEgo,
   at,
-  bearing,
+  direction,
   honestThing,
   name,
   northStar,
   readings,
 }: BeginInput): Journey {
   return {
-    alterEgo,
-    bearing,
+    direction,
     closed: [],
     committedAt: at,
     honestThing,
@@ -73,8 +69,8 @@ export function beginJourney({
     passed: [],
     preferences: { haptics: true, sound: true },
     readings,
-    reachedNorthAt: bearing === 0 ? at : null,
-    startingBearing: bearing,
+    reachedNorthAt: direction === 0 ? at : null,
+    startingDirection: direction,
     swapsUsedAt: [],
   };
 }
@@ -106,13 +102,13 @@ export function closeAction(journey: Journey, { at, kept, note }: CloseInput): J
   if (!open) return journey;
 
   const earned = kept ? degreesForClose(open.deadlineDays) : 0;
-  const bearing = kept
-    ? bearingAfterClose(journey.bearing, open.deadlineDays)
-    : bearingAfterMiss(journey.bearing);
+  const direction = kept
+    ? directionAfterClose(journey.direction, open.deadlineDays)
+    : directionAfterMiss(journey.direction);
 
   return {
     ...journey,
-    bearing,
+    direction,
     closed: [
       ...journey.closed,
       {
@@ -125,7 +121,7 @@ export function closeAction(journey: Journey, { at, kept, note }: CloseInput): J
     ],
     open: null,
     reachedNorthAt:
-      journey.reachedNorthAt ?? (bearing === 0 ? at : null),
+      journey.reachedNorthAt ?? (direction === 0 ? at : null),
   };
 }
 
@@ -149,13 +145,18 @@ export function setPreferences(journey: Journey, preferences: Preferences): Jour
   return { ...journey, preferences };
 }
 
+export function setJourneyName(journey: Journey, name: string): Journey {
+  const trimmed = name.trim();
+  return trimmed.length > 0 ? { ...journey, name: trimmed } : journey;
+}
+
 export type ActionState =
   | { kind: 'idle'; lastClosedAt: number | null }
   | { kind: 'running'; action: OpenAction }
   | { kind: 'overdue'; action: OpenAction; days: number };
 
 /**
- * What the home screen is answering. The Action and the Bearing are read
+ * What the home screen is answering. The Action and the Direction are read
  * separately on purpose: a man can be one day from the Exit and still have an
  * Action running, and collapsing the two into a single enum is how a screen
  * ends up lying about one of them.
@@ -183,7 +184,7 @@ export function northState(journey: Journey, now: number): NorthState {
     if (daysHeld >= HOLD_NORTH_DAYS) return { kind: 'exit' };
     return { daysHeld, daysLeft: HOLD_NORTH_DAYS - daysHeld, kind: 'holding' };
   }
-  return journey.bearing <= NEAR_NORTH_DEGREES ? { kind: 'near' } : { kind: 'travelling' };
+  return journey.direction <= NEAR_NORTH_DEGREES ? { kind: 'near' } : { kind: 'travelling' };
 }
 
 export function keptCount(journey: Journey): number {
@@ -192,5 +193,5 @@ export function keptCount(journey: Journey): number {
 
 /** Degrees closed since onboarding. The one number that is genuinely earned. */
 export function degreesTravelled(journey: Journey): number {
-  return Math.round((journey.startingBearing - journey.bearing) * 100) / 100;
+  return Math.round((journey.startingDirection - journey.direction) * 100) / 100;
 }

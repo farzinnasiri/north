@@ -22,9 +22,9 @@ functions. Create a directory only when implementing the first working slice.
 
 | Domain | Owns | Does not own |
 | --- | --- | --- |
-| onboarding | Reality, North Star, contract, initial calibration flow | The unresolved life axes or bearing formula |
-| actions | Proposals, naming, deadlines, closeouts, notes, swaps | Bearing movement policy or content authoring |
-| bearing | Bearing state, movement policy, recalibration, Hold North | Action lifecycle or the unresolved formula |
+| onboarding | Reality, North Star, contract, initial calibration flow | The unresolved life axes or direction formula |
+| actions | Proposals, naming, deadlines, closeouts, notes, swaps | Direction movement policy or content authoring |
+| direction | Direction state, movement policy, recalibration, Hold North | Action lifecycle or the unresolved formula |
 | content | Authored Actions and Lessons; deterministic selection inputs | LLM generation or Action lifecycle |
 | journey | Cross-stage lifecycle from first open through Exit | Domain persistence copied from the domains above |
 | mascot | Frontend scene vocabulary, expression geometry, and restrained motion | Screen-specific reaction policy or durable state |

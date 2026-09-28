@@ -36,6 +36,21 @@ const COLORS: Record<string, string> = {
   'on-surface': 'paper',
   'on-surface-muted': 'ash',
   'on-surface-subtle': 'slate',
+  'signal-gold': 'signalGold',
+  'signal-gold-light': 'signalGoldLight',
+  'signal-gold-muted': 'signalGoldMuted',
+  'signal-tide': 'signalTide',
+  'signal-tide-light': 'signalTideLight',
+  'signal-tide-muted': 'signalTideMuted',
+  'signal-cobalt': 'signalCobalt',
+  'signal-cobalt-light': 'signalCobaltLight',
+  'signal-cobalt-muted': 'signalCobaltMuted',
+  'axis-agency': 'axisAgency',
+  'axis-frame': 'axisFrame',
+  'axis-desire': 'axisDesire',
+  'axis-connection': 'axisConnection',
+  'axis-appetite': 'axisAppetite',
+  'axis-craft': 'axisCraft',
 };
 
 const SPACING: Record<string, string> = {
@@ -63,6 +78,8 @@ const TYPE_SCALE: Record<string, string> = {
 // name a platform reports is the filename, so this map is about build output,
 // not design intent, and stays out of DESIGN.md.
 const FONT_FILES = {
+  editorial: 'BarlowCondensed_600SemiBold',
+  editorialMedium: 'BarlowCondensed_700Bold',
   sans: 'Inter_400Regular',
   sansMedium: 'Inter_500Medium',
   mono: 'JetBrainsMono_400Regular',

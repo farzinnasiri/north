@@ -14,12 +14,14 @@ export function Surface({ children, style }: SurfaceProps) {
       style={[
         {
           backgroundColor: colors.field,
-          borderColor: colors.lineSoft,
+          borderColor: colors.line,
           borderCurve: 'continuous',
           borderRadius: radii.card,
           borderWidth: 1,
           gap: spacing.md,
-          padding: spacing.lg,
+          overflow: 'hidden',
+          paddingHorizontal: spacing.lg,
+          paddingVertical: spacing.lg,
         },
         style,
       ]}

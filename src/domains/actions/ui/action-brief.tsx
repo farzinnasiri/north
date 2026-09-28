@@ -13,7 +13,7 @@ type ActionBriefProps = {
 
 /**
  * The Action as he reads it: the direction, the clarifier that removes the easy
- * reading of it, and why this one. The lesson carries a two-pixel edge rather
+ * reading of it, and why this one. The lesson carries a two-pixel rule rather
  * than a card, because it explains the moment and must not become a banner.
  */
 export function ActionBrief({ action, named }: ActionBriefProps) {
@@ -49,10 +49,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   lesson: {
-    borderLeftColor: colors.brassDim,
-    borderLeftWidth: 2,
-    gap: spacing.xs,
-    paddingLeft: spacing.lg,
+    borderTopColor: colors.brass,
+    borderTopWidth: 2,
+    gap: spacing.sm,
+    paddingTop: spacing.lg,
   },
   named: {
     gap: spacing.sm,

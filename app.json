@@ -16,7 +16,7 @@
     "android": {
       "predictiveBackGestureEnabled": false,
       "adaptiveIcon": {
-        "backgroundColor": "#0F1319",
+        "backgroundColor": "#090B0C",
         "foregroundImage": "./assets/adaptive-icon.png"
       }
     },
@@ -28,7 +28,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#0F1319",
+          "backgroundColor": "#090B0C",
           "image": "./assets/splash-mark.png",
           "imageWidth": 168,
           "resizeMode": "contain"
@@ -39,6 +39,8 @@
         "expo-font",
         {
           "fonts": [
+            "node_modules/@expo-google-fonts/barlow-condensed/600SemiBold/BarlowCondensed_600SemiBold.ttf",
+            "node_modules/@expo-google-fonts/barlow-condensed/700Bold/BarlowCondensed_700Bold.ttf",
             "node_modules/@expo-google-fonts/inter/400Regular/Inter_400Regular.ttf",
             "node_modules/@expo-google-fonts/inter/500Medium/Inter_500Medium.ttf",
             "node_modules/@expo-google-fonts/jetbrains-mono/400Regular/JetBrainsMono_400Regular.ttf",
@@ -48,7 +50,17 @@
       ],
       "expo-asset",
       "expo-sqlite",
-      "expo-image"
+      "expo-image",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": false,
+          "savePhotosPermission": "Allow North to save your Reality card to Photos.",
+          "granularPermissions": [
+            "photo"
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

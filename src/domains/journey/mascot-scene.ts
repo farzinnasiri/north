@@ -2,12 +2,12 @@ import type { MascotScene } from '@/domains/mascot/mascot';
 import type { ActionState, NorthState } from '@/domains/journey/journey';
 
 type HomeSceneInput = {
-  bearing: number;
+  direction: number;
   /** Set only when he has just closed an Action and the needle is about to move. */
   acknowledge: number | null;
   action: ActionState;
   north: NorthState;
-  startingBearing: number;
+  startingDirection: number;
 };
 
 /**
@@ -22,14 +22,14 @@ type HomeSceneInput = {
 export function homeMascotScene({
   acknowledge,
   action,
-  bearing,
+  direction,
   north,
-  startingBearing,
+  startingDirection,
 }: HomeSceneInput): MascotScene {
-  const travelled = startingBearing <= 0 ? 1 : (startingBearing - bearing) / startingBearing;
+  const travelled = startingDirection <= 0 ? 1 : (startingDirection - direction) / startingDirection;
 
   return {
-    bearing,
+    direction,
     completion: Math.min(1, Math.max(0, travelled)),
     expression: expressionFor(action, north),
     gesture: acknowledge === null ? undefined : { cue: acknowledge, kind: 'acknowledge' },

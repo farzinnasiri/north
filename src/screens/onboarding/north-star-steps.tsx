@@ -1,79 +1,54 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useReducedMotion } from 'react-native-reanimated';
 
 import { ChoiceInstrument } from '@/components/ui/choice-instrument';
-import type { NorthStarType } from '@/domains/onboarding/onboarding';
-import { ROLE_MODELS, ROLE_MODEL_PICKS, STAR_QUESTIONS } from '@/domains/onboarding/north-star';
-import { NorthField } from '@/components/ui/north-field';
+import type { NorthStarType, Profile } from '@/domains/onboarding/onboarding';
+import { STAR_QUESTIONS } from '@/domains/onboarding/north-star';
 import { OnboardingFrame } from '@/screens/onboarding/onboarding-frame';
 import { NorthStarCarousel } from '@/screens/onboarding/north-star-carousel';
+import { motion } from '@/theme';
 
-type RoleModelStepProps = {
-  onChange: (ids: string[]) => void;
+type StarQuestionStepProps = {
+  id: string;
+  onChange: (id: string, answers: string[]) => void;
   onContinue: () => void;
+  profile: Profile;
   value: readonly string[];
 };
 
-/**
- * Names, not archetypes. A man knows instantly whether he would rather be
- * Spider-Man or Tony Stark; asked instead whether he is "disagreeable", he will
- * pick whichever word flatters him. The picks are weighted evidence toward the
- * destination, never the destination itself.
- */
-export function RoleModelStep({
+function personalizedPrompt(prompt: string, profile: Profile): string {
+  return prompt
+    .replace('{name}', profile.name)
+    .replace('{age}', String(profile.age + 5));
+}
+
+export function StarQuestionStep({
+  id,
   onChange,
   onContinue,
+  profile,
   value,
-}: RoleModelStepProps) {
-  const remaining = ROLE_MODEL_PICKS - value.length;
+}: StarQuestionStepProps) {
+  const question = STAR_QUESTIONS.find((candidate) => candidate.id === id)!;
+  const multiple = question.max > 1;
 
   return (
     <OnboardingFrame
       actionLabel="Continue"
-      body={
-        remaining > 0
-          ? `Pick ${ROLE_MODEL_PICKS}. ${remaining} left.`
-          : 'That is your three. Change any, or keep going.'
-      }
-      disabled={value.length !== ROLE_MODEL_PICKS}
+      body={question.body ?? (multiple ? `Choose ${question.min === question.max ? question.min : `up to ${question.max}`}.` : undefined)}
+      disabled={value.length < question.min || value.length > question.max}
+      emphasis={question.emphasis}
       onContinue={onContinue}
-      scrollable
-      title="Whose life would you try for a week?"
+      title={personalizedPrompt(question.prompt, profile)}
     >
       <ChoiceInstrument
-        multiple
-        onChange={(ids) => onChange(ids.slice(-ROLE_MODEL_PICKS))}
-        options={ROLE_MODELS.map((model) => ({ label: model.name, value: model.id }))}
-        presentation="chips"
-        values={value}
-      />
-    </OnboardingFrame>
-  );
-}
-
-type StarQuestionStepProps = {
-  id: string;
-  onAnswer: (id: string, answer: 'negative' | 'positive') => void;
-  value?: 'negative' | 'positive';
-};
-
-export function StarQuestionStep({
-  id,
-  onAnswer,
-  value,
-}: StarQuestionStepProps) {
-  const question = STAR_QUESTIONS.find((candidate) => candidate.id === id)!;
-
-  return (
-    <OnboardingFrame title={question.prompt}>
-      <ChoiceInstrument
-        onChange={(values) => onAnswer(id, values[0] as 'negative' | 'positive')}
-        options={[
-          { label: question.positive, value: 'positive' },
-          { label: question.negative, value: 'negative' },
-        ]}
-        presentation="doors"
-        values={value ? [value] : []}
+        multiple={multiple}
+        onChange={(values) => onChange(id, values.slice(-question.max))}
+        options={question.options.map((option) => ({
+          label: option.label,
+          value: option.value,
+        }))}
+        values={[...value]}
       />
     </OnboardingFrame>
   );
@@ -81,15 +56,15 @@ export function StarQuestionStep({
 
 type StarRevealStepProps = {
   name: string;
-  onChoose: (star: NorthStarType) => void;
+  onChoose: (star: NorthStarType | null) => void;
   onContinue: () => void;
   ranked: readonly NorthStarType[];
   value: NorthStarType | null;
 };
 
 /**
- * Every destination remains available. Ranking changes the initial order and
- * centre card; it never removes choice or labels the person he is today.
+ * Browsing changes only the card in view. The destination is not stored until
+ * the person confirms the fixed action.
  */
 export function StarRevealStep({
   name,
@@ -98,97 +73,59 @@ export function StarRevealStep({
   ranked,
   value,
 }: StarRevealStepProps) {
-  const chosen = value ?? ranked[0];
+  const [viewed, setViewed] = useState<NorthStarType>(value ?? ranked[0]);
 
   return (
     <OnboardingFrame
-      actionLabel="This is my North Star"
-      body="The closest match is first. The choice is yours."
-      kicker="YOUR ALTER EGO"
-      onContinue={onContinue}
-      title={`Hey, ${name}. I think this is your direction.`}
+      actionLabel="Choose this life"
+      body="Swipe to explore."
+      layout="stacked"
+      onContinue={() => {
+        onChoose(viewed);
+        onContinue();
+      }}
+      title={`${name}, which life do you want?`}
     >
-      <NorthStarCarousel onChoose={onChoose} ranked={ranked} value={chosen} />
+      <NorthStarCarousel
+        onView={setViewed}
+        ranked={ranked}
+        value={viewed}
+      />
     </OnboardingFrame>
   );
 }
 
-type AlterEgoIntroStepProps = {
+type NorthStarIntroStepProps = {
   onContinue: () => void;
 };
 
-type AlterEgoLoadingStepProps = AlterEgoIntroStepProps & {
-  duration: number;
-};
+type NorthStarCurationStepProps = NorthStarIntroStepProps;
 
-export function AlterEgoLoadingStep({ duration, onContinue }: AlterEgoLoadingStepProps) {
+export function NorthStarCurationStep({ onContinue }: NorthStarCurationStepProps) {
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
-    const timeout = setTimeout(onContinue, reduceMotion ? 0 : duration);
+    const timeout = setTimeout(onContinue, reduceMotion ? 0 : motion.arrival);
     return () => clearTimeout(timeout);
-  }, [duration, onContinue, reduceMotion]);
+  }, [onContinue, reduceMotion]);
 
   return (
     <OnboardingFrame
       align="centre"
-      body="Considering what you value, the lives you chose, and the man you can already picture."
-      kicker="PROFILE COMPLETE"
       presentation="statement"
-      title="Finding your direction."
+      title="Ordering the eight lives."
     />
   );
 }
 
-export function AlterEgoIntroStep({ onContinue }: AlterEgoIntroStepProps) {
+export function NorthStarIntroStep({ onContinue }: NorthStarIntroStepProps) {
   return (
     <OnboardingFrame
-      actionLabel="Show me"
-      body="It is a name and image for the version of you you are choosing on purpose. When you drift, it gives you a direction to return to."
-      kicker="YOUR NORTH STAR"
+      actionLabel="Continue"
+      align="centre"
       onContinue={onContinue}
       presentation="statement"
-      title="Now, your alter ego."
+      title="What matters most?"
     />
-  );
-}
-
-type AlterEgoStepProps = {
-  name: string;
-  onChange: (alterEgo: string) => void;
-  onContinue: () => void;
-  value: string;
-};
-
-/**
- * The destination is not only a type, it is a person — and a man is far more
- * likely to act as someone when that someone has a name he chose. This is the
- * one free-text field left in onboarding, and it is deliberate: a name cannot
- * be picked from a list without becoming somebody else's idea. It is optional
- * and skippable, so nobody is blocked by a blank box at the end.
- */
-export function AlterEgoStep({
-  name,
-  onChange,
-  onContinue,
-  value,
-}: AlterEgoStepProps) {
-  return (
-    <OnboardingFrame
-      actionLabel={value.trim().length > 0 ? `Then it is ${value.trim()}` : 'Skip'}
-      kicker="YOUR ALTER EGO"
-      onContinue={onContinue}
-      title={`What do you want to name him, ${name}?`}
-    >
-      <NorthField
-        accessibilityLabel="A name for the man you are walking toward, optional"
-        autoCapitalize="words"
-        multiline={false}
-        onChangeText={onChange}
-        placeholder=""
-        returnKeyType="done"
-        value={value}
-      />
-    </OnboardingFrame>
   );
 }

@@ -82,24 +82,25 @@ const styles = StyleSheet.create({
     backgroundColor: colors.brass,
   },
   done: {
-    backgroundColor: colors.brassDim,
+    backgroundColor: colors.paper,
   },
   fill: {
     borderRadius: 2,
-    height: 3,
+    height: 4,
   },
   rail: {
     flexDirection: 'row',
-    gap: spacing.xs,
-    paddingTop: spacing.sm,
+    gap: spacing.sm,
+    maxWidth: 260,
+    width: '42%',
   },
   slot: {
     flex: 1,
   },
   track: {
-    backgroundColor: colors.lineSoft,
+    backgroundColor: colors.fieldRaised,
     borderRadius: 2,
-    height: 3,
+    height: 4,
     overflow: 'hidden',
   },
 });

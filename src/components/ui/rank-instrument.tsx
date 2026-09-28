@@ -95,13 +95,16 @@ const styles = StyleSheet.create({
   item: {
     color: colors.paper,
     flex: 1,
+    minWidth: 0,
   },
   list: {
     borderTopColor: colors.lineSoft,
     borderTopWidth: 1,
+    minWidth: 0,
+    width: '100%',
   },
   number: {
-    color: colors.brassDim,
+    color: colors.brass,
     width: 32,
   },
   row: {

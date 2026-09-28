@@ -3,6 +3,7 @@ import type { PressableProps, StyleProp, View, ViewStyle } from 'react-native';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import Animated, { useReducedMotion } from 'react-native-reanimated';
 
+import { useSignalTheme } from '@/components/ui/signal-theme';
 import { colors, motion, radii, typography } from '@/theme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -20,15 +21,17 @@ type NorthButtonProps = PressableProps & {
  * recovers rather than snapping between two frames.
  */
 export const NorthButton = forwardRef<View, NorthButtonProps>(function NorthButton(
-  { disabled, label, style, tone = 'primary', ...props },
+  { accessibilityLabel, disabled, label, style, tone = 'primary', ...props },
   ref,
 ) {
   const reduceMotion = useReducedMotion();
+  const signal = useSignalTheme();
   const [pressed, setPressed] = useState(false);
   const held = pressed && !disabled;
 
   return (
     <AnimatedPressable
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityRole="button"
       disabled={disabled}
       onPressIn={() => setPressed(true)}
@@ -37,6 +40,7 @@ export const NorthButton = forwardRef<View, NorthButtonProps>(function NorthButt
       style={[
         styles.base,
         styles[tone],
+        tone === 'primary' && { backgroundColor: signal.primary, borderColor: signal.primary },
         disabled && styles.disabled,
         {
           opacity: held ? motion.pressOpacity : 1,
@@ -50,9 +54,28 @@ export const NorthButton = forwardRef<View, NorthButtonProps>(function NorthButt
       ]}
       {...props}
     >
-      <Text style={[styles.label, styles[`${tone}Label`], disabled && styles.disabledLabel]}>
+      <Text style={[
+        styles.label,
+        styles[`${tone}Label`],
+        tone === 'primary' && { color: signal.onPrimary },
+        disabled && styles.disabledLabel,
+      ]}>
         {label}
       </Text>
+      {tone === 'quiet' ? null : (
+        <Text
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+          style={[
+            styles.arrow,
+            styles[`${tone}Label`],
+            tone === 'primary' && { color: signal.onPrimary },
+            disabled && styles.disabledLabel,
+          ]}
+        >
+          →
+        </Text>
+      )}
     </AnimatedPressable>
   );
 });
@@ -63,9 +86,10 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     borderRadius: radii.control,
     borderWidth: 1,
-    justifyContent: 'center',
-    minHeight: 52,
-    paddingHorizontal: 18,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    minHeight: 62,
+    paddingHorizontal: 20,
     width: '100%',
   },
   primary: {
@@ -73,7 +97,7 @@ const styles = StyleSheet.create({
     borderColor: colors.brass,
   },
   secondary: {
-    backgroundColor: colors.field,
+    backgroundColor: colors.fieldRaised,
     borderColor: colors.line,
   },
   quiet: {
@@ -81,8 +105,10 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   label: {
-    fontFamily: typography.sansMedium,
-    fontSize: 15,
+    fontFamily: typography.editorialMedium,
+    fontSize: 20,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
   },
   primaryLabel: {
     color: colors.brassOn,
@@ -93,10 +119,15 @@ const styles = StyleSheet.create({
   quietLabel: {
     color: colors.ash,
   },
-  // Dimming brass produces a murky olive that reads as broken rather than
-  // unavailable. An unavailable action drops out of the accent entirely.
+  arrow: {
+    fontFamily: typography.sansMedium,
+    fontSize: 26,
+    lineHeight: 28,
+  },
+  // An unavailable action drops out of ink and leaves only its measured
+  // boundary, so it remains legible without looking like a second action.
   disabled: {
-    backgroundColor: 'transparent',
+    backgroundColor: colors.field,
     borderColor: colors.lineSoft,
     opacity: 1,
   },

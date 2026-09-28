@@ -29,7 +29,7 @@ export function Section({ children, label, ruled = false, style }: SectionProps)
 
 const styles = StyleSheet.create({
   ruled: {
-    borderTopColor: colors.lineSoft,
+    borderTopColor: colors.line,
     borderTopWidth: 1,
     paddingTop: spacing.lg,
   },

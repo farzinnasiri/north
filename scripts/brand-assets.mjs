@@ -45,6 +45,17 @@ function ring(d, r, t) {
   return Math.abs(d - r) <= t ? 1 : 0;
 }
 
+function normalizeAngle(degrees) {
+  return ((degrees % 360) + 360) % 360;
+}
+
+function inArc(degrees, start, end) {
+  const angle = normalizeAngle(degrees);
+  const from = normalizeAngle(start);
+  const to = normalizeAngle(end);
+  return from <= to ? angle >= from && angle <= to : angle >= from || angle <= to;
+}
+
 /** Coverage of the triangle (needle) via barycentric containment. */
 function triangle(px, py, ax, ay, bx, by, cx, cy) {
   const area = (bx - ax) * (cy - ay) - (cx - ax) * (by - ay);
@@ -71,8 +82,10 @@ function blend(target, colour, coverage) {
  * @param opaque  fill the canvas with field, or leave it transparent
  * @param weight  stroke multiplier; an app icon is read at 60pt and hairlines
  *                disappear there, so it carries a heavier line than the screen
+ * @param signal  include the needle. The native splash omits it so the app can
+ *                complete the same mark during its one-shot handoff.
  */
-function draw(size, scale, opaque, weight = 1) {
+function draw(size, scale, opaque, weight = 1, signal = true) {
   const image = new Jimp(size, size, 0x00000000);
   const c = size / 2;
   const rim = size * 0.42 * scale;
@@ -91,6 +104,8 @@ function draw(size, scale, opaque, weight = 1) {
       let northHits = 0;
       let southHits = 0;
       let hubHits = 0;
+      let hubRingHits = 0;
+      let hubSignalHits = 0;
       let cardinalHits = 0;
 
       for (let sy = 0; sy < SAMPLES; sy += 1) {
@@ -98,14 +113,27 @@ function draw(size, scale, opaque, weight = 1) {
           const px = x + (sx + 0.5) * step;
           const py = y + (sy + 0.5) * step;
           const d = Math.hypot(px - c, py - c);
+          const angle = (Math.atan2(py - c, px - c) * 180) / Math.PI;
 
-          rimHits += ring(d, rim, stroke);
-          innerHits += ring(d, inner, stroke);
+          rimHits +=
+            ring(d, rim, stroke) *
+            (inArc(angle, -62, 62) || inArc(angle, 118, 242) ? 1 : 0);
+          innerHits +=
+            ring(d, inner, stroke) *
+            (inArc(angle, -48, 48) || inArc(angle, 132, 228) ? 1 : 0);
           hubHits += d <= hub ? 1 : 0;
-          northHits += triangle(px, py, c, c - needle, c - half, c, c + half, c);
-          southHits += triangle(px, py, c, c + needle * 0.3, c - half, c, c + half, c);
+          hubRingHits += ring(d, hub, Math.max(1, stroke * 0.65));
+          hubSignalHits += d <= hub * 0.38 ? 1 : 0;
+          northHits += signal
+            ? triangle(px, py, c, c - needle, c - half, c, c + half, c)
+            : 0;
+          southHits += signal
+            ? triangle(px, py, c, c + needle * 0.34, c - half, c, c + half, c)
+            : 0;
           cardinalHits +=
-            Math.abs(px - c) <= stroke && py >= c - rim - size * 0.02 * scale && py <= c - rim + size * 0.03 * scale
+            Math.abs(px - c) <= stroke &&
+            ((py >= c - rim - size * 0.02 * scale && py <= c - rim + size * 0.07 * scale) ||
+              (py >= c + rim - size * 0.07 * scale && py <= c + rim + size * 0.02 * scale))
               ? 1
               : 0;
         }
@@ -118,9 +146,8 @@ function draw(size, scale, opaque, weight = 1) {
       blend(pixel, LINE, southHits / total);
       blend(pixel, BRASS, northHits / total);
       blend(pixel, opaque ? FIELD_DEEP : [15, 19, 25], hubHits / total);
-      // The hub keeps a hairline whatever the mark's line weight: thickened,
-      // it reads as a bullseye and starts competing with the needle.
-      blend(pixel, ASH, ring(Math.hypot(x + 0.5 - c, y + 0.5 - c), hub, size * 0.0022));
+      blend(pixel, ASH, hubRingHits / total);
+      blend(pixel, BRASS, hubSignalHits / total);
 
       image.setPixelColor(
         Jimp.rgbaToInt(
@@ -139,13 +166,13 @@ function draw(size, scale, opaque, weight = 1) {
 }
 
 const outputs = [
-  { file: 'icon.png', opaque: true, scale: 1.06, size: 1024, weight: 2.2 },
-  { file: 'adaptive-icon.png', opaque: false, scale: 0.62, size: 1024, weight: 2.2 },
-  { file: 'splash-mark.png', opaque: false, scale: 1, size: 512, weight: 1 },
+  { file: 'icon.png', opaque: true, scale: 1.06, signal: true, size: 1024, weight: 2.2 },
+  { file: 'adaptive-icon.png', opaque: false, scale: 0.62, signal: true, size: 1024, weight: 2.2 },
+  { file: 'splash-mark.png', opaque: false, scale: 1, signal: false, size: 512, weight: 1 },
 ];
 
 for (const output of outputs) {
-  const image = draw(output.size, output.scale, output.opaque, output.weight);
+  const image = draw(output.size, output.scale, output.opaque, output.weight, output.signal);
   const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
   writeFileSync(join(root, 'assets', output.file), buffer);
   console.log(`Wrote assets/${output.file} (${output.size}px)`);

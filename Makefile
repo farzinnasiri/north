@@ -14,7 +14,7 @@ add:
 	npx expo install $(PKG)
 
 dev:
-	npm run start
+	portless north npm run web
 
 go:
 	npm run start -- --go --lan
@@ -26,7 +26,7 @@ android:
 	npm run android
 
 web:
-	npm run web
+	@$(MAKE) dev
 
 doctor:
 	npx expo-doctor

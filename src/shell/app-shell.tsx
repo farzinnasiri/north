@@ -8,34 +8,48 @@ import {
   JetBrainsMono_500Medium,
   useFonts as useMonoFonts,
 } from '@expo-google-fonts/jetbrains-mono';
+import {
+  BarlowCondensed_600SemiBold,
+  BarlowCondensed_700Bold,
+  useFonts as useDirectionalFonts,
+} from '@expo-google-fonts/barlow-condensed';
 import * as SplashScreen from 'expo-splash-screen';
 import type { PropsWithChildren } from 'react';
 import { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ReduceMotion, ReducedMotionConfig } from 'react-native-reanimated';
 
+import { SignalThemeProvider } from '@/components/ui/signal-theme';
+import { useAccount } from '@/domains/account/store';
+import { signalIdentity } from '@/domains/personalization/signal';
 import { BootScreen } from '@/shell/boot-screen';
 import { motion } from '@/theme';
 
 void SplashScreen.preventAutoHideAsync();
 
 export function AppShell({ children }: PropsWithChildren) {
-  // The expo-font config plugin embeds all four faces at build time, so in a
+  const signalId = useAccount((state) => state.signalId);
+  const signal = signalIdentity(signalId);
+  // The expo-font config plugin embeds all six faces at build time, so in a
   // native build these resolve on the first render and the splash never waits.
   // Expo Go does not run config plugins, so the hooks still do real loading
   // there and this stays the one code path that works in both.
   const [interLoaded] = useInterFonts({ Inter_400Regular, Inter_500Medium });
   const [monoLoaded] = useMonoFonts({ JetBrainsMono_400Regular, JetBrainsMono_500Medium });
-  const fontsLoaded = interLoaded && monoLoaded;
+  const [directionalLoaded] = useDirectionalFonts({
+    BarlowCondensed_600SemiBold,
+    BarlowCondensed_700Bold,
+  });
+  const fontsLoaded = directionalLoaded && interLoaded && monoLoaded;
 
-  // The mark is held for one arrival whether or not the app needed the time.
+  // The boot composition is held for its authored minimum whether or not the app needed the time.
   // A boot that flickers for eighty milliseconds reads as a glitch; a beat
   // that is always the same length reads as the product opening.
   const [beatPassed, setBeatPassed] = useState(false);
 
   useEffect(() => {
     void SplashScreen.hideAsync();
-    const beat = setTimeout(() => setBeatPassed(true), motion.arrival);
+    const beat = setTimeout(() => setBeatPassed(true), motion.bootHold);
     return () => clearTimeout(beat);
   }, []);
 
@@ -52,12 +66,14 @@ export function AppShell({ children }: PropsWithChildren) {
   }, [booted]);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      {/* Removes nonessential animation under the system setting. The compass
-          opts out and cross-fades instead; see DESIGN.md, Motion. */}
-      <ReducedMotionConfig mode={ReduceMotion.System} />
-      {fontsLoaded ? children : null}
-      {cleared ? null : <BootScreen held={!booted} />}
-    </GestureHandlerRootView>
+    <SignalThemeProvider value={signal}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        {/* Removes nonessential animation under the system setting. The compass
+            opts out and cross-fades instead; see DESIGN.md, Motion. */}
+        <ReducedMotionConfig mode={ReduceMotion.System} />
+        {fontsLoaded && cleared ? children : null}
+        {cleared ? null : <BootScreen held={!booted} />}
+      </GestureHandlerRootView>
+    </SignalThemeProvider>
   );
 }

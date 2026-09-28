@@ -26,6 +26,10 @@ function proudEye(cx: number, cy: number, width: number, height: number): number
   return [left, top, cx, top, right, top, right, cy, right, bottom - 1, cx, bottom - 4, left, bottom - 1, left, cy];
 }
 
+function pointerNeedle(): number[] {
+  return [130, 69, 130, 69, 138, 112, 138, 112, 130, 137, 130, 137, 122, 112, 122, 112];
+}
+
 function rotatePoints(points: number[], angle: number, cx = CENTRE, cy = CENTRE): number[] {
   const radians = (angle * Math.PI) / 180;
   const cosine = Math.cos(radians);
@@ -39,21 +43,24 @@ function rotatePoints(points: number[], angle: number, cx = CENTRE, cy = CENTRE)
   return rotated;
 }
 
-const NORTH_NEEDLE = [130, 78, 134, 99, 136, 122, 133, 128, 130, 132, 127, 128, 124, 122, 126, 99];
-const SOUTH_NEEDLE = [130, 128, 134, 134, 136, 138, 134, 158, 130, 182, 126, 158, 124, 138, 126, 134];
-
 export const ACKNOWLEDGEMENT_LEFT = roundedRect(100, 113, 31, 5);
 export const ACKNOWLEDGEMENT_RIGHT = roundedRect(160, 113, 31, 5);
 
 export type EyeTarget = { curve: number; left: number[]; right: number[] };
 
-export function eyeTargetFor(expression: MascotExpression, bearing: number): EyeTarget {
+export function eyeTargetFor(expression: MascotExpression, _direction: number): EyeTarget {
   const straight = { curve: 0 };
   switch (expression) {
+    case 'blink':
+      return { ...straight, left: roundedRect(100, 113, 31, 4), right: roundedRect(160, 113, 31, 4) };
     case 'focused':
       return { ...straight, left: roundedRect(100, 113, 29, 21), right: roundedRect(160, 113, 29, 21) };
     case 'loading':
       return { ...straight, left: roundedRect(100, 113, 30, 10), right: roundedRect(160, 113, 30, 10) };
+    case 'pointer': {
+      const needle = pointerNeedle();
+      return { ...straight, left: needle, right: needle };
+    }
     case 'proud':
       return { curve: 1, left: proudEye(100, 111, 31, 21), right: proudEye(160, 111, 31, 21) };
     case 'sad':
@@ -69,11 +76,7 @@ export function eyeTargetFor(expression: MascotExpression, bearing: number): Eye
     case 'direction':
       return { ...straight, left: rightTriangle(100, 112, 30, 29), right: rightTriangle(160, 112, 30, 29) };
     case 'compass':
-      return {
-        ...straight,
-        left: rotatePoints(NORTH_NEEDLE, bearing),
-        right: rotatePoints(SOUTH_NEEDLE, bearing),
-      };
+      return { ...straight, left: roundedRect(100, 113, 29, 21), right: roundedRect(160, 113, 29, 21) };
     case 'settled':
       return { ...straight, left: roundedRect(100, 113, 22, 22), right: roundedRect(160, 113, 22, 22) };
     default:
@@ -130,4 +133,3 @@ export function morphValue(
     ? from + (via - from) * (progress / viaStop)
     : via + (to - via) * ((progress - viaStop) / (1 - viaStop));
 }
-

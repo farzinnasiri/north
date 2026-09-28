@@ -46,10 +46,10 @@ export function TracingFrame({ progress }: TracingFrameProps) {
 
   return (
     <>
-      <Animated.View pointerEvents="none" style={[styles.horizontal, styles.top, top]} />
-      <Animated.View pointerEvents="none" style={[styles.vertical, styles.right, right]} />
-      <Animated.View pointerEvents="none" style={[styles.horizontal, styles.bottom, bottom]} />
-      <Animated.View pointerEvents="none" style={[styles.vertical, styles.left, left]} />
+      <Animated.View style={[styles.edge, styles.horizontal, styles.top, top]} />
+      <Animated.View style={[styles.edge, styles.vertical, styles.right, right]} />
+      <Animated.View style={[styles.edge, styles.horizontal, styles.bottom, bottom]} />
+      <Animated.View style={[styles.edge, styles.vertical, styles.left, left]} />
     </>
   );
 }
@@ -63,6 +63,9 @@ const styles = StyleSheet.create({
   bottom: {
     bottom: 0,
     transformOrigin: 'right',
+  },
+  edge: {
+    pointerEvents: 'none',
   },
   horizontal: {
     backgroundColor: colors.brass,
