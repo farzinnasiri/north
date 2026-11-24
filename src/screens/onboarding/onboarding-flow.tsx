@@ -14,18 +14,21 @@ import {
   getInitialDirection,
   northStarLabel,
 } from '@/domains/onboarding/onboarding';
-import { axisForHonestThing, nextAction } from '@/domains/content/selection';
-import { onboardingMascotScene } from '@/domains/onboarding/mascot-scene';
+import { clockLabel, DEFAULT_CHECK_IN_MINUTES, localDay } from '@/domains/actions/action';
+import { lineById } from '@/domains/content/catalogue';
+import { suggestions, themeForHonestThing } from '@/domains/content/selection';
+import { useCatalogue } from '@/domains/content/store';
 import { directionWeightsForNorthStar, rankNorthStars } from '@/domains/onboarding/north-star';
 import { clearDraft, loadDraft, saveDraft } from '@/domains/onboarding/persistence';
+import { allowCheckIns } from '@/platform/check-in';
 import type { OnboardingStep } from '@/domains/onboarding/sequence';
 import { ONBOARDING_STEPS, promptPositionFor } from '@/domains/onboarding/sequence';
 import { useJourney } from '@/domains/journey/store';
 import { OnboardingShell } from '@/screens/onboarding/onboarding-frame';
 import {
+  CheckInStep,
   ContractStep,
   FirstActionStep,
-  LetterStep,
 } from '@/screens/onboarding/closing-steps';
 import { OnboardingProgressProvider } from '@/screens/onboarding/onboarding-progress';
 import { OnboardingStepTransition } from '@/screens/onboarding/onboarding-step-transition';
@@ -34,8 +37,6 @@ import { ProfileStep } from '@/screens/onboarding/profile-step';
 import { QuestionStep } from '@/screens/onboarding/question-step';
 import { RealityReveal } from '@/screens/onboarding/reality-reveal';
 import {
-  NorthStarIntroStep,
-  NorthStarCurationStep,
   StarQuestionStep,
   StarRevealStep,
 } from '@/screens/onboarding/north-star-steps';
@@ -59,9 +60,7 @@ function phaseOf(step: OnboardingStep): number {
     case 'honest':
     case 'reality-reveal':
       return 1;
-    case 'north-star-intro':
     case 'star-question':
-    case 'north-star-curation':
     case 'star-reveal':
       return 2;
     default:
@@ -71,6 +70,9 @@ function phaseOf(step: OnboardingStep): number {
 
 export function OnboardingFlow() {
   const begin = useJourney((state) => state.begin);
+  const openFirst = useJourney((state) => state.open);
+  const setPreferences = useJourney((state) => state.preferences);
+  const catalogue = useCatalogue((state) => state.catalogue);
   const restored = useMemo(() => loadDraft(), []);
   const reduceMotion = useReducedMotion();
   const [step, setStep] = useState(restored.step);
@@ -79,11 +81,11 @@ export function OnboardingFlow() {
   const [draft, setDraft] = useState<OnboardingDraft>(restored.draft);
   const ceremony = useSharedValue(0);
   const [holding, setHolding] = useState(false);
-  const [sealed, setSealed] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
   const transitionLock = useRef(false);
   const transitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Persist on every step so a phone call does not cost fifteen minutes.
+  // Persist on every step so a phone call does not lose the assessment.
   useEffect(() => {
     saveDraft(step, draft);
   }, [draft, step]);
@@ -110,15 +112,17 @@ export function OnboardingFlow() {
       ),
     [answered, draft.answers, draft.northStar],
   );
-  const firstAction = useMemo(
-    () => nextAction({
-      closed: [],
+  const [today] = useState(() => localDay(Date.now()));
+  const firstLines = useMemo(
+    () => suggestions({
+      day: today,
       honestThing: draft.honestThing,
+      lines: catalogue.lines,
       northStar: draft.northStar,
-      passed: [],
       readings,
+      seen: [],
     }),
-    [draft.honestThing, draft.northStar, readings],
+    [catalogue.lines, draft.honestThing, draft.northStar, readings, today],
   );
 
   const current = ONBOARDING_STEPS[Math.min(step, ONBOARDING_STEPS.length - 1)];
@@ -162,14 +166,7 @@ export function OnboardingFlow() {
   const progress = {
     answered,
     ceremony,
-    mascot: onboardingMascotScene({
-      ceremony: sealed,
-      direction,
-      moment: current.kind,
-      phase,
-      step: step + 1,
-      total: ONBOARDING_STEPS.length,
-    }),
+    direction,
     phase,
     phaseFraction: inPhase.length <= 1 ? 1 : (positionInPhase + 1) / inPhase.length,
     phases: PHASES,
@@ -183,7 +180,11 @@ export function OnboardingFlow() {
 
   return (
     <OnboardingProgressProvider value={progress}>
-      <OnboardingShell onBack={step > 0 ? back : undefined}>
+      <OnboardingShell
+        hideInstrument={current.kind === 'profile' && current.field === 1}
+        introducing={current.kind === 'welcome'}
+        onBack={step > 0 ? back : undefined}
+      >
         <OnboardingStepTransition
           animate={transition > 0}
           direction={transitionDirection}
@@ -199,7 +200,7 @@ export function OnboardingFlow() {
   function renderStep() {
     switch (current.kind) {
       case 'welcome':
-        return <Welcome onContinue={next} />;
+        return <Welcome name={draft.profile.name.trim()} onContinue={next} />;
 
       case 'profile':
         return (
@@ -241,9 +242,6 @@ export function OnboardingFlow() {
           />
         );
 
-      case 'north-star-intro':
-        return <NorthStarIntroStep onContinue={next} />;
-
       case 'star-question':
         return (
           <StarQuestionStep
@@ -261,9 +259,6 @@ export function OnboardingFlow() {
           />
         );
 
-      case 'north-star-curation':
-        return <NorthStarCurationStep onContinue={next} />;
-
       case 'star-reveal': {
         const ranked = rankNorthStars({
           answers: draft.starAnswers,
@@ -279,9 +274,6 @@ export function OnboardingFlow() {
         );
       }
 
-      case 'letter':
-        return <LetterStep onContinue={next} />;
-
       case 'contract':
         return (
           <ContractStep
@@ -292,31 +284,52 @@ export function OnboardingFlow() {
               next();
             }}
             onHold={setHolding}
-            onSeal={setSealed}
           />
         );
 
       case 'first-action':
         return (
           <FirstActionStep
-            action={firstAction}
+            lines={firstLines}
             northStar={northStarLabel(draft.northStar)}
-            onContinue={() => {
-              const at = Date.now();
-              begin({
-                at,
-                direction,
-                honestThing: draft.honestThing,
-                name: draft.profile.name,
-                northStar: draft.northStar,
-                readings,
-              });
-              clearDraft();
-              router.replace('/sign-up');
-            }}
-            reflectionLed={axisForHonestThing(draft.honestThing) !== null}
+            onChoose={(firstLine) => setDraft((value) => ({ ...value, firstLine }))}
+            onContinue={next}
+            reflectionLed={themeForHonestThing(draft.honestThing) !== null}
+            value={draft.firstLine}
           />
         );
+
+      case 'check-in':
+        return (
+          <CheckInStep
+            onAllow={() => { void finishOnboarding(true); }}
+            onSkip={() => { void finishOnboarding(false); }}
+            time={clockLabel(DEFAULT_CHECK_IN_MINUTES)}
+          />
+        );
+    }
+  }
+
+  /**
+   * Everything onboarding learned becomes the Journey on this phone, and the
+   * Line he picked becomes his first open Action, due today.
+   */
+  async function finishOnboarding(askForCheckIns: boolean) {
+    if (submitting || !draft.signedAt) return;
+    setSubmitting(true);
+    try {
+      const checkIns = askForCheckIns ? await allowCheckIns().catch(() => false) : false;
+      begin({
+        at: Date.now(), direction, honestThing: draft.honestThing,
+        name: draft.profile.name.trim(), northStar: draft.northStar, readings,
+      });
+      setPreferences({ checkIns });
+      const line = (draft.firstLine ? lineById(catalogue, draft.firstLine) : undefined) ?? firstLines[0];
+      if (line) openFirst({ action: '', days: 1, line });
+      clearDraft();
+      router.replace('/');
+    } finally {
+      setSubmitting(false);
     }
   }
 }

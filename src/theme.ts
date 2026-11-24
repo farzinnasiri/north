@@ -34,6 +34,9 @@ export const colors = {
   axisConnection: '#2BB7A8',
   axisAppetite: '#8B72E8',
   axisCraft: '#5F7CFF',
+  glassFill: '#1B1F21B8',
+  glassEdge: '#FFFFFF1F',
+  glassHighlight: '#FFFFFF38',
 } as const;
 
 export const typography = {
@@ -59,6 +62,7 @@ export const spacing = {
 export const radii = {
   control: 10,
   card: 16,
+  glass: 26,
   device: 32,
   full: 9999,
 } as const;

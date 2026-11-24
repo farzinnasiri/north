@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Switch, View } from 'react-native';
+import { Alert, Platform, Pressable, StyleSheet, Switch, View } from 'react-native';
 
+import { InstrumentSlider } from '@/components/ui/instrument-slider';
 import { NorthButton } from '@/components/ui/north-button';
 import { NorthField } from '@/components/ui/north-field';
 import { NorthRow } from '@/components/ui/north-row';
@@ -9,31 +10,33 @@ import { NorthScreen } from '@/components/ui/north-screen';
 import { NorthText } from '@/components/ui/north-text';
 import { Section } from '@/components/ui/section';
 import { useSignalTheme } from '@/components/ui/signal-theme';
-import { useAccount } from '@/domains/account/store';
+import { clockLabel } from '@/domains/actions/action';
+import { useCatalogue } from '@/domains/content/store';
 import { useJourney } from '@/domains/journey/store';
+import { clearDraft } from '@/domains/onboarding/persistence';
 import type { SignalIdentity } from '@/domains/personalization/signal';
 import { SIGNAL_IDENTITIES } from '@/domains/personalization/signal';
+import { allowCheckIns } from '@/platform/check-in';
 import { colors, radii, spacing } from '@/theme';
 
-/** Frontend-only settings shaped around the few things North actually lets a person change. */
+/** Check-in time from 17:00 to 23:30, in half hours. */
+const EARLIEST = 17 * 60;
+const LATEST = 23 * 60 + 30;
+
+/** Settings for a Journey that lives only on this phone. */
 export function Settings() {
   const journey = useJourney((state) => state.journey);
   const preferences = useJourney((state) => state.preferences);
   const rename = useJourney((state) => state.rename);
   const erase = useJourney((state) => state.erase);
-  const accountEmail = useAccount((state) => state.email);
-  const accountName = useAccount((state) => state.name);
-  const currentSignal = useAccount((state) => state.signalId);
-  const logOut = useAccount((state) => state.logOut);
-  const setAccountName = useAccount((state) => state.setName);
-  const setSignal = useAccount((state) => state.setSignal);
+  const catalogue = useCatalogue((state) => state.catalogue);
   const signal = useSignalTheme();
-  const [name, setName] = useState(accountName || journey?.name || '');
+  const [name, setName] = useState(journey?.name ?? '');
+  const [denied, setDenied] = useState(false);
 
   if (!journey) return null;
-
-  const savedName = accountName || journey.name;
-  const nameChanged = name.trim().length > 0 && name.trim() !== savedName;
+  const nameChanged = name.trim().length > 0 && name.trim() !== journey.name;
+  const minutes = journey.preferences.checkInMinutes;
 
   return (
     <NorthScreen contentStyle={styles.screen}>
@@ -48,23 +51,37 @@ export function Settings() {
             value={name}
           />
         </View>
-        {nameChanged ? (
-          <NorthButton
-            label="Save name"
-            onPress={() => {
-              const next = name.trim();
-              rename(next);
-              setAccountName(next);
-            }}
-            style={styles.save}
-          />
-        ) : null}
+        {nameChanged ? <NorthButton label="Save name" onPress={() => rename(name)} /> : null}
+      </Section>
+
+      <Section label="CHECK-IN" ruled>
+        <NorthRow
+          control={(
+            <Switch
+              accessibilityLabel="Check-in notification"
+              ios_backgroundColor={colors.line}
+              onValueChange={(on) => { void toggleCheckIns(on); }}
+              thumbColor={colors.paper}
+              trackColor={{ false: colors.line, true: signal.muted }}
+              value={journey.preferences.checkIns}
+            />
+          )}
+          detail={denied
+            ? 'Notifications are off for North in iOS Settings.'
+            : 'One notification, on the day you chose, asking if you did it.'}
+          label="Ask me how it went"
+        />
         <View style={styles.field}>
-          <NorthText variant="label">EMAIL</NorthText>
-          <NorthField
-            editable={false}
-            multiline={false}
-            value={accountEmail || 'Not connected in this prototype'}
+          <NorthText variant="label">{`TIME · ${clockLabel(minutes)}`}</NorthText>
+          <InstrumentSlider
+            accessibilityLabel="Check-in time"
+            leftLabel={clockLabel(EARLIEST)}
+            maximum={(LATEST - EARLIEST) / 30}
+            minimum={0}
+            onChange={(step) => preferences({ checkInMinutes: EARLIEST + step * 30 })}
+            readout={clockLabel(minutes)}
+            rightLabel={clockLabel(LATEST)}
+            value={Math.round((Math.min(LATEST, Math.max(EARLIEST, minutes)) - EARLIEST) / 30)}
           />
         </View>
       </Section>
@@ -75,8 +92,8 @@ export function Settings() {
             <SignalSetting
               identity={identity}
               key={identity.id}
-              onPress={() => setSignal(identity.id)}
-              selected={currentSignal === identity.id}
+              onPress={() => preferences({ signal: identity.id })}
+              selected={journey.preferences.signal === identity.id}
             />
           ))}
         </View>
@@ -88,7 +105,7 @@ export function Settings() {
             <Switch
               accessibilityLabel="Haptics"
               ios_backgroundColor={colors.line}
-              onValueChange={(haptics) => preferences({ ...journey.preferences, haptics })}
+              onValueChange={(haptics) => preferences({ haptics })}
               thumbColor={colors.paper}
               trackColor={{ false: colors.line, true: signal.muted }}
               value={journey.preferences.haptics}
@@ -102,56 +119,55 @@ export function Settings() {
             <Switch
               accessibilityLabel="Sound"
               ios_backgroundColor={colors.line}
-              onValueChange={(sound) => preferences({ ...journey.preferences, sound })}
+              onValueChange={(sound) => preferences({ sound })}
               thumbColor={colors.paper}
               trackColor={{ false: colors.line, true: signal.muted }}
               value={journey.preferences.sound}
             />
           )}
-          detail="Sounds for closeout and Direction changes."
+          detail="Sounds for the check-in and the needle."
           label="Sound"
         />
       </Section>
 
-      <Section label="ACCOUNT" ruled>
+      <Section label="PRIVACY" ruled>
+        <NorthText variant="small">
+          {`No account. Your answers, actions and notes stay on this phone. North downloads its library of ${catalogue.lines.length} lines and sends nothing back.`}
+        </NorthText>
         <NorthRow
-          detail="Leaves your local journey on this device."
-          label="Log out"
-          onPress={() => {
-            logOut();
-            router.replace('/welcome');
-          }}
-        />
-        <NorthRow
-          detail="Erases your Direction and every Action."
-          label="Start over"
+          detail="Deletes your Journey, actions and notes from this phone. It cannot be undone."
+          label="Erase everything"
           onPress={confirmErase}
           tone="destructive"
         />
       </Section>
-
-      <View style={styles.footer}>
-        <NorthText variant="label">LOCAL FRONTEND PROTOTYPE</NorthText>
-      </View>
     </NorthScreen>
   );
 
+  async function toggleCheckIns(on: boolean) {
+    if (!on) {
+      preferences({ checkIns: false });
+      return;
+    }
+    const allowed = await allowCheckIns();
+    setDenied(!allowed);
+    preferences({ checkIns: allowed });
+  }
+
   function confirmErase() {
-    Alert.alert(
-      'Start over?',
-      'This erases your Direction and everything you have closed. It cannot be undone.',
-      [
-        { style: 'cancel', text: 'Keep it' },
-        {
-          onPress: () => {
-            erase();
-            router.replace('/onboarding');
-          },
-          style: 'destructive',
-          text: 'Erase everything',
-        },
-      ],
-    );
+    const run = () => {
+      erase();
+      clearDraft();
+      router.replace('/onboarding');
+    };
+    if (Platform.OS === 'web') {
+      if (globalThis.confirm('Erase everything? This cannot be undone.')) run();
+      return;
+    }
+    Alert.alert('Erase everything?', 'Your Journey, actions and notes are deleted from this phone. This cannot be undone.', [
+      { style: 'cancel', text: 'Keep it' },
+      { onPress: run, style: 'destructive', text: 'Erase' },
+    ]);
   }
 }
 
@@ -185,13 +201,6 @@ function SignalSetting({
 const styles = StyleSheet.create({
   field: {
     gap: spacing.sm,
-  },
-  footer: {
-    alignItems: 'center',
-    paddingTop: spacing.lg,
-  },
-  save: {
-    minHeight: 54,
   },
   screen: {
     gap: spacing.xxl,

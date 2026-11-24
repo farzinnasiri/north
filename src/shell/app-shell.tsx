@@ -1,3 +1,4 @@
+import { AppErrorBoundary } from '@/shell/error-boundary';
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -20,7 +21,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ReduceMotion, ReducedMotionConfig } from 'react-native-reanimated';
 
 import { SignalThemeProvider } from '@/components/ui/signal-theme';
-import { useAccount } from '@/domains/account/store';
+import { useJourney } from '@/domains/journey/store';
 import { signalIdentity } from '@/domains/personalization/signal';
 import { BootScreen } from '@/shell/boot-screen';
 import { motion } from '@/theme';
@@ -28,7 +29,7 @@ import { motion } from '@/theme';
 void SplashScreen.preventAutoHideAsync();
 
 export function AppShell({ children }: PropsWithChildren) {
-  const signalId = useAccount((state) => state.signalId);
+  const signalId = useJourney((state) => state.journey?.preferences.signal ?? 'signal');
   const signal = signalIdentity(signalId);
   // The expo-font config plugin embeds all six faces at build time, so in a
   // native build these resolve on the first render and the splash never waits.
@@ -66,6 +67,7 @@ export function AppShell({ children }: PropsWithChildren) {
   }, [booted]);
 
   return (
+    <AppErrorBoundary>
     <SignalThemeProvider value={signal}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         {/* Removes nonessential animation under the system setting. The compass
@@ -75,5 +77,6 @@ export function AppShell({ children }: PropsWithChildren) {
         {cleared ? null : <BootScreen held={!booted} />}
       </GestureHandlerRootView>
     </SignalThemeProvider>
+    </AppErrorBoundary>
   );
 }

@@ -1,0 +1,13 @@
+# Each package root installs independently and shares pnpm's content-addressable store.
+packages: []
+allowBuilds:
+  "browser-tabs-lock": false
+  "bufferutil": true
+  "core-js": false
+  "esbuild": true
+  "fsevents": false
+  "unrs-resolver": true
+  "utf-8-validate": true
+minimumReleaseAgeExclude:
+  - expo-constants@57.0.25
+  - expo-notifications@57.0.26

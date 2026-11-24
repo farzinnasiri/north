@@ -2,22 +2,21 @@ import type { PropsWithChildren } from 'react';
 import { createContext, use } from 'react';
 import type { SharedValue } from 'react-native-reanimated';
 
-import type { MascotScene } from '@/domains/mascot/mascot';
 import type { OnboardingPromptPosition } from '@/domains/onboarding/sequence';
 
 export type OnboardingProgress = {
-  /** Scored Reality questions answered so far, 0-24. */
+  /** Reality questions answered so far, 0-12. */
   answered: number;
   /** Contract circuit, written only while the person's hand is down. */
   ceremony: SharedValue<number>;
-  /** Full destination state for the mascot on this screen. */
-  mascot: MascotScene;
+  /** The Direction the answers so far point to, 0-180. */
+  direction: number;
   /** Index of the movement in progress, for the rail. */
   phase: number;
   /** How far through that movement, 0-1. */
   phaseFraction: number;
   phases: readonly string[];
-  /** Position among the 30 authored prompts, absent on non-question steps. */
+  /** Position among the 15 authored prompts, absent on non-question steps. */
   prompt: OnboardingPromptPosition | null;
   /** 1-based position in the whole flow. */
   step: number;

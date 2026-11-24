@@ -26,6 +26,7 @@ export type StarOption = {
 
 export type StarQuestion = {
   body?: string;
+  context?: string;
   emphasis: string;
   id: string;
   max: number;
@@ -39,64 +40,19 @@ const weights = (values: Partial<PriorityWeights> = {}): Partial<PriorityWeights
 export const STAR_QUESTIONS: readonly StarQuestion[] = [
   {
     body: 'Pick two.',
-    emphasis: 'which two would matter most to you',
+    emphasis: 'which two matter most',
     id: 'year-matters',
     max: 2,
     min: 2,
-    prompt: 'At the end of a good year, which two would matter most to you?',
+    prompt: 'After a good year, which two matter most?',
     options: [
-      { label: 'I built or improved something that matters', value: 'build', weights: weights({ building: 2 }) },
-      { label: 'My closest relationships became stronger', value: 'relationships', weights: weights({ closeness: 2 }) },
-      { label: 'I had more freedom over my time', value: 'freedom', weights: weights({ freedom: 2 }) },
-      { label: 'I became more skilled and capable', value: 'skill', weights: weights({ mastery: 2 }) },
-      { label: 'I made life steadier for myself or other people', value: 'steadiness', weights: weights({ steadiness: 2 }) },
-      { label: 'I enjoyed more of my ordinary days', value: 'enjoyment', weights: weights({ enjoyment: 2 }) },
-      { label: 'I helped people or a community I care about', value: 'help', weights: weights({ service: 2 }) },
-    ],
-  },
-  {
-    body: 'A: Protect more of my time, even if I build less.\n\nB: Build more, even if it takes more of my time.',
-    emphasis: 'which way would you go',
-    id: 'building-time',
-    max: 1,
-    min: 1,
-    prompt: 'If you had to give something up, which way would you go?',
-    options: [
-      { label: 'Protect my time, much more', value: 'time-strong', weights: weights({ freedom: 2, enjoyment: 1 }) },
-      { label: 'Protect my time, a little more', value: 'time-somewhat', weights: weights({ freedom: 1 }) },
-      { label: 'They matter about the same', value: 'equal', weights: weights() },
-      { label: 'Build, a little more', value: 'build-somewhat', weights: weights({ building: 1 }) },
-      { label: 'Build, much more', value: 'build-strong', weights: weights({ building: 2, mastery: 1 }) },
-    ],
-  },
-  {
-    body: 'A: A close life with another person, even if I have less freedom.\n\nB: More freedom, even if I share my life less.',
-    emphasis: 'more room in your life',
-    id: 'commitment-freedom',
-    max: 1,
-    min: 1,
-    prompt: 'Where do you want more room in your life?',
-    options: [
-      { label: 'A close life, much more', value: 'commit-strong', weights: weights({ closeness: 2, steadiness: 1 }) },
-      { label: 'A close life, a little more', value: 'commit-somewhat', weights: weights({ closeness: 1 }) },
-      { label: 'They matter about the same', value: 'equal', weights: weights() },
-      { label: 'Freedom, a little more', value: 'freedom-somewhat', weights: weights({ freedom: 1 }) },
-      { label: 'Freedom, much more', value: 'freedom-strong', weights: weights({ freedom: 2, enjoyment: 1 }) },
-    ],
-  },
-  {
-    body: 'A: Say what matters, even if the other person may not like it.\n\nB: Keep the peace, even if I do not say what matters.',
-    emphasis: 'which way would you go',
-    id: 'friction-unsaid',
-    max: 1,
-    min: 1,
-    prompt: 'If you had to give something up, which way would you go?',
-    options: [
-      { label: 'Say what matters, much more', value: 'plain-strong', weights: weights({ candor: 2, freedom: 1 }) },
-      { label: 'Say what matters, a little more', value: 'plain-somewhat', weights: weights({ candor: 1 }) },
-      { label: 'They matter about the same', value: 'equal', weights: weights() },
-      { label: 'Keep the peace, a little more', value: 'peace-somewhat', weights: weights({ closeness: 1 }) },
-      { label: 'Keep the peace, much more', value: 'peace-strong', weights: weights({ closeness: 2, steadiness: 1 }) },
+      { label: 'Built something meaningful', value: 'build', weights: weights({ building: 2 }) },
+      { label: 'Stronger close relationships', value: 'relationships', weights: weights({ closeness: 2 }) },
+      { label: 'More control of my time', value: 'freedom', weights: weights({ freedom: 2 }) },
+      { label: 'Greater skill and capability', value: 'skill', weights: weights({ mastery: 2 }) },
+      { label: 'More stability for me or others', value: 'steadiness', weights: weights({ steadiness: 2 }) },
+      { label: 'More everyday enjoyment', value: 'enjoyment', weights: weights({ enjoyment: 2 }) },
+      { label: 'Helped people or my community', value: 'help', weights: weights({ service: 2 }) },
     ],
   },
   {
@@ -104,16 +60,17 @@ export const STAR_QUESTIONS: readonly StarQuestion[] = [
     id: 'ordinary-day',
     max: 2,
     min: 1,
-    prompt: '{name}, it is five years from now. You are {age}. Which ordinary day feels closest to the life you want?',
+    context: 'In 5 years · Age {age}',
+    prompt: 'Which ordinary day would you want?',
     options: [
-      { label: 'I lead or build something, and I own how it turns out', value: 'lead-build', weights: weights({ building: 2, candor: 1 }) },
-      { label: 'I do skilled work with people I respect', value: 'skilled-team', weights: weights({ closeness: 1, mastery: 2 }) },
-      { label: 'I work on my own and control more of my time', value: 'independent', weights: weights({ freedom: 2, mastery: 1 }) },
-      { label: 'I care for people, a home, or a community', value: 'care', weights: weights({ service: 2, steadiness: 1 }) },
-      { label: 'I move between projects, places, or new experiences', value: 'projects-places', weights: weights({ enjoyment: 1, freedom: 2 }) },
-      { label: 'I have steady work and plenty of life outside it', value: 'steady-life', weights: weights({ enjoyment: 1, steadiness: 2 }) },
-      { label: 'Something else fits me better', value: 'other', weights: weights() },
-      { label: 'I cannot see it clearly yet', value: 'unclear', weights: weights() },
+      { label: 'Building something I answer for', value: 'lead-build', weights: weights({ building: 2, candor: 1 }) },
+      { label: 'Skilled work with respected people', value: 'skilled-team', weights: weights({ closeness: 1, mastery: 2 }) },
+      { label: 'Independent work, my own schedule', value: 'independent', weights: weights({ freedom: 2, mastery: 1 }) },
+      { label: 'Caring for people, home, or community', value: 'care', weights: weights({ service: 2, steadiness: 1 }) },
+      { label: 'New projects, places, and experiences', value: 'projects-places', weights: weights({ enjoyment: 1, freedom: 2 }) },
+      { label: 'Steady work, time for life', value: 'steady-life', weights: weights({ enjoyment: 1, steadiness: 2 }) },
+      { label: 'Something else', value: 'other', weights: weights() },
+      { label: 'Not clear yet', value: 'unclear', weights: weights() },
     ],
   },
 ];

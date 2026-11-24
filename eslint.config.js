@@ -1,5 +1,4 @@
 const { defineConfig } = require('eslint/config');
-const convexPlugin = require('@convex-dev/eslint-plugin');
 const expoConfig = require('eslint-config-expo/flat');
 const jestPlugin = require('eslint-plugin-jest');
 
@@ -10,14 +9,6 @@ const BANNED_PACKAGES = [
   {
     name: '@react-native-async-storage/async-storage',
     message: 'Removed from React Native core. Use the expo-sqlite localStorage polyfill.',
-  },
-  {
-    name: 'expo-notifications',
-    message: 'North never notifies or reminds. This is a product invariant, not a preference.',
-  },
-  {
-    name: 'expo-glass-effect',
-    message: 'DESIGN.md forbids floating glass, glow, and gradients.',
   },
   {
     name: '@shopify/react-native-skia',
@@ -133,21 +124,8 @@ module.exports = defineConfig([
     },
   },
 
-  {
-    files: ['convex/**/*.ts'],
-    plugins: {
-      '@convex-dev': convexPlugin,
-    },
-    rules: {
-      '@convex-dev/explicit-table-ids': 'error',
-      '@convex-dev/no-filter-in-query': 'warn',
-      '@convex-dev/no-old-registered-function-syntax': 'error',
-      '@convex-dev/no-top-of-hour-crons': 'warn',
-      '@convex-dev/require-args-validator': 'error',
-    },
-  },
 
   {
-    ignores: ['convex/_generated/**', 'dist/**', 'src/theme.ts'],
+    ignores: ['content-api/**', 'dist/**', 'src/theme.ts'],
   },
 ]);

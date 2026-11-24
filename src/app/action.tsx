@@ -1,5 +1,5 @@
-import { StartAction } from '@/screens/action';
+import { TakeAction } from '@/screens/action';
 
 export default function ActionRoute() {
-  return <StartAction />;
+  return <TakeAction />;
 }

@@ -1,177 +1,105 @@
-import { useMemo, useState } from 'react';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { InstrumentSlider } from '@/components/ui/instrument-slider';
+import { GLASS_AVAILABLE, GlassGroup } from '@/components/ui/glass';
 import { NorthButton } from '@/components/ui/north-button';
 import { NorthField } from '@/components/ui/north-field';
 import { NorthScreen } from '@/components/ui/north-screen';
 import { NorthText } from '@/components/ui/north-text';
-import { Reveal } from '@/components/ui/reveal';
-import { MAX_DEADLINE_DAYS, MIN_DEADLINE_DAYS } from '@/domains/actions/action';
-import { swapsLeft } from '@/domains/actions/swaps';
-import { ActionBrief } from '@/domains/actions/ui/action-brief';
-import { nextAction } from '@/domains/content/selection';
+import { MAX_DAYS, MIN_DAYS, checkInTime, clockLabel, dayLabel } from '@/domains/actions/action';
+import { lineById } from '@/domains/content/catalogue';
+import { useCatalogue } from '@/domains/content/store';
+import { LineCard } from '@/domains/content/ui/line-card';
+import { degreesForClose } from '@/domains/direction/movement';
 import { useJourney } from '@/domains/journey/store';
 import { commitImpact } from '@/platform/haptics';
 import { colors, spacing } from '@/theme';
 
-type Step = 'proposal' | 'naming' | 'deadline';
-
 /**
- * Taking the next Action, in the order the product asks for it: read what the
- * system proposes, decide what it means for you, then choose how long you are
- * giving yourself. Each step asks for exactly one thing, because a sheet that
- * asks for three at once is how a commitment becomes a form.
+ * Taking the Action. Two decisions and no more: how many days it gets, and
+ * whether to put it in his own words. The check-in time comes from Settings.
  */
-export function StartAction() {
+export function TakeAction() {
+  const { line: lineId } = useLocalSearchParams<{ line?: string }>();
   const journey = useJourney((state) => state.journey);
   const open = useJourney((state) => state.open);
-  const swap = useJourney((state) => state.swap);
-
-  const [step, setStep] = useState<Step>('proposal');
-  const [named, setNamed] = useState('');
-  const [days, setDays] = useState(3);
+  const catalogue = useCatalogue((state) => state.catalogue);
+  const line = lineId ? lineById(catalogue, lineId) : undefined;
+  const [days, setDays] = useState(1);
+  const [rewording, setRewording] = useState(false);
+  const [text, setText] = useState('');
   const [now] = useState(() => Date.now());
 
-  const proposal = useMemo(() => {
-    if (!journey) return null;
-    return nextAction({
-      closed: journey.closed.map((action) => action.actionId),
-      honestThing: journey.honestThing,
-      northStar: journey.northStar,
-      passed: journey.passed,
-      readings: journey.readings,
-    });
-  }, [journey]);
-
-  if (!journey || !proposal) return null;
-
-  const swaps = swapsLeft(journey.swapsUsedAt, now);
+  if (!journey || !line || journey.open) return null;
+  const checkIn = checkInTime(now, days, journey.preferences.checkInMinutes);
 
   return (
-    <NorthScreen contentStyle={styles.screen}>
-      <Reveal key={step} style={styles.step}>
-        {step === 'proposal' ? (
-          <>
-            <NorthText variant="label">THE NEXT ACTION</NorthText>
-            <ActionBrief action={proposal} />
-            <View style={styles.actions}>
-              <NorthButton label="Take this one" onPress={() => go('naming')} />
-              <NorthButton
-                disabled={swaps === 0}
-                label={swaps === 0 ? 'No swaps left this month' : `Swap it · ${swaps} left`}
-                onPress={() => swap(proposal.id, Date.now())}
-                tone="quiet"
-              />
-            </View>
-          </>
-        ) : null}
+    <NorthScreen bare={GLASS_AVAILABLE} contentStyle={styles.screen}>
+      <LineCard action={text.trim() || undefined} line={line} />
 
-        {step === 'naming' ? (
-          <>
-            <View style={styles.recall}>
-              <NorthText variant="label">THE ACTION</NorthText>
-              <NorthText style={styles.paper}>{proposal.title}</NorthText>
-            </View>
-            <View style={styles.head}>
-              <NorthText variant="title">Name it in your own words.</NorthText>
-              <NorthText>What does this mean for you this week?</NorthText>
-            </View>
-            <NorthField
-              accessibilityLabel="Your named action"
-              autoFocus
-              onChangeText={setNamed}
-              placeholder="Speak up in Thursday’s meeting instead of nodding along."
-              value={named}
-            />
-            <View style={styles.actions}>
-              <NorthButton
-                disabled={named.trim().length === 0}
-                label="Set the deadline"
-                onPress={() => go('deadline')}
-              />
-              <NorthButton label="Back" onPress={() => go('proposal')} tone="quiet" />
-            </View>
-          </>
-        ) : null}
+      {rewording ? (
+        <NorthField
+          accessibilityLabel="The action, in your words"
+          autoFocus
+          maxLength={240}
+          onChangeText={setText}
+          placeholder={line.takeaway}
+          value={text}
+        />
+      ) : (
+        <NorthButton label="Put it in my words" onPress={() => setRewording(true)} tone="quiet" />
+      )}
 
-        {step === 'deadline' ? (
-          <>
-            <View style={styles.recall}>
-              <NorthText variant="label">YOU NAMED IT</NorthText>
-              <NorthText style={styles.paper}>{named.trim()}</NorthText>
-            </View>
-            <View style={styles.head}>
-              <NorthText variant="title">How long are you giving yourself?</NorthText>
-              <NorthText>Choose one to seven days.</NorthText>
-            </View>
-            <InstrumentSlider
-              accessibilityLabel="Deadline in days"
-              leftLabel="1 day"
-              maximum={MAX_DEADLINE_DAYS}
-              minimum={MIN_DEADLINE_DAYS}
-              onChange={setDays}
-              readout={`${days} ${days === 1 ? 'DAY' : 'DAYS'}`}
-              rightLabel="7 days"
-              value={days}
-            />
-            <View style={styles.actions}>
-              <NorthButton label="Open it" onPress={openIt} />
-              <NorthButton label="Back" onPress={() => go('naming')} tone="quiet" />
-            </View>
-            <NorthText style={styles.footnote} variant="small">
-              North will not remind you.
-            </NorthText>
-          </>
-        ) : null}
-      </Reveal>
+      <View style={styles.when}>
+        <NorthText variant="label">HOW LONG</NorthText>
+        <InstrumentSlider
+          accessibilityLabel="Days for this action"
+          leftLabel="Today"
+          maximum={MAX_DAYS}
+          minimum={MIN_DAYS}
+          onChange={setDays}
+          readout={days === 1 ? 'Today' : `${days} days`}
+          rightLabel="7 days"
+          value={days}
+        />
+        <NorthText variant="label">
+          {`CHECK-IN ${dayLabel(checkIn, now).toUpperCase()} ${clockLabel(journey.preferences.checkInMinutes)} · WORTH ${degreesForClose(days).toFixed(2)}°`}
+        </NorthText>
+      </View>
+
+      <GlassGroup style={styles.actions}>
+        <NorthButton
+          label="Commit"
+          onPress={() => {
+            open({ action: text, days, line });
+            void commitImpact();
+            router.back();
+          }}
+        />
+        <NorthText style={styles.footnote} variant="small">
+          {journey.preferences.checkIns
+            ? 'North will ask once, at the check-in. Nothing else.'
+            : 'Check-ins are off. Answer on Today when you are ready.'}
+        </NorthText>
+      </GlassGroup>
     </NorthScreen>
   );
-
-  function go(next: Step) {
-    setStep(next);
-  }
-
-  function openIt() {
-    void commitImpact();
-    open({
-      actionId: proposal!.id,
-      axis: proposal!.axis,
-      deadlineDays: days,
-      named: named.trim(),
-      note: null,
-      openedAt: Date.now(),
-    });
-    router.back();
-  }
 }
 
 const styles = StyleSheet.create({
   actions: {
     gap: spacing.sm,
-    paddingTop: spacing.sm,
   },
   footnote: {
     color: colors.slate,
     textAlign: 'center',
   },
-  head: {
-    gap: spacing.sm,
-  },
-  paper: {
-    color: colors.paper,
-  },
-  recall: {
-    borderLeftColor: colors.lineSoft,
-    borderLeftWidth: 2,
-    gap: spacing.xs,
-    paddingLeft: spacing.lg,
-  },
   screen: {
     gap: spacing.lg,
   },
-  step: {
-    gap: spacing.lg,
+  when: {
+    gap: spacing.md,
   },
 });

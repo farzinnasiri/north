@@ -1,70 +1,79 @@
-import { useState } from 'react';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { GLASS_AVAILABLE, GlassGroup } from '@/components/ui/glass';
 import { NorthButton } from '@/components/ui/north-button';
 import { NorthField } from '@/components/ui/north-field';
 import { NorthScreen } from '@/components/ui/north-screen';
 import { NorthText } from '@/components/ui/north-text';
 import { Surface } from '@/components/ui/surface';
-import { degreesForClose } from '@/domains/direction/movement';
+import type { Outcome } from '@/domains/actions/action';
+import { earnedFor } from '@/domains/direction/movement';
 import { useJourney } from '@/domains/journey/store';
-import { closeoutNotification } from '@/platform/haptics';
+import { closeoutNotification, commitImpact } from '@/platform/haptics';
 import { playSoundCue } from '@/platform/sound';
 import { colors, spacing } from '@/theme';
 
 /**
- * The honour system, in one screen. There is nothing to upload and nothing to
- * prove, so the only thing this asks for is an answer — and the quiet way out
- * changes nothing, because a man who is not finished has not failed.
+ * The check-in, in one screen. Three honest answers and an optional note.
+ * There is nothing to upload and nothing to prove.
  */
 export function Closeout() {
   const journey = useJourney((state) => state.journey);
-  const close = useJourney((state) => state.close);
+  const checkIn = useJourney((state) => state.checkIn);
   const [note, setNote] = useState(journey?.open?.note ?? '');
-  const soundEnabled = journey?.preferences.sound ?? false;
+  const [showNote, setShowNote] = useState(false);
+  const [targetId] = useState(() => journey?.open?.instanceId);
 
   const open = journey?.open;
-  if (!open) return null;
+  if (!journey || !open || open.instanceId !== targetId) return null;
+
+  function answer(outcome: Outcome) {
+    if (!targetId) return;
+    const moved = checkIn({ instanceId: targetId, note: note.trim() === '' ? null : note.trim(), outcome });
+    if (moved) {
+      void closeoutNotification();
+      playSoundCue('close-out', journey?.preferences.sound ?? false);
+    } else {
+      void commitImpact();
+    }
+    if (router.canGoBack()) router.back();
+    else router.replace('/');
+  }
 
   return (
-    <NorthScreen contentStyle={styles.screen}>
+    <NorthScreen bare={GLASS_AVAILABLE} contentStyle={styles.screen}>
       <View style={styles.head}>
-        <NorthText variant="title">Did you do what you named?</NorthText>
-        <NorthText>No proof needed.</NorthText>
+        <NorthText variant="title">Did you do it?</NorthText>
+        <NorthText>No proof needed. Say how it went.</NorthText>
       </View>
 
       <Surface>
-        <NorthText variant="label">YOU NAMED IT</NorthText>
-        <NorthText selectable style={styles.named}>
-          {open.named}
-        </NorthText>
+        <NorthText variant="label">THE ONE THING</NorthText>
+        <NorthText selectable style={styles.paper}>{open.action}</NorthText>
       </Surface>
 
-      <NorthField
-        accessibilityLabel="Optional note"
-        onChangeText={setNote}
-        placeholder="Add a note if you want."
-        value={note}
-      />
+      <GlassGroup style={styles.actions}>
+        <NorthButton label={`I did it · ${earnedFor('done', open.days).toFixed(2)}°`} onPress={() => answer('done')} />
+        <NorthButton label={`Partly · ${earnedFor('partly', open.days).toFixed(2)}°`} onPress={() => answer('partly')} tone="secondary" />
+        <NorthButton label="I didn’t" onPress={() => answer('missed')} tone="quiet" />
+      </GlassGroup>
 
-      <View style={styles.actions}>
-        <NorthButton label="Yes, it's done" onPress={keep} />
-        <NorthButton label="Not yet" onPress={() => router.back()} tone="quiet" />
-      </View>
-
-      <NorthText style={styles.footnote} variant="label">
-        {`WORTH · ${degreesForClose(open.deadlineDays).toFixed(2)}°`}
-      </NorthText>
+      {showNote ? (
+        <NorthField
+          accessibilityLabel="Optional note"
+          maxLength={2000}
+          onChangeText={setNote}
+          placeholder="One line on how it went, if you want."
+          value={note}
+        />
+      ) : (
+        <NorthButton label={open.note ? 'Edit note' : 'Add a note'} onPress={() => setShowNote(true)} tone="quiet" />
+      )}
+      <NorthText style={styles.footnote} variant="small">A miss moves nothing back.</NorthText>
     </NorthScreen>
   );
-
-  function keep() {
-    void closeoutNotification();
-    close({ at: Date.now(), kept: true, note: note.trim() === '' ? null : note.trim() });
-    playSoundCue('close-out', soundEnabled);
-    router.back();
-  }
 }
 
 const styles = StyleSheet.create({
@@ -72,13 +81,12 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   footnote: {
-    color: colors.slate,
     textAlign: 'center',
   },
   head: {
     gap: spacing.sm,
   },
-  named: {
+  paper: {
     color: colors.paper,
   },
   screen: {

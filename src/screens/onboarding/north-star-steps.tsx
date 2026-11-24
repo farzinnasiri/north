@@ -1,12 +1,10 @@
-import { useEffect, useState } from 'react';
-import { useReducedMotion } from 'react-native-reanimated';
+import { useState } from 'react';
 
 import { ChoiceInstrument } from '@/components/ui/choice-instrument';
 import type { NorthStarType, Profile } from '@/domains/onboarding/onboarding';
 import { STAR_QUESTIONS } from '@/domains/onboarding/north-star';
 import { OnboardingFrame } from '@/screens/onboarding/onboarding-frame';
 import { NorthStarCarousel } from '@/screens/onboarding/north-star-carousel';
-import { motion } from '@/theme';
 
 type StarQuestionStepProps = {
   id: string;
@@ -38,6 +36,7 @@ export function StarQuestionStep({
       body={question.body ?? (multiple ? `Choose ${question.min === question.max ? question.min : `up to ${question.max}`}.` : undefined)}
       disabled={value.length < question.min || value.length > question.max}
       emphasis={question.emphasis}
+      kicker={question.context ? personalizedPrompt(question.context, profile) : undefined}
       onContinue={onContinue}
       title={personalizedPrompt(question.prompt, profile)}
     >
@@ -92,40 +91,5 @@ export function StarRevealStep({
         value={viewed}
       />
     </OnboardingFrame>
-  );
-}
-
-type NorthStarIntroStepProps = {
-  onContinue: () => void;
-};
-
-type NorthStarCurationStepProps = NorthStarIntroStepProps;
-
-export function NorthStarCurationStep({ onContinue }: NorthStarCurationStepProps) {
-  const reduceMotion = useReducedMotion();
-
-  useEffect(() => {
-    const timeout = setTimeout(onContinue, reduceMotion ? 0 : motion.arrival);
-    return () => clearTimeout(timeout);
-  }, [onContinue, reduceMotion]);
-
-  return (
-    <OnboardingFrame
-      align="centre"
-      presentation="statement"
-      title="Ordering the eight lives."
-    />
-  );
-}
-
-export function NorthStarIntroStep({ onContinue }: NorthStarIntroStepProps) {
-  return (
-    <OnboardingFrame
-      actionLabel="Continue"
-      align="centre"
-      onContinue={onContinue}
-      presentation="statement"
-      title="What matters most?"
-    />
   );
 }

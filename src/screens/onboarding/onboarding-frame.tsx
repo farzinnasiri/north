@@ -1,4 +1,4 @@
-import { createContext, use, useRef, useState } from 'react';
+import { createContext, use, useEffect, useRef, useState } from 'react';
 import type { PropsWithChildren } from 'react';
 import {
   ScrollView,
@@ -8,20 +8,23 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { useReducedMotion } from 'react-native-reanimated';
 
 import { NorthButton } from '@/components/ui/north-button';
 import { NorthBackdrop } from '@/components/ui/north-backdrop';
 import { NorthText } from '@/components/ui/north-text';
 import { ProgressRail } from '@/components/ui/progress-rail';
+import { Reveal } from '@/components/ui/reveal';
 import { TracingFrame } from '@/components/ui/tracing-frame';
-import { Mascot } from '@/domains/mascot/ui/mascot';
+import { DirectionCompass } from '@/domains/direction/ui/direction-compass';
 import { commitImpact } from '@/platform/haptics';
 import { useOnboardingProgress } from '@/screens/onboarding/onboarding-progress';
-import { colors, spacing, typography } from '@/theme';
+import { colors, motion, spacing, typography } from '@/theme';
 
 const RAIL_HEIGHT = spacing.lg;
 
 type OnboardingFrameProps = PropsWithChildren<{
+  animateAvailability?: boolean;
   actionLabel?: string;
   actionTone?: 'primary' | 'secondary';
   align?: 'centre' | 'left';
@@ -39,11 +42,18 @@ type OnboardingFrameProps = PropsWithChildren<{
   presentation?: 'question' | 'statement';
   secondaryAction?: { label: string; onPress: () => void };
   title: string;
+  titleRevealDelay?: number;
 }>;
 
 type OnboardingShellProps = PropsWithChildren<{
+  hideInstrument?: boolean;
+  introducing?: boolean;
   onBack?: () => void;
 }>;
+
+/** When the welcome copy starts, after the compass has found north. */
+export const GREETING_CALIBRATE_AT = motion.arrival;
+export const GREETING_COPY_AT = GREETING_CALIBRATE_AT + motion.arrival;
 
 const OnboardingBackContext = createContext<(() => void) | undefined>(undefined);
 
@@ -63,17 +73,34 @@ function questionTitle(title: string, emphasis?: string) {
 
 /**
  * The persistent part of onboarding. Keeping this mounted lets the progress
- * rail, Back affordance, and Mascot move between destination states instead of
+ * rail, Back affordance, and Compass move between destination states instead of
  * being reconstructed for every page.
  */
-export function OnboardingShell({ children, onBack }: OnboardingShellProps) {
+export function OnboardingShell({ children, hideInstrument = false, introducing = false, onBack }: OnboardingShellProps) {
   const progress = useOnboardingProgress();
   const insets = useSafeAreaInsets();
   const { height, width } = useWindowDimensions();
+  const reduceMotion = useReducedMotion();
+  const [calibrated, setCalibrated] = useState(false);
   const compact = height < 740 || width < 360;
   const presenceHeight = compact ? 124 : 148;
-  const mascotSize = Math.min(356, Math.max(240, Math.min(width * 0.86, height * 0.44)));
-  const inkFieldHeight = insets.top + spacing.sm + RAIL_HEIGHT + presenceHeight;
+  const greetingSize = Math.min(width * 0.64, height * 0.3, 280);
+  const stageHeight = hideInstrument ? 0 : introducing ? greetingSize + spacing.lg : presenceHeight;
+  const inkFieldHeight = insets.top + spacing.sm + RAIL_HEIGHT + stageHeight;
+
+  // On the welcome beat the needle starts off and finds north once.
+  useEffect(() => {
+    if (!introducing) return;
+    if (reduceMotion) {
+      const now = setTimeout(() => setCalibrated(true), 0);
+      return () => clearTimeout(now);
+    }
+    const timer = setTimeout(() => setCalibrated(true), GREETING_CALIBRATE_AT);
+    return () => clearTimeout(timer);
+  }, [introducing, reduceMotion]);
+
+  const direction = introducing ? (calibrated ? 0 : 38) : progress?.direction ?? 90;
+  const instrumentSize = introducing ? greetingSize : presenceHeight;
 
   return (
     <View style={styles.screen}>
@@ -106,18 +133,14 @@ export function OnboardingShell({ children, onBack }: OnboardingShellProps) {
           </View>
         ) : null}
 
-        <View style={[styles.presence, { height: presenceHeight }]}>
-          {progress ? (
-            <Mascot
-              scene={progress.mascot}
-              size={mascotSize}
-              style={{
-                transform: [
-                  { translateX: Math.round(mascotSize * 0.36) },
-                  { translateY: Math.round(mascotSize * 0.12) },
-                ],
-              }}
-            />
+        <View style={[styles.presence, { height: stageHeight }]}>
+          {!hideInstrument ? (
+            <Animated.View
+              pointerEvents="none"
+              style={introducing ? styles.instrumentCentre : styles.instrumentCorner}
+            >
+              <DirectionCompass direction={direction} field={introducing} size={instrumentSize} />
+            </Animated.View>
           ) : null}
         </View>
 
@@ -135,6 +158,7 @@ export function OnboardingShell({ children, onBack }: OnboardingShellProps) {
  * fixed action instead of being clipped on shorter phones.
  */
 export function OnboardingFrame({
+  animateAvailability = false,
   actionLabel,
   actionTone = 'primary',
   align = 'left',
@@ -149,8 +173,10 @@ export function OnboardingFrame({
   presentation = 'question',
   secondaryAction,
   title,
+  titleRevealDelay,
 }: OnboardingFrameProps) {
   const { height, width } = useWindowDimensions();
+  const reduceMotion = useReducedMotion();
   const centred = align === 'centre';
   const stacked = layout === 'stacked';
   const statement = presentation === 'statement';
@@ -176,6 +202,26 @@ export function OnboardingFrame({
     setContinuing(true);
     secondaryAction?.onPress();
   }
+
+  const titleNode = (
+    <NorthText
+      style={[
+        styles.title,
+        statement
+          ? compact
+            ? styles.titleCompact
+            : styles.titleRegular
+          : compactQuestion
+            ? styles.questionTitleCompact
+            : styles.questionTitleRegular,
+        !statement && styles.questionTitle,
+        centred && styles.centre,
+      ]}
+      variant="title"
+    >
+      {statement ? title : questionTitle(title, emphasis)}
+    </NorthText>
+  );
 
   const content = (
     <View
@@ -210,23 +256,9 @@ export function OnboardingFrame({
             ) : null}
           </View>
         )}
-        <NorthText
-          style={[
-            styles.title,
-            statement
-              ? compact
-                ? styles.titleCompact
-                : styles.titleRegular
-              : compactQuestion
-                ? styles.questionTitleCompact
-                : styles.questionTitleRegular,
-            !statement && styles.questionTitle,
-            centred && styles.centre,
-          ]}
-          variant="title"
-        >
-          {statement ? title : questionTitle(title, emphasis)}
-        </NorthText>
+        {titleRevealDelay === undefined
+          ? titleNode
+          : <Reveal delay={titleRevealDelay} enabled={!reduceMotion}>{titleNode}</Reveal>}
         {body ? <NorthText style={[styles.body, centred && styles.centre]}>{body}</NorthText> : null}
       </View>
 
@@ -266,6 +298,7 @@ export function OnboardingFrame({
         >
           {actionLabel && onContinue ? (
             <NorthButton
+              animateAvailability={animateAvailability}
               disabled={disabled || continuing}
               label={actionLabel}
               onPress={continueFlow}
@@ -359,6 +392,21 @@ const styles = StyleSheet.create({
   },
   questionCountSlot: {
     flexShrink: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  instrumentCentre: {
+    alignItems: 'center',
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  instrumentCorner: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
   },
   padded: {
     flex: 1,

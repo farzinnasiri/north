@@ -17,13 +17,11 @@ export type OnboardingStep =
   | { kind: 'question'; index: number }
   | { kind: 'honest' }
   | { kind: 'reality-reveal' }
-  | { kind: 'north-star-intro' }
   | { kind: 'star-question'; id: string }
-  | { kind: 'north-star-curation' }
   | { kind: 'star-reveal' }
-  | { kind: 'letter' }
   | { kind: 'contract' }
-  | { kind: 'first-action' };
+  | { kind: 'first-action' }
+  | { kind: 'check-in' };
 
 function questionsFor(axis: Axis): OnboardingStep[] {
   return QUESTIONS.reduce<OnboardingStep[]>(
@@ -34,22 +32,20 @@ function questionsFor(axis: Axis): OnboardingStep[] {
 }
 
 export const ONBOARDING_STEPS: readonly OnboardingStep[] = [
-  { kind: 'welcome' },
   { kind: 'profile', field: 1 },
+  { kind: 'welcome' },
   { kind: 'profile', field: 2 },
   ...ONBOARDING_AXES.flatMap((axis): OnboardingStep[] => questionsFor(axis)),
   { kind: 'honest' },
   { kind: 'reality-reveal' },
-  { kind: 'north-star-intro' },
   ...STAR_QUESTIONS.map((question): OnboardingStep => ({
     id: question.id,
     kind: 'star-question',
   })),
-  { kind: 'north-star-curation' },
   { kind: 'star-reveal' },
-  { kind: 'letter' },
   { kind: 'contract' },
   { kind: 'first-action' },
+  { kind: 'check-in' },
 ];
 
 export const ONBOARDING_PROMPT_COUNT =

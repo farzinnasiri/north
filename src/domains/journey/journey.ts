@@ -1,44 +1,48 @@
-import type { ClosedAction, OpenAction } from '@/domains/actions/action';
-import { daysOverdue, isOverdue } from '@/domains/actions/action';
-import { swapsLeft } from '@/domains/actions/swaps';
+import type { ClosedAction, OpenAction, Outcome } from '@/domains/actions/action';
+import { DEFAULT_CHECK_IN_MINUTES, checkInTime, clampDays, isDue, localDay } from '@/domains/actions/action';
+import type { Line } from '@/domains/content/catalogue';
 import type { AxisReading } from '@/domains/direction/initial-direction';
 import {
   HOLD_NORTH_DAYS,
   NEAR_NORTH_DEGREES,
-  directionAfterClose,
-  directionAfterMiss,
   daysHeldAtNorth,
-  degreesForClose,
+  directionAfter,
+  earnedFor,
 } from '@/domains/direction/movement';
 import type { NorthStarType } from '@/domains/onboarding/onboarding';
+import type { SignalId } from '@/domains/personalization/signal';
 
 export type Preferences = {
+  /** Minutes after local midnight for the check-in. */
+  checkInMinutes: number;
+  /** Whether North may send the one check-in notification. */
+  checkIns: boolean;
   haptics: boolean;
+  signal: SignalId;
   sound: boolean;
 };
 
 /**
- * Everything North knows about a person after onboarding is completed. It is
- * one record because the product is one continuous line from the first Open
- * Action to the Exit, and splitting it would only invite two of them to
- * disagree about where he stands.
+ * Everything North knows about one man. It lives on his phone and nowhere
+ * else: there is no account and no server copy.
  */
 export type Journey = {
-  direction: number;
   closed: ClosedAction[];
   committedAt: number;
+  direction: number;
   honestThing: string;
   name: string;
   northStar: NorthStarType | null;
   open: OpenAction | null;
-  /** Authored ids passed over with a Swap. */
+  /** Line ids he passed over with "Show two others". */
   passed: string[];
+  /** Local day he last asked for two others. Once a day. */
+  passedOnDay: number | null;
   preferences: Preferences;
   readings: AxisReading[];
   /** When the Direction first reached north, which starts Hold North. */
   reachedNorthAt: number | null;
   startingDirection: number;
-  swapsUsedAt: number[];
 };
 
 type BeginInput = {
@@ -50,99 +54,115 @@ type BeginInput = {
   readings: AxisReading[];
 };
 
-export function beginJourney({
-  at,
-  direction,
-  honestThing,
-  name,
-  northStar,
-  readings,
-}: BeginInput): Journey {
+export function beginJourney({ at, direction, honestThing, name, northStar, readings }: BeginInput): Journey {
   return {
-    direction,
     closed: [],
     committedAt: at,
+    direction,
     honestThing,
     name,
     northStar,
     open: null,
     passed: [],
-    preferences: { haptics: true, sound: true },
+    passedOnDay: null,
+    preferences: {
+      checkInMinutes: DEFAULT_CHECK_IN_MINUTES,
+      checkIns: false,
+      haptics: true,
+      signal: 'signal',
+      sound: true,
+    },
     readings,
     reachedNorthAt: direction === 0 ? at : null,
     startingDirection: direction,
-    swapsUsedAt: [],
   };
 }
 
-export function openAction(journey: Journey, action: OpenAction): Journey {
-  return { ...journey, open: action };
+type OpenInput = {
+  action: string;
+  at: number;
+  days: number;
+  instanceId: string;
+  line: Line;
+};
+
+/** Taking an Action. Refused while another is open: one at a time is the product. */
+export function openAction(journey: Journey, { action, at, days, instanceId, line }: OpenInput): Journey {
+  if (journey.open) return journey;
+  const text = action.trim() === '' ? line.takeaway : action.trim();
+  return {
+    ...journey,
+    open: {
+      action: text,
+      axis: line.axis,
+      checkInAt: checkInTime(at, days, journey.preferences.checkInMinutes),
+      days: clampDays(days),
+      instanceId,
+      lineId: line.id,
+      note: null,
+      openedAt: at,
+    },
+  };
 }
 
 export function attachNote(journey: Journey, note: string): Journey {
   if (!journey.open) return journey;
-  return { ...journey, open: { ...journey.open, note } };
+  const trimmed = note.trim();
+  return { ...journey, open: { ...journey.open, note: trimmed === '' ? null : trimmed } };
 }
 
-type CloseInput = {
+type CheckInInput = {
   at: number;
-  /** The honour system in one flag. Nothing verifies it and nothing may. */
-  kept: boolean;
   note?: string | null;
+  outcome: Outcome;
 };
 
 /**
- * Closing the Open Action. A kept Deadline moves the needle by what the
- * Deadline was worth; a missed one moves it by nothing at all. Neither takes
- * anything away, which is why both paths run through here rather than through
- * two screens that could drift apart.
+ * The check-in. What he says is what is recorded: there is no proof to give
+ * and no late penalty, because the question is asked at the time he chose.
  */
-export function closeAction(journey: Journey, { at, kept, note }: CloseInput): Journey {
+export function checkIn(journey: Journey, { at, note, outcome }: CheckInInput): Journey {
   const open = journey.open;
   if (!open) return journey;
-
-  const earned = kept ? degreesForClose(open.deadlineDays) : 0;
-  const direction = kept
-    ? directionAfterClose(journey.direction, open.deadlineDays)
-    : directionAfterMiss(journey.direction);
-
+  const earned = earnedFor(outcome, open.days);
+  const direction = directionAfter(journey.direction, earned);
   return {
     ...journey,
-    direction,
     closed: [
       ...journey.closed,
-      {
-        ...open,
-        closedAt: at,
-        earned,
-        kept,
-        note: note === undefined ? open.note : note,
-      },
+      { ...open, closedAt: at, earned, note: note === undefined ? open.note : note, outcome },
     ],
+    direction,
     open: null,
-    reachedNorthAt:
-      journey.reachedNorthAt ?? (direction === 0 ? at : null),
+    reachedNorthAt: journey.reachedNorthAt ?? (direction === 0 ? at : null),
   };
 }
 
-/** Letting an Action go. It is recorded, it is not punished. */
-export function letGo(journey: Journey, at: number): Journey {
-  return closeAction(journey, { at, kept: false });
+export function canPass(journey: Journey, now: number): boolean {
+  return journey.open === null && journey.passedOnDay !== localDay(now);
 }
 
-export function spendSwap(journey: Journey, actionId: string, at: number): Journey {
-  if (swapsLeft(journey.swapsUsedAt, at) === 0) return journey;
+/** "Show two others": both of today's suggestions are set aside, once a day. */
+export function passSuggestions(journey: Journey, ids: readonly string[], now: number): Journey {
+  if (!canPass(journey, now)) return journey;
   return {
     ...journey,
-    passed: journey.passed.includes(actionId)
-      ? journey.passed
-      : [...journey.passed, actionId],
-    swapsUsedAt: [...journey.swapsUsedAt, at],
+    passed: [...journey.passed, ...ids.filter((id) => !journey.passed.includes(id))],
+    passedOnDay: localDay(now),
   };
 }
 
-export function setPreferences(journey: Journey, preferences: Preferences): Journey {
-  return { ...journey, preferences };
+/** Lines that should not be suggested again soon. */
+export function seenLines(journey: Journey): string[] {
+  return [...journey.closed.map((action) => action.lineId), ...journey.passed];
+}
+
+export function setPreferences(journey: Journey, change: Partial<Preferences>): Journey {
+  const preferences = { ...journey.preferences, ...change };
+  const open = journey.open && change.checkInMinutes !== undefined
+    ? { ...journey.open, checkInAt: checkInTime(journey.open.openedAt, journey.open.days, preferences.checkInMinutes) }
+    : journey.open;
+  return { ...journey, open, preferences };
 }
 
 export function setJourneyName(journey: Journey, name: string): Journey {
@@ -151,25 +171,20 @@ export function setJourneyName(journey: Journey, name: string): Journey {
 }
 
 export type ActionState =
-  | { kind: 'idle'; lastClosedAt: number | null }
+  | { kind: 'choosing' }
   | { kind: 'running'; action: OpenAction }
-  | { kind: 'overdue'; action: OpenAction; days: number };
+  | { kind: 'due'; action: OpenAction };
 
 /**
- * What the home screen is answering. The Action and the Direction are read
- * separately on purpose: a man can be one day from the Exit and still have an
- * Action running, and collapsing the two into a single enum is how a screen
- * ends up lying about one of them.
+ * What the Today screen is answering. The Action and the Direction are read
+ * separately on purpose: a man can be one day from the Exit with an Action
+ * still running.
  */
 export function actionState(journey: Journey, now: number): ActionState {
-  if (!journey.open) {
-    const last = journey.closed.at(-1);
-    return { kind: 'idle', lastClosedAt: last ? last.closedAt : null };
-  }
-  if (isOverdue(journey.open, now)) {
-    return { kind: 'overdue', action: journey.open, days: daysOverdue(journey.open, now) };
-  }
-  return { kind: 'running', action: journey.open };
+  if (!journey.open) return { kind: 'choosing' };
+  return isDue(journey.open, now)
+    ? { action: journey.open, kind: 'due' }
+    : { action: journey.open, kind: 'running' };
 }
 
 export type NorthState =
@@ -187,8 +202,8 @@ export function northState(journey: Journey, now: number): NorthState {
   return journey.direction <= NEAR_NORTH_DEGREES ? { kind: 'near' } : { kind: 'travelling' };
 }
 
-export function keptCount(journey: Journey): number {
-  return journey.closed.filter((action) => action.kept).length;
+export function doneCount(journey: Journey): number {
+  return journey.closed.filter((action) => action.outcome === 'done').length;
 }
 
 /** Degrees closed since onboarding. The one number that is genuinely earned. */

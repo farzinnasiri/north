@@ -149,7 +149,7 @@ export function RealityTrace({ readings }: { readings: AxisReading[] }) {
           </NorthText>
           <NorthText variant="small">{DETAILS[selected]}</NorthText>
         </View>
-        <NorthText style={{ color: AXIS_COLORS[selected] }} variant="data">
+        <NorthText style={[styles.band, { color: AXIS_COLORS[selected] }]} variant="label">
           {realityBand(byAxis.get(selected) ?? 0).toUpperCase()}
         </NorthText>
       </View>
@@ -191,12 +191,13 @@ function labelPoint(index: number): Point & { anchor: 'end' | 'middle' | 'start'
 }
 
 const styles = StyleSheet.create({
+  band: {
+    fontSize: 12,
+  },
   detail: {
-    alignItems: 'center',
-    borderTopColor: colors.lineSoft,
-    borderTopWidth: 1,
-    flexDirection: 'row',
-    gap: spacing.lg,
+    borderTopColor: colors.glassEdge,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    gap: spacing.sm,
     minHeight: 52,
     paddingTop: spacing.sm,
   },
@@ -207,8 +208,8 @@ const styles = StyleSheet.create({
   graph: {
     alignSelf: 'center',
     aspectRatio: 1,
-    flex: 1,
-    minHeight: 0,
+    maxWidth: 300,
+    width: '100%',
   },
   hitTarget: {
     height: 48,
@@ -218,6 +219,6 @@ const styles = StyleSheet.create({
     width: 72,
   },
   root: {
-    flex: 1,
+    gap: spacing.sm,
   },
 });

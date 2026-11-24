@@ -31,20 +31,24 @@ iOS and Android.
 
 | Concern | Decision | Why |
 | --- | --- | --- |
-| Navigation | Expo Router, native `Stack`, `NativeTabs` | Real `UITabBar` and Material bottom bar rather than a JavaScript reimplementation |
+| Navigation | Expo Router, native `Stack` | Now is the only root; Log and You use native push and back gestures |
 | Sheets | Expo Router `presentation: 'formSheet'` with detents | Already native; a sheet library would add a dependency to reimplement it worse |
 | Styling | React Native `StyleSheet` with tokens from `src/theme.ts` | Fastest available, no build step, and North has one structural theme plus four authored Signal families. A styling library would be paying setup and runtime cost for variants the product does not need |
 | Tokens | `DESIGN.md` frontmatter is the source; `src/theme.ts` is generated | The two drifted while both were hand-maintained. One direction, checked by `make check` |
 | Animation | Reanimated 4 with `react-native-worklets` | New-Architecture-only and current. Use the CSS API for state-driven transitions, shared values for the needle and gestures, `entering`/`exiting`/`layout` for mount and reorder |
 | Gestures | `react-native-gesture-handler` | Required by Reanimated gesture work and by signature capture |
-| Vector drawing | `react-native-svg` | The compass, signature, and Mascot are bespoke product instruments. Mascot paths and its three rotors animate through Reanimated without a second rendering system |
+| Vector drawing | `react-native-svg` | The Compass and the crosshair field are bespoke product instruments, animated through Reanimated without a second rendering system |
 | Icons | One bespoke Settings gear in content. `NativeTabs` `sf`/`md` props for chrome | The gear is a universally learned route into Settings; native tab icons cost nothing and match each platform. An icon-font dependency remains unjustified |
 | View capture | `react-native-view-shot` | Captures the bounded Reality card as PNG on native and the web review surface without capturing surrounding controls |
 | Photo save | `expo-media-library` | Adds the captured Reality card to Photos with write-only photo permission rather than requesting broad library access |
 | Sound | `expo-audio`, three app-lifetime players | Navigation must not clip a cue; loading on press is audibly late |
 | Haptics | `expo-haptics`, `performAndroidHapticsAsync` on Android | Avoids needing the `VIBRATE` permission and matches iOS semantics |
 | Client state | Zustand | About 1KB, no boilerplate, and the smallest thing that survives contact with a real app |
-| Local persistence | `expo-sqlite` `localStorage` polyfill | Ships with Expo, works in Expo Go, and AsyncStorage is removed from React Native core |
+| Local persistence | `expo-sqlite` `localStorage` polyfill | Holds the Journey, the onboarding draft, and the downloaded content catalogue. There is no server copy |
+| Content | Cloudflare Worker + D1 (`content-api/`), bundled snapshot | Read-only catalogue of Lines. The app downloads it whole and matches on the phone, so nothing about the person is sent |
+| Native development | SDK-matched `expo-dev-client`, EAS cloud builds, Metro | Own app identity and native dependencies for device testing; reuse the client for JavaScript edits. Expo Go remains an optional supported preview. See `docs/EXPO-DEVELOPMENT.md` |
+| Liquid Glass | `expo-glass-effect`, native tabs, native sheets and headers | The system's own iOS 26 material for chrome, buttons and cards, with a translucent fallback elsewhere |
+| Check-in | `expo-notifications` | One local notification at his chosen time, with Done / Partly / Missed actions. Nothing remote |
 | Forms | `react-hook-form` with `zod` when onboarding is built | Not yet installed. Onboarding is the only real form surface |
 | Runtime validation | `zod` at boundaries only | Onboarding answers and persisted-state migration. Not for internal function arguments |
 | Unit and component tests | `jest-expo` with `@testing-library/react-native` | `node --test` cannot render React Native components |
@@ -57,28 +61,26 @@ specifically, not in the abstract.
 
 | Rejected | Reason |
 | --- | --- |
-| Effect-TS | Its payoff is typed errors, resource safety, retries, and fibers — all of which are backend concerns. `src/` is a frontend prototype with no network, no async, and no concurrency. It would add a large runtime and a second mental model for no current benefit. If it ever earns a place, that place is `convex/domains/` |
+| Effect-TS | Its payoff is typed errors, resource safety, retries, and fibers — all of which are backend concerns. `src/` is a frontend prototype with no network, no async, and no concurrency. It would add a large runtime and a second mental model for no current benefit. If it ever earns a place, that place is the content Worker |
 | NativeWind, Uniwind, Tailwind | A utility-class model competing with a token model, plus a build step. North already has tokens |
 | Unistyles | A good library whose features are broad variants and theming. North changes one semantic Signal family through a tiny context, not its structure |
 | Tamagui | Brings its own design system, which is the thing `DESIGN.md` already is |
 | shadcn/ui, react-native-reusables | A copy-paste catalogue of dialogs, cards, badges, and accordions — most of which `DESIGN.md` explicitly bans — that also requires NativeWind |
 | React Native Skia | Adds roughly 3–5MB of native binaries. North draws one dial that rotates. The right tool for shaders and large datasets, and enormously oversized for this |
-| `expo-glass-effect`, Liquid Glass | `DESIGN.md` forbids floating glass, glow, and gradients. Native tabs already opt out via `blurEffect="none"` |
 | Lottie | Decorative motion by construction, and the Motion section rules out everything it is good at |
 | `@gorhom/bottom-sheet` | Native form sheets already do this |
 | `@expo/vector-icons`, `react-native-vector-icons` | Ship entire icon fonts. Also moot while content has no icons |
 | Redux, Redux Toolkit | Roughly 11KB and an architecture with no problem to solve here |
 | `expo-av` | Deprecated in favour of `expo-audio` and `expo-video` |
 | AsyncStorage | Removed from React Native core |
-| `expo-notifications` | A product invariant, not a technical preference. North never chases a person |
 | Platform semantic colors (`Color`, `PlatformColor`) | North has one fixed mineral palette. System colors would fight the tokens, and Reanimated cannot consume them anyway |
 | Moti | A wrapper over Reanimated whose ergonomics the Reanimated 4 CSS API now provides directly |
 | `@react-native-picker/picker` | Added for the onboarding age field and removed on 2026-08-11. Picking one number from forty-five renders as a wheel on iOS and a full-height list on web, and it was the only piece of system chrome in a flow built from hairlines and marks. Replaced by `NumberTape`, a measuring tape read against a fixed index. Use a native picker only where the system look is genuinely correct |
-| TanStack Query | When the backend resumes, Convex's own hooks are the data layer |
+| TanStack Query | One request, twice a day, for a whole catalogue. A small store in `@/domains/content/store` is enough |
 
 ## Budgets
 
-Cheaper to hold than to recover. Measure with `npx expo-atlas` before a release,
+Cheaper to hold than to recover. Measure with `pnpm dlx expo-atlas` before a release,
 not once.
 
 | Budget | Limit |
@@ -149,8 +151,7 @@ two advisory warnings. The command still exits zero.
 
 ## Settled after the initial stack decision
 
-- **Main navigation, 2026-08-25.** The three destinations are `Now / Direction /
-  You`. Shipping targets retain `NativeTabs`; current iOS may minimize the bar
-  on downward scroll. Web gets an opaque development-only instrument dock so
-  the hierarchy can be reviewed without replacing native chrome. The product
-  rationale and motion rules live in `docs/product/main-surface-design.md`.
+- **Main navigation, 2026-10-08.** Now is the only root. Log and You are pushed
+  screens; Commit, Closeout, and Note use native form sheets. Native tabs and
+  the development web dock are removed. This supersedes the 2026-08-25 tab
+  decision. The accepted product contract is `docs/product/app-after-onboarding.md`.

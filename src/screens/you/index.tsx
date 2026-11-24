@@ -6,6 +6,7 @@ import { NorthRow } from '@/components/ui/north-row';
 import { NorthScreen } from '@/components/ui/north-screen';
 import { NorthText } from '@/components/ui/north-text';
 import { Section } from '@/components/ui/section';
+import { TAB_TOP_INSET } from '@/components/ui/tab-inset';
 import { RealityTrace } from '@/domains/direction/ui/reality-trace';
 import { useJourney } from '@/domains/journey/store';
 import { NORTH_STAR_OPTIONS } from '@/domains/onboarding/onboarding';
@@ -25,7 +26,7 @@ export function You() {
   const identity = star?.label || 'Your North Star';
 
   return (
-    <NorthScreen contentStyle={[styles.screen, wide && styles.screenWide]}>
+    <NorthScreen contentStyle={[styles.screen, wide && styles.screenWide, { paddingTop: TAB_TOP_INSET }]}>
       {star ? (
         <View style={[styles.hero, compact && styles.heroCompact, wide && styles.heroWide]}>
           <View style={styles.portraitFrame}>
@@ -51,13 +52,13 @@ export function You() {
       ) : null}
 
       <View style={[styles.content, wide && styles.contentWide]}>
-        <Section label="WHERE YOU STAND" style={styles.reality}>
+        <Section label="WHERE YOU STAND" style={wide ? styles.reality : undefined}>
           <View style={[styles.trace, compact && styles.traceCompact]}>
             <RealityTrace readings={journey.readings} />
           </View>
         </Section>
 
-        <Section label="THE CODE" ruled style={styles.code}>
+        <Section label="THE CODE" style={wide ? styles.code : undefined}>
           <Link asChild href="/code">
             <NorthRow
               detail="An optional agreement you can return to."
@@ -150,11 +151,10 @@ const styles = StyleSheet.create({
   },
   trace: {
     alignSelf: 'center',
-    height: 280,
     maxWidth: 380,
     width: '100%',
   },
   traceCompact: {
-    height: 250,
+    maxWidth: 320,
   },
 });

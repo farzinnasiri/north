@@ -10,8 +10,7 @@ import Animated, {
 
 import { NorthMark } from '@/components/ui/north-mark';
 import { NorthText } from '@/components/ui/north-text';
-import type { MascotScene } from '@/domains/mascot/mascot';
-import { Mascot } from '@/domains/mascot/ui/mascot';
+import { DirectionCompass } from '@/domains/direction/ui/direction-compass';
 import { colors, motion } from '@/theme';
 
 type BootScreenProps = {
@@ -87,7 +86,7 @@ export function BootScreen({ held }: BootScreenProps) {
           <NorthMark size={168} />
         </Animated.View>
         <Animated.View style={[styles.face, faceStyle]}>
-          <Mascot scene={bootFaceScene(stage)} size={204} />
+          <DirectionCompass direction={stage >= 1 ? 0 : 38} field={false} size={204} />
         </Animated.View>
       </View>
       <Animated.View style={[styles.wordmark, wordStyle]}>
@@ -99,41 +98,6 @@ export function BootScreen({ held }: BootScreenProps) {
   );
 }
 
-function bootFaceScene(stage: number): MascotScene {
-  if (stage === 0) {
-    return {
-      expression: 'loading',
-      rotations: {
-        cardinals: { angle: 18 },
-        face: { angle: -6 },
-        outer: { angle: -28 },
-      },
-    };
-  }
-
-  if (stage === 1) {
-    return {
-      direction: 0,
-      expression: 'compass',
-      rotations: {
-        cardinals: { angle: -8, duration: 'settle' },
-        face: { angle: 0, duration: 'settle' },
-        outer: { angle: 16, duration: 'arrival' },
-      },
-      transition: { duration: 'settle' },
-    };
-  }
-
-  return {
-    expression: 'focused',
-    rotations: {
-      cardinals: { angle: 0, duration: 'settle' },
-      face: { angle: 0, duration: 'settle' },
-      outer: { angle: 0, duration: 'settle' },
-    },
-    transition: { duration: 'settle' },
-  };
-}
 
 const styles = StyleSheet.create({
   face: {

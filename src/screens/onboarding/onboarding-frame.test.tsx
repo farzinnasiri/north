@@ -1,10 +1,15 @@
-import { fireEvent, render, screen, within } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, within } from '@testing-library/react-native';
 import { Text } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { OnboardingFrame, OnboardingShell } from '@/screens/onboarding/onboarding-frame';
+import {
+  GREETING_CALIBRATE_AT,
+  OnboardingFrame,
+  OnboardingShell,
+} from '@/screens/onboarding/onboarding-frame';
 import { OnboardingProgressProvider } from '@/screens/onboarding/onboarding-progress';
+import { motion } from '@/theme';
 
 describe('OnboardingFrame', () => {
   it('allows one continuation while the current page is leaving', async () => {
@@ -87,7 +92,7 @@ describe('OnboardingFrame', () => {
           value={{
             answered: 29,
             ceremony: { value: 0 } as SharedValue<number>,
-            mascot: { expression: 'neutral' },
+            direction: 47,
             phase: 1,
             phaseFraction: 0.5,
             phases: ['Start', 'Questions'],
@@ -108,6 +113,46 @@ describe('OnboardingFrame', () => {
       flexDirection: 'column',
     });
     expect(screen.getByText('QUESTION 30 OF 30')).toBeOnTheScreen();
+  });
+
+  it('greets him with a compass that finds north, after the name', async () => {
+    jest.useFakeTimers();
+    const progress = {
+      answered: 0,
+      ceremony: { value: 0 } as SharedValue<number>,
+      direction: 90,
+      phase: 0,
+      phaseFraction: 0,
+      phases: ['You', 'Reality'],
+      prompt: null,
+      step: 1,
+      total: 20,
+    };
+    const shell = (hideInstrument: boolean, introducing: boolean) => (
+      <SafeAreaProvider initialMetrics={SAFE_AREA_METRICS}>
+        <OnboardingProgressProvider value={progress}>
+          <OnboardingShell hideInstrument={hideInstrument} introducing={introducing}>
+            <OnboardingFrame title="What should I call you?" />
+          </OnboardingShell>
+        </OnboardingProgressProvider>
+      </SafeAreaProvider>
+    );
+
+    try {
+      const view = await render(shell(true, false));
+      expect(screen.queryByRole('image')).not.toBeOnTheScreen();
+
+      await view.rerender(shell(false, true));
+      expect(screen.getByRole('image', { name: '38 degrees off north. North is zero.' })).toBeOnTheScreen();
+
+      await act(() => jest.advanceTimersByTime(GREETING_CALIBRATE_AT));
+      expect(screen.getByRole('image', { name: '0 degrees off north. North is zero.' })).toBeOnTheScreen();
+
+      await act(() => jest.advanceTimersByTime(motion.arrival * 2));
+      await view.unmount();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });
 

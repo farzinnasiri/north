@@ -1,18 +1,18 @@
 # Onboarding
 
-North onboarding v0.2 — 30-question candidate instrument.
+North onboarding v0.3 — 15-question candidate instrument.
 
-Date: 2026-08-28
+Date: 2026-09-28
 
-Status: implemented in the frontend prototype for cognitive testing; not a validated psychological instrument.
+Status: implemented in the app for cognitive testing; not a validated psychological instrument. Answers stay on the phone.
 
 ## The decision
 
-North v0.2 contains exactly **30 substantive prompts** across the required onboarding:
+North v0.3 contains exactly **15 substantive prompts** across the required onboarding:
 
-- **24 Reality questions:** four candidates for each of six Axes.
+- **12 Reality questions:** two complementary questions for each of six Axes.
 - **1 final Reality reflection:** the issue the person is stepping around.
-- **5 North Star questions:** values and desired-life tradeoffs.
+- **2 North Star questions:** priorities and a preferred ordinary life.
 
 The following do not count as assessment questions:
 
@@ -20,9 +20,9 @@ The following do not count as assessment questions:
 - result explanations, quotes, progress pauses, and animations;
 - choosing among the final North Star candidates, because that is the outcome decision rather than another test item;
 
-Required role-model picking is removed. If the product keeps it, it must replace one of the five North Star prompts rather than becoming question 31. A better use is to show figures as optional inspiration after the person chooses a North Star, with no hidden score.
+Required role-model picking is removed. If the product keeps it, it must replace one of the two North Star prompts rather than lengthening the assessment. A better use is to show figures as optional inspiration after the person chooses a North Star, with no hidden score.
 
-## What the 30 prompts do
+## What the 15 prompts do
 
 ### Reality
 
@@ -47,12 +47,12 @@ Reusing a small number of scales lowers cognitive load. Controls should show the
 
 Use when a behavior can only occur if a relevant situation happened.
 
-1. I didn't have a chance
+1. No opportunity
 2. Never
 3. Rarely
-4. About half the time
-5. Most of the time
-6. Every time
+4. Half the time
+5. Usually
+6. Always
 
 `I didn't have a chance` is missing/contextual data, not the lowest or highest score.
 
@@ -60,12 +60,12 @@ Use when a behavior can only occur if a relevant situation happened.
 
 Use for memorable but not exactly recalled events.
 
-1. None
-2. Once
+1. 0
+2. 1
 3. 2–3 times
 4. 4–6 times
 5. 7–10 times
-6. 11 or more
+6. 11+
 
 Adjust the upper bands only after pilot distributions show they are unrealistic.
 
@@ -84,24 +84,16 @@ The lack of a midpoint is acceptable here because each statement is concrete eno
 
 ### Scale D — count of people
 
-1. None
-2. One
-3. Two
+1. 0
+2. 1
+3. 2
 4. 3–4
-5. 5 or more
+5. 5+
 6. Not sure
 
-### Scale E — balanced tradeoff
+## The 15 candidate prompts
 
-1. A, much more
-2. A, a little more
-3. They matter about the same
-4. B, a little more
-5. B, much more
-
-A midpoint belongs here because equal priority can be a genuine value.
-
-## The 30 candidate prompts
+Recall periods appear above the question. Counts use numerals and short ranges; opportunity-based items keep frequency labels rather than changing to counts. Option order, scores, and North Star weights are unchanged by the copy edit.
 
 Candidate wording is deliberately plain and mostly at a fifth-grade reading level. It is implemented so the team can run cognitive tests; shipping it does not make it a validated instrument.
 
@@ -114,10 +106,12 @@ Working definition: **stating a view, need, or limit with respect when another p
 ### 1. Saying what you think
 
 **Prompt**
-In the past 30 days, when you thought someone was wrong, how often did you tell them you disagreed?
+Recall period: **Last 30 days**.
+
+When you disagreed, how often did you say so?
 
 **Response**
-Scale A — I didn't have a chance; Never; Rarely; About half the time; Most of the time; Every time.
+Scale A — No opportunity; Never; Rarely; Half the time; Usually; Always.
 
 **Why it exists**
 Samples respectful self-expression under interpersonal cost.
@@ -125,33 +119,15 @@ Samples respectful self-expression under interpersonal cost.
 **Scoring hypothesis**
 More frequent respectful expression suggests stronger Frame. No opportunity is not scored.
 
-### 2. A request that was too much
+### 2. A yes you regretted
 
 **Prompt**
-The last time someone asked for more than you could give, what did you do?
+Recall period: **Last 30 days**.
 
-**Options**
-
-1. I said no.
-2. I offered less than they asked for.
-3. I asked for time to decide.
-4. I said yes and was okay with it.
-5. I said yes and wished I hadn't.
-6. No one has asked me lately.
-
-**Why it exists**
-Separates a deliberate no, a negotiated limit, chosen generosity, and regretful compliance.
-
-**Scoring hypothesis**
-Option 5 is the clearest needs-attention response. Options 1–4 are different valid choices and should not be forced onto one simple good/bad line. Option 6 is not scored.
-
-### 3. A yes you regretted
-
-**Prompt**
-In the past 30 days, how many times did you say yes and later wish you had said no?
+How many times did you say yes and regret it?
 
 **Response**
-Scale B — None through 11 or more.
+Scale B — 0; 1; 2–3; 4–6; 7–10; 11+.
 
 **Why it exists**
 Measures a concrete cost of weak boundaries without treating every act of help as a problem.
@@ -159,30 +135,16 @@ Measures a concrete cost of weak boundaries without treating every act of help a
 **Scoring hypothesis**
 Higher frequency suggests more attention may be needed.
 
-### 4. Changing a choice to avoid upset
-
-**Prompt**
-In the past 30 days, how many times did you go along with someone else so they would not be upset with you?
-
-**Response**
-Scale B — None through 11 or more.
-
-**Why it exists**
-Samples approval-driven reversal rather than a general preference for peace.
-
-**Testing concern**
-Cognitive interviews must determine whether people include healthy compromise. If they do, revise to anchor regret or continued disagreement.
-
----
-
 ## Reality: Desire
 
 Working definition: **taking reasonable steps toward something the person wants despite uncertainty or possible rejection.** Desire is not entitlement, heterosexual approach behavior, risk for its own sake, or getting every desired outcome.
 
-### 5. Starting contact
+### 3. Starting contact
 
 **Prompt**
-In the past 30 days, when you wanted to know someone better, how often did you start the conversation?
+Recall period: **Last 30 days**.
+
+When you wanted to know someone better, how often did you start the conversation?
 
 **Response**
 Scale A.
@@ -190,89 +152,46 @@ Scale A.
 **Why it exists**
 Preserves the approach-behavior insight without assuming gender, romance, relationship status, or stranger approach.
 
-### 6. Making a reasonable ask
+### 4. Ruling yourself out
 
 **Prompt**
-In the past 30 days, how often did you ask for something they might say no to?
+Recall period: **Last 30 days**.
+
+How many times did you rule yourself out before even trying?
 
 **Response**
-Scale A.
+Scale B — 0; 1; 2–3; 4–6; 7–10; 11+.
 
 **Why it exists**
-Measures approach in work, study, friendship, dating, and ordinary life.
-
-**Testing concern**
-Probe what users count as “reasonable” and whether the phrase changes their answer.
-
-### 7. Ruling yourself out
-
-**Statement**
-I decide I can't do it before I try.
-
-**Response**
-Scale C — Strongly disagree through Strongly agree.
-
-**Why it exists**
-Samples automatic self-rejection in direct first-person language.
+Samples self-rejection as a recent behavior, separate from starting contact.
 
 **Scoring hypothesis**
-Agreement suggests more attention may be needed. It should never outweigh actual behavior by itself.
-
-### 8. Fear stopping a wanted step
-
-**Prompt**
-In the past 30 days, how many times did being afraid they would say no stop you from doing something you still wanted to do?
-
-**Options**
-
-1. None
-2. Once
-3. 2–3 times
-4. 4–6 times
-5. 7 or more
-6. Nothing like that came up
-
-**Why it exists**
-Distinguishes fear-driven inhibition from freely choosing not to act.
-
-**Scoring hypothesis**
-Frequency is scored; no opportunity is not.
-
----
+More frequent self-rejection suggests more attention may be needed.
 
 ## Reality: Connection
 
 Working definition: **having accessible mutual support and taking part in maintaining close relationships.** Connection is not popularity, charisma, contact count, or being the centre of a room.
 
-### 9. The 2 a.m. call
+### 5. The 2 a.m. call
 
 **Prompt**
 If you were in trouble at 2 a.m., how many people could you call?
 
 **Response**
-Scale D — None; One; Two; 3–4; 5 or more; Not sure.
+Scale D — 0; 1; 2; 3–4; 5+; Not sure.
 
 **Why it exists**
 Keeps one of North's strongest concrete images while measuring people rather than relationship categories.
 
-### 10. Someone waiting for the real answer
+### 6. Starting personal conversations
 
 **Prompt**
-In the past 30 days, how many times did someone close to you ask how you were and keep listening after your first answer?
+Recall period: **Last 7 days**.
+
+How many personal conversations did you start with people you know?
 
 **Response**
-Scale B.
-
-**Why it exists**
-Samples received emotional support in memorable, human language.
-
-### 11. Starting personal conversations
-
-**Prompt**
-In the past 7 days, how many personal conversations did you start with someone you know?
-
-**Response**
-None; One; 2–3; 4–6; 7–10; 11 or more.
+0; 1; 2–3; 4–6; 7–10; 11+.
 
 **Why it exists**
 Measures active maintenance instead of waiting to be included.
@@ -280,83 +199,41 @@ Measures active maintenance instead of waiting to be included.
 **Testing concern**
 Examples may be needed to separate a meaningful check-in from a routine work message.
 
-### 12. Giving the real listen
-
-**Prompt**
-In the past 30 days, how many times did you ask someone how they were and keep listening after their first answer?
-
-**Response**
-Scale B.
-
-**Why it exists**
-Balances received connection with given connection. The Axis should not only ask what other people do for the user.
-
----
-
 ## Reality: Self-command
 
 Working definition: **keeping choice over attention and behavior when an easy reward or bad feeling pulls in another direction.** Self-command is about control and consequence, not whether an object is morally approved.
 
-### 13. Using time as planned
+### 7. Using time as planned
 
 **Prompt**
-In the past 7 days, on how many days did you spend your free time the way you planned?
+Recall period: **Last 7 days**.
+
+On how many days did you use your free time as planned?
 
 **Options**
 
-1. None
-2. One day
+1. 0
+2. 1 day
 3. 2–3 days
 4. 4–5 days
 5. 6 days
 6. Every day
-7. I did not make a plan
+7. No plan
 
 **Why it exists**
 Provides a positive regulation item rather than asking only about vice and failure.
 
 **Scoring hypothesis**
-`I did not make a plan` is a planning/context state. It is not automatically the worst response.
+`No plan` is a planning/context state. It is not automatically the worst response.
 
-### 14. Five more minutes
-
-**Prompt**
-Think of the last time you opened TikTok, Instagram, X, YouTube, or a similar app and told yourself "five more minutes." How long did you stay?
-
-**Options**
-
-1. Under 10 minutes
-2. 10–29 minutes
-3. 30–59 minutes
-4. 1–2 hours
-5. More than 2 hours
-6. This has not happened lately
-7. I do not use these apps
-
-**Why it exists**
-Preserves one of the most recognizable and useful North questions: the gap between an intended limit and what happened.
-
-**Scoring hypothesis**
-Only options 1–5 form a severity order. Options 6–7 are contextual branches.
-
-### 15. Coping that ran long
+### 8. A habit causing a real cost
 
 **Prompt**
-In the past 30 days, how many times did you handle a bad day in a way that took more time or energy than you meant?
+Recall period: **Last 30 days**.
 
-**Response**
-Scale B.
+How many times did a habit cause a problem?
 
-**Why it exists**
-Measures impaired control without assigning moral points to phone, food, porn, alcohol, games, work, or exercise.
-
-**Optional unscored follow-up**
-What did you reach for? This can personalize Actions but must not add a penalty by category.
-
-### 16. A habit causing a real cost
-
-**Prompt**
-In the past 30 days, how many times did a habit cause a problem for your sleep, time, work, study, or someone close to you?
+Supporting text: For your sleep, time, work, study, or someone close to you.
 
 **Response**
 Scale B.
@@ -373,37 +250,20 @@ This lists several consequences. Cognitive interviews must test whether the exam
 
 Working definition: **building capability through self-directed practice and follow-through.** Craft is not income, job status, body appearance, or productivity at any cost.
 
-### 17. Skills used for another person
-
-**Prompt**
-In the past year, how many skills did you use to make, fix, teach, or solve something for someone else?
-
-**Options**
-
-1. None
-2. One
-3. Two
-4. 3–4
-5. 5 or more
-6. Not sure
-
-**Why it exists**
-Keeps the demonstrated-skill idea while including unpaid, early-career, student, care, and practical capability.
-
-### 18. Finishing something nobody required
+### 9. Finishing something nobody required
 
 **Prompt**
 When did you last finish something nobody made you finish?
 
 **Options**
 
-1. In the past 7 days
-2. In the past 30 days
-3. In the past 3 months
-4. In the past year
+1. Within 7 days
+2. Within 30 days
+3. Within 3 months
+4. Within 1 year
 5. Longer ago
-6. I cannot remember
-7. I have not had something like that lately
+6. Cannot remember
+7. Nothing like that lately
 
 **Why it exists**
 Preserves one of the cleanest existing measures of self-directed completion.
@@ -411,41 +271,24 @@ Preserves one of the cleanest existing measures of self-directed completion.
 **Scoring hypothesis**
 The first six are ordered evidence. The final option is lack of opportunity/context and should not automatically equal failure.
 
-### 19. Deliberate practice
+### 10. Intentional body care
 
 **Prompt**
-In the past 7 days, on how many days did you practice a skill you want to improve?
+Recall period: **Last 7 days**.
+
+On how many days did you intentionally move or care for your body?
 
 **Options**
 
-1. None
-2. One day
+1. 0
+2. 1 day
 3. 2 days
 4. 3–4 days
 5. 5–6 days
 6. Every day
-7. I am not trying to improve a skill right now
 
 **Why it exists**
-Measures investment in capability rather than current status.
-
-### 20. Following through on body care
-
-**Prompt**
-In the past 7 days, on how many days did you exercise or take care of your body as planned?
-
-**Options**
-
-1. None
-2. One day
-3. 2 days
-4. 3–4 days
-5. 5–6 days
-6. Every day
-7. I did not make a plan
-
-**Why it exists**
-Keeps the body inside Craft without judging appearance, strength, disability, weight, or illness.
+Keeps the body inside Craft without requiring a formal exercise plan or judging appearance, strength, disability, weight, or illness. It always provides a scored answer, even when the independent-completion question is not applicable.
 
 **Testing concern**
 “Physical care” must be tested across training, walking, mobility work, rehabilitation, sleep routines, and health limitations.
@@ -456,59 +299,30 @@ Keeps the body inside Craft without judging appearance, strength, disability, we
 
 Working definition: **seeing and taking a useful next step, while recognizing that luck and other people also affect outcomes.** Agency is not denying circumstance, taking reckless risks, or believing confidence slogans.
 
-### 21. A self-chosen step
+### 11. A self-chosen step
 
 **Prompt**
-In the past 7 days, how many times did you take a step that mattered to you without anyone asking?
+Recall period: **Last 7 days**.
+
+How often did you take a step that mattered to you without being asked?
 
 **Options**
 
-1. None
-2. Once
+1. 0
+2. 1
 3. 2–3 times
 4. 4–6 times
 5. Every day
-6. More than once a day
-7. Nothing like that came up
+6. 2+ times a day
+7. No opportunity
 
 **Why it exists**
 Preserves the strongest part of the current autonomy item while excluding trivial choices.
 
-### 22. Finding a first step
+### 12. Influence without denying luck
 
 **Statement**
-When I do not know how to do something, I can usually find a first step.
-
-**Response**
-Scale C.
-
-**Why it exists**
-Measures practical self-efficacy instead of asking whether confidence is innate or earned.
-
-### 23. What happened after a setback
-
-**Prompt**
-Think of the last plan that went wrong. What did you do next?
-
-**Options**
-
-1. I tried another way right away.
-2. I asked for help and kept going.
-3. I took a break and came back.
-4. I stopped because the plan did not make sense anymore.
-5. I gave up even though I still wanted it.
-6. No plan has gone wrong lately.
-
-**Why it exists**
-Separates adaptation, help-seeking, recovery, sensible stopping, and helpless withdrawal.
-
-**Scoring hypothesis**
-Options 1–4 are different forms of agency. Option 5 is the clearest needs-attention response. Option 6 is not scored.
-
-### 24. Influence without denying luck
-
-**Statement**
-Even when luck or other people shape the result, I can usually change what happens next.
+Even when luck or others affect the result, I can usually change what happens next.
 
 **Response**
 Scale C.
@@ -520,21 +334,21 @@ Lets realistic beliefs about luck coexist with perceived control.
 
 ## Final Reality reflection
 
-### 25. What is costing you now?
+### 13. What is costing you now?
 
 **Prompt**
 Which one is costing you most right now?
 
 **Options**
 
-1. A conversation I keep avoiding
-2. Something I keep saying I will start
-3. A habit that keeps taking more than I mean to give
+1. An avoided conversation
+2. Something I keep putting off
+3. A habit taking too much
 4. An apology or repair I owe
-5. Taking care of my body or health
-6. Money I keep avoiding
+5. My body or health
+6. Avoiding money matters
 7. Something else
-8. I am not sure yet
+8. Not sure yet
 
 **Status**
 Unscored.
@@ -549,22 +363,22 @@ The chosen answer should affect the first Action family. If it does not, remove 
 
 ## North Star
 
-These five questions do not measure health or present worth. They clarify desired priorities. They may order candidate North Stars, but the person chooses the destination.
+These two questions do not measure health or present worth. They clarify desired priorities. They may order candidate North Stars, but the person chooses the destination.
 
-### 26. What makes a year matter?
+### 14. What makes a year matter?
 
 **Prompt**
-At the end of a good year, which two would matter most to you?
+After a good year, which two matter most?
 
 **Options — choose exactly two**
 
-1. I built or improved something that matters.
-2. My closest relationships became stronger.
-3. I had more freedom over my time.
-4. I became more skilled and capable.
-5. I made life steadier for myself or other people.
-6. I enjoyed more of my ordinary days.
-7. I helped people or a community I care about.
+1. Built something meaningful.
+2. Stronger close relationships.
+3. More control of my time.
+4. Greater skill and capability.
+5. More stability for me or others.
+6. More everyday enjoyment.
+7. Helped people or my community.
 
 **Why it exists**
 Elicits direct priorities without labeling one masculine style as superior.
@@ -572,78 +386,23 @@ Elicits direct priorities without labeling one masculine style as superior.
 **Scoring rule**
 Preference signal only. No answer moves Reality or Direction closer/further by itself.
 
-### 27. Building versus protecting time
-
-**Prompt**
-If you had to give something up, which way would you go?
-
-**A**
-Protect more of my time, even if I build less.
-
-**B**
-Build more, even if it takes more of my time.
-
-**Response**
-Scale E — A, much more; A, a little more; They matter about the same; B, a little more; B, much more.
-
-**Why it exists**
-Both answers carry a real cost. This is a tradeoff rather than ambition versus failure.
-
-### 28. Commitment versus flexibility
-
-**Prompt**
-I want more room in my life for…
-
-**A**
-A close life with another person, even if I have less freedom.
-
-**B**
-More freedom, even if I share my life less.
-
-**Response**
-Scale E.
-
-**Why it exists**
-Clarifies relationship centrality without calling commitment responsible and freedom selfish, or vice versa.
-
-**Branching note**
-People who do not want a romantic partnership can still interpret A as a deeply shared life. Test that interpretation; revise if it remains romance-bound.
-
-### 29. Friction versus leaving something unsaid
-
-**Prompt**
-If you had to give something up, which way would you go?
-
-**A**
-Say what matters, even if the other person may not like it.
-
-**B**
-Keep the peace, even if I do not say what matters.
-
-**Response**
-Scale E.
-
-**Why it exists**
-Uses matched negative consequences so neither pole is presented as painless virtue.
-
-**Testing concern**
-This must not become a second Frame score. It is only a preferred cost in the desired life.
-
-### 30. An ordinary day at age + 5
+### 15. An ordinary day at age + 5
 
 **Dynamic prompt**
-`{Name}`, it is five years from now. You are `{Age + 5}`. Which ordinary day feels closest to the life you want?
+Context: **In 5 years · Age {Age + 5}**.
+
+Which ordinary day would you want?
 
 **Options — choose up to two**
 
-1. I lead or build something, and I own how it turns out.
-2. I do skilled work with people I respect.
-3. I work on my own and control more of my time.
-4. I care for people, a home, or a community.
-5. I move between projects, places, or new experiences.
-6. I have steady work and plenty of life outside it.
-7. Something else fits me better.
-8. I cannot see it clearly yet.
+1. Building something I answer for.
+2. Skilled work with respected people.
+3. Independent work, my own schedule.
+4. Caring for people, home, or community.
+5. New projects, places, and experiences.
+6. Steady work, time for life.
+7. Something else.
+8. Not clear yet.
 
 **Why it exists**
 Replaces three repetitive, status-biased future-self questions with one ordinary-life visualization.
@@ -667,9 +426,9 @@ For prototype research only:
 
 1. Map each ordinal scored response to an internal 0–4 or 0–5 position.
 2. Keep `no opportunity`, `not applicable`, `not sure`, and contextual branches missing—not good or bad.
-3. Require at least three answered items before showing an Axis interpretation.
+3. Treat a one-answer Axis reading as provisional; each Axis has one question that always provides a scored answer.
 4. Show item evidence and broad language, not scientific precision.
-5. Keep question 25 and questions 26–30 outside Reality scoring.
+5. Keep question 13 and questions 14–15 outside Reality scoring.
 6. Never average North Star preferences into a “healthy masculinity” result.
 
 ### Prototype North Star ordering
@@ -719,7 +478,7 @@ The development process should follow intended-use validity and content/response
 
 ## Required onboarding flow
 
-The user answers exactly 30 substantive prompts, but the experience does not become 30 identical cards.
+The person answers 15 substantive prompts, with the Reality reflection and North Star choice kept in their existing places.
 
 Before this flow, acquisition uses two short surfaces: a sparse welcome with an
 immediate Sign in route, then a three-frame product preview of Reality, North
@@ -729,36 +488,36 @@ the instrument.
 
 ### Arrival
 
-1. Welcome and value promise.
-2. Explain privacy and honesty: no answer makes someone a better or worse man.
-3. Name and age as a compact factual setup.
+1. Ask what to call the person.
+2. North greets them by name with its full face visible. Two short lines introduce its role and the 15 questions; Start becomes available when they finish appearing. Reduced motion skips the wait.
+3. On Start, the face moves to the corner and the age question follows.
 
-### Reality: 24 questions
+### Reality: 12 questions
 
-4. Questions 1–4 — Frame behaviors.
+4. Questions 1–2 — Frame behaviors.
 5. Continue directly into the next set; the persistent instrument marks chapter progress without adding a dedicated pause screen.
-6. Questions 5–8 — Desire behaviors.
+6. Questions 3–4 — Desire behaviors.
 7. Continue into the next set.
-8. Questions 9–12 — Connection behaviors.
+8. Questions 5–6 — Connection behaviors.
 9. Midpoint payoff: show factual progress, not a moral conclusion.
-10. Questions 13–16 — Self-command behaviors.
+10. Questions 7–8 — Self-command behaviors.
 11. Continue into the next set.
-12. Questions 17–20 — Craft behaviors.
+12. Questions 9–10 — Craft behaviors.
 13. Continue into the next set.
-14. Questions 21–24 — Agency behaviors.
+14. Questions 11–12 — Agency behaviors.
 
 Do not reveal Axis labels or explain what answer is preferred before the questions. Dedicated quotation screens are omitted: they add length, break answering rhythm, and risk priming the next set.
 
 ### Reality payoff
 
-15. Question 25 — what is costing the person most.
+15. Question 13 — what is costing the person most.
 16. Honest calibration animation: each Axis resolves separately, then the shape connects.
 17. Reality explanation, evidence, and Save image. Do not open a share sheet during onboarding.
 18. Explicit transition: “That is where you are. Now choose where you want to go.”
 
-### North Star: five questions
+### North Star: two questions
 
-19. Questions 26–30.
+19. Questions 14–15.
 20. One truthful curation animation that says it is organizing stated preferences.
 21. Present all eight candidates in ranked order, beginning **unselected**, with tradeoffs.
 22. Let the person inspect all candidates and explicitly choose.
@@ -768,8 +527,8 @@ Do not reveal Axis labels or explain what answer is preferred before the questio
 23. Calculate Direction from both Reality and the chosen North Star; do not add a simulated loading screen.
 24. Show the closing letter without unsupported social or retention claims.
 25. Sign the Contract.
-26. Preview the first Action with the chosen North Star and starting Axis. Question 25 selects the closest matching authored Action; the chosen North Star orders later Actions by weighting the remaining Reality gaps.
-27. Create the account, then offer Profile color once after first sign-up. Never interrupt sign-in with color selection.
+26. Preview the first Action with the chosen North Star and starting Axis. Question 13 selects the closest matching authored Action; the chosen North Star orders later Actions by weighting the remaining Reality gaps.
+27. Offer two first Actions, then ask once for the check-in notification. There is no account.
 28. Enter the Action flow.
 29. Keep the Code outside the required completion path, available from You.
 
@@ -779,14 +538,14 @@ Do not reveal Axis labels or explain what answer is preferred before the questio
 2. Selecting an answer never auto-advances. The person confirms with the same fixed Continue action.
 3. One press can advance at most one step; input remains locked through transition completion.
 4. A Back action restores the saved answer and permits correction. It remains in the fixed bottom action lane beneath Continue rather than in top chrome.
-5. Show `Question n of 30`, but do not show a moral score during answering.
+5. Show `Question n of 15`, but do not show a moral score during answering.
 6. Keep the question and first options in the eye lane; long display copy does not begin at the top edge.
 7. Use sentence case for questions and options; reserve condensed uppercase for short labels/actions.
 8. Do not color one option as virtuous before selection.
 9. Ordinal scales keep their order. Non-ordinal lists may rotate during pilot testing to detect order effects.
 10. Sensitive optional branches explain why the information is asked and allow Skip without penalty.
 
-## What is deliberately removed from the required 30
+## What is deliberately removed from the required 15
 
 - walking up to an unknown woman;
 - number of women not told feelings;
@@ -821,9 +580,9 @@ Revise the item if respondents do not retrieve the intended behavior or if the s
 ## Validation gates before external release
 
 1. Product owner accepts the six working Axis definitions.
-2. A psychometrician reviews the 30-item candidate bank for content coverage and construct contamination.
+2. A psychometrician reviews the 15-item candidate bank for content coverage and construct contamination.
 3. Cognitive interviews identify no systematic missing answers or obvious status answers.
-4. The team accepts that v0.2 will not display scientifically precise degrees before validation.
+4. The team accepts that v0.3 will not display scientifically precise degrees before validation.
 5. Every collected response has a declared product use: Axis calibration, Action personalization, or North Star preference.
 
 The prototype exists to test these gates. Do not describe its readings as validated until the remaining gates are met.

@@ -35,6 +35,9 @@ colors:
   axis-connection: "#2BB7A8"
   axis-appetite: "#8B72E8"
   axis-craft: "#5F7CFF"
+  glass-fill: "#1B1F21B8"
+  glass-edge: "#FFFFFF1F"
+  glass-highlight: "#FFFFFF38"
 typography:
   display:
     fontFamily: Barlow Condensed
@@ -78,6 +81,7 @@ typography:
 rounded:
   control: 10px
   card: 16px
+  glass: 26px
   device: 32px
   full: 9999px
 spacing:
@@ -116,6 +120,17 @@ components:
     textColor: "{colors.on-surface-muted}"
     rounded: "{rounded.card}"
     padding: 16px
+  glass-surface:
+    backgroundColor: "{colors.glass-fill}"
+    textColor: "{colors.on-surface}"
+    rounded: "{rounded.glass}"
+    padding: 18px
+  glass-divider:
+    backgroundColor: "{colors.glass-edge}"
+    height: 1px
+  glass-highlight:
+    backgroundColor: "{colors.glass-highlight}"
+    height: 1px
   surface-raised:
     backgroundColor: "{colors.surface-container-high}"
     textColor: "{colors.on-surface}"
@@ -275,11 +290,10 @@ negative space for the live action to remain unmistakable. Primary copy uses
 24px horizontal insets. The Compass may crop beyond that grid, but never through
 functional copy. Answer controls are complete, full-width measured plates.
 
-Home, Direction, and onboarding use one continuous obsidian environment. The
-oversized Compass or Mascot owns the upper field and may crop beyond the screen.
-Copy and controls occupy protected dark plates inside that environment. Depth
-comes from the physical instrument, edge light, and controlled tonal separation,
-not from gradients or switching to a light page halfway down the screen.
+Today, Log, You and onboarding share one obsidian field with the crosshair grid
+and two faint signal glows. The Compass owns the upper field. Copy and controls
+sit on Liquid Glass plates inside that field; the page never switches to a
+light surface halfway down.
 
 The oversized instrument is allowed to cross a plane seam, never functional
 copy or controls. Progress, metrics, destination labels, prompts, and actions
@@ -290,37 +304,23 @@ One screen should expose one primary decision. Secondary actions may follow the
 primary action, but must not compete with it. Layout is allowed to evolve from
 the HTML prototypes; the one-purpose rule is not.
 
-The post-onboarding surface has three destinations with three distinct jobs:
-**Now** shows the one live Action and the next decision; **Direction** shows the
-person's current Direction and the movement that produced it; **You** shows the
-North Star and Reality he authored. A destination begins with that
-subject, not with a page title explaining it. Repeated prose becomes a measured
-fact or disappears. The first viewport must read as one composition, never a
-dashboard grid or a document with a tab bar attached.
+After onboarding, North has three tabs in the system Liquid Glass tab bar:
+**Today**, **Log** and **You**. Today shows the Compass, the Direction readout,
+and then one of three states: two Suggestions to pick from, the Open Action with
+its source and Check-in time, or the Check-in itself (done, partly, missed).
+Log lists checked-in Actions with their sources. You shows the North Star and
+Reality, with Settings behind the gear. Taking an Action and checking in happen
+in native sheets. A miss has no sound or haptic.
 
-Before onboarding, the welcome screen owns acquisition and the identity screens
-own access. Welcome uses the Mascot as a cropped face with a one-shot
-orientation sequence. The face stays within the first quarter of a regular
-phone viewport so the product explanation and actions remain above the fold.
-Its primary action opens one product introduction surface; returning people get
-an immediately legible Sign in route. The introduction tells one short story:
-a familiar rejection, the guidance men often missed, choosing the kind of man
-to become, one Action at a time, and accumulated change. Its six horizontally
-swappable frames use persistent progress and one Start
-action. It does not become a feature list or a second onboarding. A first-time person does not
-create an account until the final onboarding letter.
-Sign in and Sign up are quiet form surfaces: one title, two labelled fields,
-one primary action, and one plain route. Authentication errors stay beside the
-field that caused them. After first account creation, one Signal selection
-surface suggests a color deterministically from the chosen North Star and lets
-the person override it. Clerk may own values, errors, verification, and session
-state later; it must not replace these surfaces.
+Onboarding asks for the person's name first. On the next screen a large Compass
+calibrates once from 38 degrees to north, then the title and two lines reveal in
+sequence and Start onboarding becomes active. Reduced motion shows the settled
+Compass and copy with the action ready. From the questions onward a small
+Compass sits in the trailing corner and points where the answers so far lead.
 
 During onboarding, every question prompt starts in the same fixed lane below
-the Mascot; its vertical position must not depend on the prompt length or the
-instrument beneath it. The Mascot is anchored decisively beyond the trailing
-edge rather than centred in the field. It may crop upward, and its visible dial
-meets the plane seam without entering the prompt lane.
+the Compass; its vertical position must not depend on the prompt length or the
+instrument beneath it.
 The prompt and instrument form one vertical scroll surface, so long copy,
 dynamic type, and every answer remain reachable on compact phones without
 horizontal scrolling. Primary continuation actions remain fixed above the
@@ -335,10 +335,15 @@ sentences.
 
 ## Elevation & Depth
 
-Depth comes from the physical Compass, edge highlights, and tonal black layers.
-A control may carry one precise inner edge and a restrained
-shadow when it helps the plate read as touchable. Avoid frosted glass, generic
-gradients, neon bloom, and floating-card stacks.
+Depth comes from the Compass, the crosshair field, and Liquid Glass. Since
+2026-11-24 North uses iOS 26 Liquid Glass through `expo-glass-effect`: buttons,
+cards, grouped settings and the button stacks that merge under
+`GlassContainer` are glass, and the tab bar, sheets and navigation headers are
+the system's own glass. The field behind them is black with the crosshair grid
+and two faint signal glows, so the glass has something to refract. Where Liquid
+Glass is unavailable (older iOS, Android, the web preview) the same shapes are
+drawn with `glass-fill` and a `glass-edge` hairline. Avoid neon bloom and
+gradients on content.
 
 ## Shapes
 
@@ -346,61 +351,26 @@ Use 10px radii for controls and 16px for instrument plates. These are machined
 corners, not friendly pills. Circles belong to selectors, hubs, and the Compass.
 Do not put every paragraph in a container.
 
-## Mascot
+## Compass
 
-The Mascot is a face built as a compass instrument: an outer tick bezel, a
-cardinal ring, and a square-eyed face rotor. Those three layers rotate
-independently. Product code calls it `Mascot`; “North mascot” and “face” are
-acceptable descriptive phrases, but `North` alone remains the product name.
-
-The Mascot registers what is happening. On the first onboarding screen only,
-product copy beside it may speak in the first person to introduce North. It
-does not use a speech bubble or mouth, and after that introduction it does not
-speak, judge an answer, nag, celebrate, or become a coach. Its eyes carry
-expression without a mouth.
-
-The face is also the rare pre-auth arrival: the static North Mark hands off to
-the face during boot, then welcome reveals the focused face before its sparse
-ambient behavior begins.
-After onboarding, the face belongs to **Now**, where it is the live state
-instrument. **Direction** is a standalone needle compass, and **You** lets the
-North Star portrait and Reality trace carry themselves.
-The Mascot does not appear in settings, list rows, or empty corners merely to
-brand them. This restraint makes its presence on Now feel intentional.
-The accepted expressions are blink, neutral, focused, loading, pointer, proud,
-sad, concerned, tired, direction, compass, and settled. Pointer is reserved for
-the final introduction frame, where both eyes briefly merge into one needle.
-Blink is a momentary ambient state that always returns to the business-state
-expression. Proud means quiet recognition — “I am
-proud of you” — rather than generic happiness.
-Compass keeps the white eyes visible and moves direction to a red position
-pennant on the outer bezel; no needle or route line crosses the face.
-
-A mascot scene is a complete destination state: expression, direction, completed
-graduations, three absolute layer rotations, expression transition, and at
-most one restrained body gesture. Screens choose scenes; the Mascot owns SVG
-geometry, interpolation, interruption, and reduced motion. Size and layout
-placement stay with the surface rendering it.
-
-Expression changes morph the same eye paths. Proud uses one acknowledgment
-blink by default. Body movement is limited to a one-shot arrival during the
-first onboarding screen, acknowledgment dip, or small left/right orientation
-shift, using the standard duration tokens and decelerating curve. The Mascot
-never bounces, shakes, pulses, floats, or breathes. The final introduction frame
-alone may repeat its eye-to-pointer explanation while visible; it rests as eyes
-between repetitions and stops under reduced motion.
-Welcome and Now may use sparse irregular blinks while visible; Welcome alone
-may add brief attention shifts. Every gesture returns to a complete still rest,
-and reduced motion keeps the settled face. On Now, business state always owns
-the expression and the blink only passes through it.
+North has one instrument.
+The Compass (`DirectionCompass`, direction domain) is a thin ring on the
+crosshair field: 72 ticks, four longer cardinal ticks, a Signal-red `N`, a red
+needle with a short slate tail, and a red hub. The needle points at the
+Direction, clockwise from north. A lit trail runs along the ring from where the
+Journey started to the needle, brightest at the needle and fading toward the
+start, with one lit dot at the needle's end. The needle is the only spring.
+Boot and the onboarding welcome calibrate it once from 38 degrees to north.
+During onboarding a small Compass sits in the trailing corner and points where
+the answers so far lead.
 
 ## Motion
 
 North moves like an instrument, not an interface. Everything decelerates into
 place; nothing accelerates, bounces, or arrives early. `easing-standard` is the
 default curve. `instant`, `quick`, and `settle` cover ordinary interaction;
-`arrival` is reserved for the boot-to-welcome reveal and the Mascot's one
-onboarding entrance. `boot-hold` is the minimum in-app splash duration; loading
+`arrival` is reserved for the boot-to-welcome reveal and the Compass's one
+calibration. `boot-hold` is the minimum in-app splash duration; loading
 may extend it, but never shorten it. Reach for `quick` unless one of the
 authored moments below calls for another token.
 
@@ -415,32 +385,14 @@ authored moments below calls for another token.
 - **The needle moves once per closed action, and the person watches it.** The
   rest of the screen holds still while it does. This is North's only
   celebration, and it lasts less than a second.
-- **The first pre-auth arrival is authored once.** The system splash hands its
-  static split gate to the in-app mark; that mark dissolves into the Mascot,
-  whose rotors oppose briefly and settle on North before welcome follows.
-  Welcome mounts after that handoff and gets one visible entrance. Returning to
-  welcome in the same app session does not replay it. Home remains already there
+- **The first arrival is authored once.** The system splash hands its static
+  split gate to the in-app mark; that mark dissolves into the Compass, whose
+  needle settles on north before welcome follows. Today remains already there
   on cold start.
-- **The product introduction moves with the person's hand.** Its frames
-  respond to a horizontal swipe or explicit arrow control and settle over `quick`; changing frames may
-  reveal the matching explanation once. Nothing auto-advances. The final frame
-  may loop the Mascot's eye-to-pointer explanation while visible. Reduced motion
-  removes that loop and the secondary rise while preserving the page change.
-  On the final frame, the primary action rises once to accept the story's handoff.
-- **Ambient face motion is sparse and state-safe.** No pulse, breathing,
-  shimmer, skeleton wave, or looping hint. Welcome may blink or make a small
-  attention shift; Now may blink without changing its state expression. Each
-  gesture ends at a full rest and stops entirely under reduced motion.
-- **The introduction has one moving field shape.** It changes position, scale,
-  and rotation only after a committed frame change and settles over `settle`.
-  It never drifts or loops, and reduced motion makes each change immediate.
+- **Nothing breathes.** No pulse, shimmer, skeleton wave, or looping hint.
 - **The initial direction is calculated, not fetched.** It is derived after the
   person chooses a North Star, stored when onboarding ends, and shown on the
   Direction surface. There is no waiting screen or simulated computation.
-- **North Star curation is brief and truthful.** After the five preference
-  answers, the Mascot's outer rotors make one finite turn over `arrival` while
-  the interface says it is putting those stated priorities in order. It does
-  not imply a network request and is not reused elsewhere.
 - **North Star candidates begin unselected.** Browsing changes only the life in
   view. The person must explicitly choose one before the fixed Continue action
   becomes available.
@@ -453,11 +405,10 @@ authored moments below calls for another token.
   short rise and fade over `quick`. Layout animations are not used: they do not
   run on the web preview surface, so the same fade would need a second
   implementation per screen to stay visible while developing.
-- **Tabs are peers, not pages in a deck.** Switching between Now, Direction,
-  and You uses the platform transition and never slides a whole destination
-  horizontally. The tab bar may minimize on scroll where the platform owns that
-  behavior. Existing content does not replay an entrance when a tab becomes
-  visible; only state the person just caused may arrive through `Reveal`.
+- **Today, Log and You are native tabs; Settings and The Code push with the
+  system back gesture.** Take it, Check-in and Note use native form sheets. A
+  Check-in returns to Today, where only the needle moves, then the next two
+  Suggestions arrive through `Reveal`.
 - **Press feedback is `press-scale` and `press-opacity` over `instant` in and
   `quick` out.** A flat opacity dip is the least considered feedback available.
   The scale is deliberately at the strong end of the subtle band: below about
@@ -484,7 +435,7 @@ no reverb, no rising interval, and no layering.
 | Direction move | One brass tine, plucked and decaying, under the needle. | `direction-move` |
 | Reach north | The tine an octave up, alone. Plays once in a person's lifetime. | `reach-north` |
 
-Nothing else makes a sound. Not navigation, not tab changes, not button
+Nothing else makes a sound. Not navigation, not button
 presses, not saving a note, not choosing a deadline. **A missed deadline is
 silent** — an interface that buzzes at a person for stalling has already broken
 the promise that inactivity is not punished.
@@ -543,38 +494,29 @@ to its domain's `ui/` folder instead.
 | `Reveal` | The one way content arrives. See Motion. |
 | `Compass` | The instrument, where the instrument is the subject. |
 | `NorthMark` | The split-gate product mark. Its frame stays still; boot and the first pre-auth welcome may calibrate its independent red needle once. |
-| `InstrumentSlider`, `NumberTape`, `DayBar`, `TallyInstrument`, `RankInstrument`, `ChoiceInstrument`, `TimeSinceArc` | Onboarding instruments. Reusable anywhere a graduated value is set. |
-| `ProgressRail`, `CompassProgress` | Position in a long flow. |
+| `InstrumentSlider`, `ChoiceInstrument` | Onboarding instruments. Reusable anywhere a graduated value is set. |
+| `ProgressRail` | Position in a long flow. |
 
-Domain UI that is not a primitive: `Mascot` (mascot), `ActionBrief` (actions),
-`DirectionDial` (direction), `NorthStarPortrait` (onboarding).
+Domain UI that is not a primitive: `DirectionCompass` (direction), `LineCard`
+(content), `NorthStarPortrait` (onboarding). Glass primitives: `GlassSurface`,
+`GlassGroup` (`@/components/ui/glass`).
 
 ## Platform surface
 
 North uses native chrome and bespoke content, and the line between them is not
 a matter of taste.
 
-Anything the operating system owns — the tab bar, the navigation stack, sheets
+Anything the operating system owns — the navigation stack, sheets
 and their detents, the keyboard, scroll physics, text selection, context menus,
 share, and the system back gesture — uses the real native component, adjusted
 only for color. These are the parts a person already knows how to use, and
 reimplementing them in JavaScript makes the product feel cheaper, not more
 designed.
 
-The three tab destinations are **Home**, **Direction**, and **You**, represented
-by the platform's house, compass, and person symbols without visible text.
-Their accessibility labels remain stable for the life of a session. Home is the
-current Action surface, Direction is the journey instrument, and You is the
-authored identity and Reality. Tabs never contain actions, status badges, or
-changing labels. On supported iOS versions,
-the native tab bar may minimize on downward scroll so content remains primary.
-The web development preview uses a small opaque instrument dock solely to make
-the same hierarchy reviewable; it does not redefine native behavior. Its three
-destinations are stable peers. Direction is an 88px circular centre target that
-crosses the 72px dock equally above and below and uses a larger true compass
-mark. Its inactive field is visibly raised from the dock; it earns the current
-Signal fill only while selected. Home and You use circular selections inside
-the outer dock. Selection changes fill and contrast without moving a target.
+Today, Log and You sit in the native tab bar. Take it holds the Days and the
+optional rewording in one native form sheet; Check-in and Note are native form
+sheets too. Dismissing Take it discards its draft. Web is a development preview
+with the same routes; its tab switcher sits at the top. It does not redefine native sheet or back-gesture behavior.
 
 The onboarding Reality card is a North-owned image surface. Save image writes
 the captured card to Photos after the system grants add-only access. Do not
@@ -587,12 +529,9 @@ and never inherits system appearance. Do not adopt platform semantic colors;
 North has one fixed obsidian/chalk structure and one authored Signal identity;
 system colours would fight both.
 
-North also declines the current platform vernacular where it contradicts the
-product. Translucent or glass navigation surfaces are switched off rather than
-inherited, because depth here comes from the instrument, scale, and controlled
-edges. The
-interface should look like it was made for this product in this decade, not
-like it was assembled from whatever the OS was shipping that year.
+North adopts the platform's Liquid Glass for chrome and keeps its own palette
+for everything it draws: the system tab bar, sheets and headers stay glass and
+are tinted with the Signal, never recoloured with a solid background.
 
 ## Accessibility
 
@@ -624,7 +563,7 @@ Accessibility is part of the contract, not a pass at the end.
 - Do not create dashboards, feeds, badges, levels, trophies, or leaderboards.
 - Do not add a fourth sound, a looping animation, or a success chime.
 - Do not set paragraphs in caps or use exclamation marks, hustle language, or motivational shouting.
-- Do not make the mascot speak, nag, celebrate, or become a coach.
-- Do not add reminders or notifications. North stays quiet by design.
+- Do not add a character or a coach voice.
+- Do not add reminders beyond the one Check-in he turned on. North stays quiet by design.
 - Do not use visual pressure to manufacture retention after the user reaches the
   exit.

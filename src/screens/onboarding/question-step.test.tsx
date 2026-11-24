@@ -16,6 +16,7 @@ describe('QuestionStep', () => {
       />,
     );
 
+    expect(screen.getByText('Last 30 days')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
 
     await fireEvent.press(screen.getByRole('radio', { name: 'Never' }));

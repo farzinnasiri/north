@@ -71,8 +71,8 @@ const styles = StyleSheet.create({
   },
   row: {
     alignItems: 'center',
-    borderBottomColor: colors.lineSoft,
-    borderBottomWidth: 1,
+    borderBottomColor: colors.glassEdge,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: spacing.lg,
     minHeight: 56,

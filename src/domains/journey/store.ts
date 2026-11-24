@@ -1,123 +1,114 @@
 import { create } from 'zustand';
 
-import type { OpenAction } from '@/domains/actions/action';
+import type { Outcome } from '@/domains/actions/action';
+import type { Line } from '@/domains/content/catalogue';
 import type { Journey, Preferences } from '@/domains/journey/journey';
 import {
   attachNote,
   beginJourney,
-  closeAction,
-  letGo,
+  checkIn,
   openAction,
+  passSuggestions,
   setJourneyName,
   setPreferences,
-  spendSwap,
 } from '@/domains/journey/journey';
 import { clearJourney, loadJourney, saveJourney } from '@/domains/journey/persistence';
+import { cancelCheckIns, scheduleCheckIn } from '@/platform/check-in';
 import { setHapticsEnabled } from '@/platform/haptics';
 
-/**
- * The needle moves once per closed Action and the person watches it, so the
- * movement has to survive the trip from the closeout sheet back to the home
- * screen. Home consumes this and clears it; nothing else may read it.
- */
-export type PendingMovement = {
-  from: number;
-  to: number;
-};
+export type PendingMovement = { from: number; to: number };
 
 type JourneyStore = {
   begin: (input: Parameters<typeof beginJourney>[0]) => void;
-  /**
-   * When the loop last changed under him. A screen compares it with the moment
-   * it mounted to know whether a state arrived or simply was, which is the
-   * whole difference between an entrance he caused and one he did not.
-   */
+  /** Bumped on every change, so screens can tell a fresh state from a remount. */
   changedAt: number;
-  close: (input: { at: number; kept: boolean; note?: string | null }) => void;
+  checkIn: (input: { instanceId: string; note?: string | null; outcome: Outcome }) => PendingMovement | null;
   erase: () => void;
   journey: Journey | null;
-  letGoOfAction: (at: number) => void;
   note: (note: string) => void;
-  open: (action: OpenAction) => void;
+  open: (input: { action: string; days: number; line: Line }) => void;
+  pass: (ids: readonly string[]) => void;
   pendingMovement: PendingMovement | null;
-  preferences: (preferences: Preferences) => void;
+  preferences: (change: Partial<Preferences>) => void;
   rename: (name: string) => void;
   settleNeedle: () => void;
-  swap: (actionId: string, at: number) => void;
 };
 
-function persist(journey: Journey): Journey {
-  saveJourney(journey);
-  setHapticsEnabled(journey.preferences.haptics);
-  return journey;
-}
-
 const restored = loadJourney();
-if (restored) {
-  setHapticsEnabled(restored.preferences.haptics);
+if (restored) setHapticsEnabled(restored.preferences.haptics);
+
+function newInstanceId(at: number): string {
+  return `${at.toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-export const useJourney = create<JourneyStore>((set, get) => ({
-  begin: (input) => set({ journey: persist(beginJourney(input)), pendingMovement: null }),
+/** Keeps the scheduled check-in in step with the open Action and the settings. */
+function syncCheckIn(journey: Journey): void {
+  const task = journey.open && journey.preferences.checkIns ? scheduleCheckIn(journey.open) : cancelCheckIns();
+  void task.catch(() => {
+    // A missing notification never blocks the app: Today shows the check-in too.
+  });
+}
 
-  changedAt: 0,
+/**
+ * The Journey, held on the phone. Every change is written straight to local
+ * storage; there is nothing to sync and nothing to wait for.
+ */
+export const useJourney = create<JourneyStore>((set, get) => {
+  function commit(journey: Journey, extra: Partial<JourneyStore> = {}) {
+    saveJourney(journey);
+    set({ changedAt: Date.now(), journey, ...extra });
+  }
 
-  close: ({ at, kept, note }) => {
-    const journey = get().journey;
-    if (!journey) return;
-    const next = closeAction(journey, { at, kept, note });
-    set({
-      changedAt: at,
-      journey: persist(next),
-      pendingMovement:
-        next.direction === journey.direction ? null : { from: journey.direction, to: next.direction },
-    });
-  },
-
-  erase: () => {
-    clearJourney();
-    set({ journey: null, pendingMovement: null });
-  },
-
-  journey: restored,
-
-  letGoOfAction: (at) => {
-    const journey = get().journey;
-    if (!journey) return;
-    set({ changedAt: at, journey: persist(letGo(journey, at)) });
-  },
-
-  note: (note) => {
-    const journey = get().journey;
-    if (!journey) return;
-    set({ journey: persist(attachNote(journey, note)) });
-  },
-
-  open: (action) => {
-    const journey = get().journey;
-    if (!journey) return;
-    set({ changedAt: action.openedAt, journey: persist(openAction(journey, action)) });
-  },
-
-  pendingMovement: null,
-
-  preferences: (preferences) => {
-    const journey = get().journey;
-    if (!journey) return;
-    set({ journey: persist(setPreferences(journey, preferences)) });
-  },
-
-  rename: (name) => {
-    const journey = get().journey;
-    if (!journey) return;
-    set({ journey: persist(setJourneyName(journey, name)) });
-  },
-
-  settleNeedle: () => set({ pendingMovement: null }),
-
-  swap: (actionId, at) => {
-    const journey = get().journey;
-    if (!journey) return;
-    set({ journey: persist(spendSwap(journey, actionId, at)) });
-  },
-}));
+  return {
+    begin: (input) => {
+      const journey = beginJourney(input);
+      commit(journey, { pendingMovement: null });
+    },
+    changedAt: 0,
+    checkIn: ({ instanceId, note, outcome }) => {
+      const journey = get().journey;
+      if (!journey?.open || journey.open.instanceId !== instanceId) return null;
+      const next = checkIn(journey, { at: Date.now(), note, outcome });
+      const movement = next.direction === journey.direction ? null : { from: journey.direction, to: next.direction };
+      commit(next, { pendingMovement: movement });
+      syncCheckIn(next);
+      return movement;
+    },
+    erase: () => {
+      clearJourney();
+      void cancelCheckIns().catch(() => {});
+      set({ changedAt: Date.now(), journey: null, pendingMovement: null });
+    },
+    journey: restored,
+    note: (note) => {
+      const journey = get().journey;
+      if (journey) commit(attachNote(journey, note));
+    },
+    open: ({ action, days, line }) => {
+      const journey = get().journey;
+      if (!journey) return;
+      const at = Date.now();
+      const next = openAction(journey, { action, at, days, instanceId: newInstanceId(at), line });
+      commit(next);
+      syncCheckIn(next);
+    },
+    pass: (ids) => {
+      const journey = get().journey;
+      if (journey) commit(passSuggestions(journey, ids, Date.now()));
+    },
+    pendingMovement: null,
+    preferences: (change) => {
+      const journey = get().journey;
+      if (!journey) return;
+      const next = setPreferences(journey, change);
+      if (change.haptics !== undefined) setHapticsEnabled(change.haptics);
+      commit(next);
+      if (change.checkIns !== undefined || change.checkInMinutes !== undefined) syncCheckIn(next);
+    },
+    rename: (name) => {
+      const journey = get().journey;
+      if (journey) commit(setJourneyName(journey, name));
+    },
+    settleNeedle: () => set({ pendingMovement: null }),
+  };
+});

@@ -1,0 +1,95 @@
+{
+  "cli": {
+    "version": ">= 5.2.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "distribution": "internal",
+      "environment": "development",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "development",
+        "NORTH_APP_VARIANT": "development"
+      },
+      "developmentClient": true,
+      "android": {
+        "buildType": "apk"
+      },
+      "pnpm": "12.16.1"
+    },
+    "development-simulator": {
+      "distribution": "internal",
+      "environment": "development",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "development",
+        "NORTH_APP_VARIANT": "development"
+      },
+      "developmentClient": true,
+      "ios": {
+        "simulator": true
+      },
+      "pnpm": "12.16.1"
+    },
+    "preview": {
+      "developmentClient": false,
+      "distribution": "internal",
+      "environment": "development",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "development",
+        "NORTH_APP_VARIANT": "preview"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "pnpm": "12.16.1"
+    },
+    "testflight": {
+      "developmentClient": false,
+      "distribution": "store",
+      "environment": "development",
+      "env": {
+        "NORTH_APP_VARIANT": "production",
+        "EXPO_PUBLIC_APP_ENV": "development"
+      },
+      "ios": {
+        "buildConfiguration": "Release"
+      },
+      "pnpm": "12.16.1"
+    },
+    "production": {
+      "environment": "production",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "NORTH_APP_VARIANT": "production"
+      },
+      "distribution": "store",
+      "developmentClient": false,
+      "ios": {
+        "buildConfiguration": "Release"
+      },
+      "pnpm": "12.16.1"
+    }
+  },
+  "submit": {
+    "testflight": {
+      "ios": {
+        "bundleIdentifier": "com.oooflabs.north",
+        "appleTeamId": "LFJY887CD3",
+        "ascApiKeyPath": "$HOME/.config/oooflabs/apple/AuthKey_Q6F666S4RG.p8",
+        "ascApiKeyId": "Q6F666S4RG",
+        "ascApiKeyIssuerId": "f282a20b-2313-4ca7-b771-69e0ea111692",
+        "ascAppId": "6824608465"
+      }
+    },
+    "production": {
+      "ios": {
+        "bundleIdentifier": "com.oooflabs.north",
+        "appleTeamId": "LFJY887CD3",
+        "ascApiKeyPath": "$HOME/.config/oooflabs/apple/AuthKey_Q6F666S4RG.p8",
+        "ascApiKeyId": "Q6F666S4RG",
+        "ascApiKeyIssuerId": "f282a20b-2313-4ca7-b771-69e0ea111692",
+        "ascAppId": "6824608465"
+      }
+    }
+  }
+}

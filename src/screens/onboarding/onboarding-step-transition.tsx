@@ -23,7 +23,7 @@ type OnboardingStepTransitionProps = PropsWithChildren<{
 /**
  * Keeps the incoming and outgoing pages in the same fixed stage while they
  * exchange places. The onboarding shell lives outside this boundary, so the
- * progress rail and Mascot remain continuous objects instead of remounting on
+ * progress rail and Compass remain continuous objects instead of remounting on
  * every answer.
  */
 export function OnboardingStepTransition({

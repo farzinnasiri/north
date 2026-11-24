@@ -7,11 +7,11 @@ const KEY = 'north.onboarding.draft';
 
 /**
  * Bumped whenever the stored shape changes. A draft written by an older
- * version is discarded rather than migrated: this is a twelve-minute flow that
+ * version is discarded rather than migrated: this is an unfinished flow that
  * has not been signed yet, so restarting it is honest and a half-migrated
  * Reality would be worse than a fresh one.
  */
-const VERSION = 12;
+const VERSION = 15;
 
 type Stored = {
   version: number;

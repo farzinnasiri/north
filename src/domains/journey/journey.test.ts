@@ -1,22 +1,33 @@
-import { DAY_MS } from '@/domains/actions/action';
-import type { AxisReading } from '@/domains/direction/initial-direction';
+import type { Line } from '@/domains/content/catalogue';
 import type { Journey } from '@/domains/journey/journey';
 import {
   actionState,
-  attachNote,
   beginJourney,
-  closeAction,
+  canPass,
+  checkIn,
   degreesTravelled,
-  keptCount,
-  letGo,
   northState,
   openAction,
-  spendSwap,
+  passSuggestions,
+  seenLines,
+  setPreferences,
 } from '@/domains/journey/journey';
 
-const AT = Date.UTC(2026, 2, 1, 9, 0);
+const AT = new Date(2026, 2, 2, 9, 0).getTime();
+const HOUR = 60 * 60 * 1000;
 
-const readings: AxisReading[] = [{ axis: 'frame', off: 60 }];
+const LINE: Line = {
+  action: 'Say the thing you have been holding back, in one sentence.',
+  axis: 'frame',
+  id: 'test-001',
+  kind: 'quote',
+  person: 'Test Person',
+  said: 'Say it plainly.',
+  source: 'A talk',
+  takeaway: 'Say it today.',
+  themes: ['conversation'],
+  url: null,
+};
 
 function start(direction = 47): Journey {
   return beginJourney({
@@ -25,95 +36,70 @@ function start(direction = 47): Journey {
     honestThing: 'conversation',
     name: 'Farzin',
     northStar: 'patriarch',
-    readings,
+    readings: [{ axis: 'frame', off: 60 }],
   });
 }
 
-function withOpen(journey: Journey, deadlineDays = 3): Journey {
-  return openAction(journey, {
-    actionId: 'frame-say-it',
-    axis: 'frame',
-    deadlineDays,
-    named: 'Speak up in Thursday’s meeting.',
-    note: null,
-    openedAt: AT,
-  });
+function withOpen(journey = start(), days = 1): Journey {
+  return openAction(journey, { action: '', at: AT, days, instanceId: 'one', line: LINE });
 }
 
-describe('the action loop', () => {
-  it('has nothing open until an action is named and opened', () => {
-    expect(actionState(start(), AT).kind).toBe('idle');
-    expect(actionState(withOpen(start()), AT).kind).toBe('running');
+describe('one action at a time', () => {
+  it('opens with the line’s takeaway when he does not reword it', () => {
+    expect(withOpen().open?.action).toBe(LINE.takeaway);
   });
 
-  it('reports an action past its deadline as overdue with the days quoted', () => {
-    const state = actionState(withOpen(start()), AT + 11 * DAY_MS);
+  it('refuses a second action while one is open', () => {
+    const open = withOpen();
+    const second = openAction(open, { action: 'Another', at: AT, days: 1, instanceId: 'two', line: LINE });
 
-    expect(state.kind).toBe('overdue');
-    expect(state.kind === 'overdue' && state.days).toBe(8);
+    expect(second.open?.instanceId).toBe('one');
   });
 
-  it('moves the direction only when he says he kept his word', () => {
-    const kept = closeAction(withOpen(start()), { at: AT + DAY_MS, kept: true });
-    const missed = closeAction(withOpen(start()), { at: AT + DAY_MS, kept: false });
+  it('asks for the check-in only once its time has come', () => {
+    const open = withOpen();
 
-    expect(kept.direction).toBe(46.1);
-    expect(missed.direction).toBe(47);
-  });
-
-  it('records a let-go action without moving the direction backwards', () => {
-    const journey = letGo(withOpen(start()), AT + 20 * DAY_MS);
-
-    expect(journey.direction).toBe(47);
-    expect(journey.open).toBeNull();
-    expect(keptCount(journey)).toBe(0);
-    expect(journey.closed).toHaveLength(1);
-  });
-
-  it('keeps the note he wrote against the action he closed', () => {
-    const journey = closeAction(attachNote(withOpen(start()), 'Said it. Room went quiet.'), {
-      at: AT + DAY_MS,
-      kept: true,
-    });
-
-    expect(journey.closed[0].note).toBe('Said it. Room went quiet.');
-  });
-
-  it('counts what he has kept and how far he has actually come', () => {
-    const first = closeAction(withOpen(start(), 1), { at: AT + DAY_MS, kept: true });
-    const second = closeAction(withOpen(first, 1), { at: AT + 2 * DAY_MS, kept: false });
-
-    expect(keptCount(second)).toBe(1);
-    expect(degreesTravelled(second)).toBe(1);
-  });
-
-  it('spends a swap on an action he passes over, and stops at three a month', () => {
-    let journey = spendSwap(start(), 'frame-say-it', AT);
-    journey = spendSwap(journey, 'frame-disagree', AT);
-    journey = spendSwap(journey, 'desire-speak-first', AT);
-    journey = spendSwap(journey, 'desire-name-want', AT);
-
-    expect(journey.passed).toStrictEqual(['frame-say-it', 'frame-disagree', 'desire-speak-first']);
+    expect(actionState(open, AT + HOUR).kind).toBe('running');
+    expect(actionState(open, AT + 12 * HOUR).kind).toBe('due');
   });
 });
 
-describe('reaching north', () => {
-  it('starts hold north the day the direction reaches zero', () => {
-    const journey = closeAction(withOpen(start(0.5), 1), { at: AT, kept: true });
-
-    expect(journey.direction).toBe(0);
-    expect(northState(journey, AT)).toStrictEqual({ daysHeld: 0, daysLeft: 30, kind: 'holding' });
+describe('the check-in', () => {
+  it('moves the needle by what he says happened', () => {
+    expect(checkIn(withOpen(), { at: AT, outcome: 'done' }).direction).toBe(46);
+    expect(checkIn(withOpen(), { at: AT, outcome: 'partly' }).direction).toBe(46.5);
+    expect(checkIn(withOpen(), { at: AT, outcome: 'missed' }).direction).toBe(47);
   });
 
-  it('names the exit in sight before he arrives, without starting the count', () => {
-    expect(northState(start(4), AT).kind).toBe('near');
-    expect(northState(start(47), AT).kind).toBe('travelling');
+  it('closes the action and frees the day for the next one', () => {
+    const after = checkIn(withOpen(), { at: AT, outcome: 'missed' });
+
+    expect(after.open).toBeNull();
+    expect(after.closed.map((action) => action.outcome)).toStrictEqual(['missed']);
+    expect(actionState(after, AT).kind).toBe('choosing');
   });
 
-  it('exits after thirty days held', () => {
-    const journey = closeAction(withOpen(start(0.5), 1), { at: AT, kept: true });
+  it('starts Hold North the moment the needle reaches north', () => {
+    const after = checkIn(withOpen(start(1)), { at: AT, outcome: 'done' });
 
-    expect(northState(journey, AT + 29 * DAY_MS).kind).toBe('holding');
-    expect(northState(journey, AT + 30 * DAY_MS).kind).toBe('exit');
+    expect(after.reachedNorthAt).toBe(AT);
+    expect(northState(after, AT).kind).toBe('holding');
+    expect(degreesTravelled(after)).toBe(1);
+  });
+
+  it('moves an open check-in when he changes the check-in time', () => {
+    const later = setPreferences(withOpen(), { checkInMinutes: 22 * 60 });
+
+    expect(new Date(later.open!.checkInAt).getHours()).toBe(22);
+  });
+});
+
+describe('showing two others', () => {
+  it('sets both suggestions aside, once a day', () => {
+    const passed = passSuggestions(start(), ['a', 'b'], AT);
+
+    expect(seenLines(passed)).toStrictEqual(['a', 'b']);
+    expect(canPass(passed, AT + HOUR)).toBe(false);
+    expect(canPass(passed, AT + 24 * HOUR)).toBe(true);
   });
 });

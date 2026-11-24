@@ -51,6 +51,9 @@ const COLORS: Record<string, string> = {
   'axis-connection': 'axisConnection',
   'axis-appetite': 'axisAppetite',
   'axis-craft': 'axisCraft',
+  'glass-fill': 'glassFill',
+  'glass-edge': 'glassEdge',
+  'glass-highlight': 'glassHighlight',
 };
 
 const SPACING: Record<string, string> = {

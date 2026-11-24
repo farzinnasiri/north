@@ -5,51 +5,17 @@ import Animated, { useReducedMotion } from 'react-native-reanimated';
 
 import { HoldButton } from '@/components/ui/hold-button';
 import { NorthText } from '@/components/ui/north-text';
-import type { AuthoredAction } from '@/domains/content/catalogue';
-import type { Axis } from '@/domains/direction/initial-direction';
-import { ActionBrief } from '@/domains/actions/ui/action-brief';
+import type { Line } from '@/domains/content/catalogue';
+import { LineCard } from '@/domains/content/ui/line-card';
 import { contractImpact, selectionTick } from '@/platform/haptics';
 import { OnboardingFrame } from '@/screens/onboarding/onboarding-frame';
 import { colors, motion, spacing } from '@/theme';
 
-type LetterStepProps = {
-  onContinue: () => void;
-};
-
-const AXIS_LABELS: Record<Axis, string> = {
-  agency: 'Agency',
-  appetite: 'Self-command',
-  connection: 'Connection',
-  craft: 'Craft',
-  desire: 'Desire',
-  frame: 'Frame',
-};
-
-export function LetterStep({ onContinue }: LetterStepProps) {
-  return (
-    <OnboardingFrame
-      actionLabel="Read the agreement"
-      onContinue={onContinue}
-      presentation="statement"
-      title="Use North until you don't need it."
-    >
-      <View style={styles.letter}>
-        <NorthText style={styles.paper}>
-          North will not remind you or ask for proof.
-        </NorthText>
-        <NorthText>
-          If you miss, say so. Nothing moves backward. Choose what to do next.
-        </NorthText>
-      </View>
-    </OnboardingFrame>
-  );
-}
-
 const CLAUSES = [
   'I will tell the truth about where I stand.',
-  'I will name the actions I take, in my own words.',
-  'I will keep the deadlines I set, or say plainly that I did not.',
-  'North will not remind me, verify me, or punish me for returning late.',
+  'I will take one action at a time.',
+  'When North asks how it went, I will answer honestly.',
+  'A miss moves nothing back. I will choose what comes next.',
   'I will use it until I no longer need it.',
 ] as const;
 
@@ -57,7 +23,7 @@ type ContractStepProps = {
   name: string;
   onCommit: () => void;
   onHold: (holding: boolean) => void;
-  onSeal: (sealed: number) => void;
+  onSeal?: (sealed: number) => void;
 };
 
 /** The existing Contract ceremony, kept separate from account creation. */
@@ -75,7 +41,7 @@ export function ContractStep({
   const seal = useCallback(
     (clause: number) => {
       setLit(clause);
-      onSeal(clause);
+      onSeal?.(clause);
       if (clause < CLAUSES.length) void selectionTick();
     },
     [onSeal],
@@ -86,7 +52,7 @@ export function ContractStep({
       onHold(holding);
       if (!holding) {
         setLit(0);
-        onSeal(0);
+        onSeal?.(0);
       }
     },
     [onHold, onSeal],
@@ -154,35 +120,70 @@ function Clause({ lit, text }: { lit: boolean; text: string }) {
 }
 
 type FirstActionStepProps = {
-  action: AuthoredAction;
+  lines: readonly Line[];
   northStar: string;
+  onChoose: (lineId: string) => void;
   onContinue: () => void;
   reflectionLed: boolean;
+  value: string | null;
 };
 
+/** The first choice between two suggestions, made before the app opens. */
 export function FirstActionStep({
-  action,
+  lines,
   northStar,
+  onChoose,
   onContinue,
   reflectionLed,
+  value,
 }: FirstActionStepProps) {
+  const chosen = value ?? lines[0]?.id ?? null;
   return (
     <OnboardingFrame
-      actionLabel="Create your account"
+      actionLabel="Start with this one"
       body={reflectionLed
-        ? 'This starts with what you said is costing you most.'
-        : 'This is the first area to work on.'}
-      onContinue={onContinue}
+        ? 'The first one starts with what you said is costing you most. Pick one.'
+        : 'Two places to start, from where you are furthest off. Pick one.'}
+      disabled={!chosen}
+      onContinue={() => {
+        if (chosen && !value) onChoose(chosen);
+        onContinue();
+      }}
       title="Your first Action."
     >
       <View style={styles.result}>
         <NorthText variant="label">NORTH STAR · {northStar.toUpperCase()}</NorthText>
-        <NorthText variant="label">
-          START HERE · {AXIS_LABELS[action.axis].toUpperCase()}
-        </NorthText>
+        {lines.map((line) => (
+          <LineCard
+            key={line.id}
+            line={line}
+            onPress={() => { void selectionTick(); onChoose(line.id); }}
+            quoteLines={3}
+            selected={line.id === chosen}
+          />
+        ))}
       </View>
-      <ActionBrief action={action} />
     </OnboardingFrame>
+  );
+}
+
+type CheckInStepProps = {
+  onAllow: () => void;
+  onSkip: () => void;
+  time: string;
+};
+
+/** The one notification, asked for at the moment it makes sense. */
+export function CheckInStep({ onAllow, onSkip, time }: CheckInStepProps) {
+  return (
+    <OnboardingFrame
+      actionLabel="Ask me at the check-in"
+      body={`At ${time} on the day you chose, North asks one thing: did you do it? Nothing else is ever sent. You can change the time in Settings.`}
+      onContinue={onAllow}
+      presentation="statement"
+      secondaryAction={{ label: 'Not now', onPress: onSkip }}
+      title="One question, once."
+    />
   );
 }
 
@@ -198,14 +199,11 @@ const styles = StyleSheet.create({
   commitment: {
     gap: spacing.xl,
   },
-  letter: {
-    gap: spacing.xl,
-  },
   paper: {
     color: colors.paper,
   },
   result: {
-    gap: spacing.sm,
+    gap: spacing.md,
   },
   without: {
     alignItems: 'center',

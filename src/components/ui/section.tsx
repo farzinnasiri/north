@@ -2,36 +2,38 @@ import type { PropsWithChildren } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 
+import { GlassSurface } from '@/components/ui/glass';
 import { NorthText } from '@/components/ui/north-text';
-import { colors, spacing } from '@/theme';
+import { spacing } from '@/theme';
 
 type SectionProps = PropsWithChildren<{
-  /** Short mono label. The only thing allowed to be uppercase. */
+  /** Short mono label above the group. */
   label?: string;
-  /** A hairline above the label, for stacked sections in one column. */
+  /** Kept for existing call sites; groups are separated by their glass now. */
   ruled?: boolean;
   style?: StyleProp<ViewStyle>;
 }>;
 
 /**
- * A labelled group in the single column. It exists so that stacked facts stay
- * one readable column instead of drifting into a card grid, which is the
- * failure mode this product is most likely to fall into.
+ * A labelled group, drawn as one glass panel like an inset grouped list. The
+ * label sits outside the glass so the panel holds only the rows.
  */
-export function Section({ children, label, ruled = false, style }: SectionProps) {
+export function Section({ children, label, style }: SectionProps) {
   return (
-    <View style={[styles.section, ruled && styles.ruled, style]}>
-      {label ? <NorthText variant="label">{label}</NorthText> : null}
-      {children}
+    <View style={[styles.section, style]}>
+      {label ? <NorthText style={styles.label} variant="label">{label}</NorthText> : null}
+      <GlassSurface style={styles.panel}>{children}</GlassSurface>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  ruled: {
-    borderTopColor: colors.line,
-    borderTopWidth: 1,
-    paddingTop: spacing.lg,
+  label: {
+    paddingHorizontal: spacing.lg,
+  },
+  panel: {
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
   },
   section: {
     gap: spacing.sm,

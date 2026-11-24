@@ -1,0 +1,61 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# environment configuration
+.env.development
+.env.production
+.env.local
+.env.*.local
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders
+/ios
+/android
+
+# Local test credentials and integration setup artifacts
+.local/
+
+# Private signing material and local automation artifacts
+*.p8
+*.p12
+*.mobileprovision
+*.key
+.asc/
+.scratch/
+.playwright-cli/
+output/
+
+# Native builds use EAS variables, never local env files.
+.env
+.env.*

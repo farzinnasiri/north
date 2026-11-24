@@ -2,21 +2,9 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import type { NorthStarType } from '@/domains/onboarding/onboarding';
 import {
-  NorthStarIntroStep,
   StarQuestionStep,
   StarRevealStep,
 } from '@/screens/onboarding/north-star-steps';
-
-describe('NorthStarIntroStep', () => {
-  it('introduces the choice without explaining the flow twice', async () => {
-    await render(<NorthStarIntroStep onContinue={jest.fn()} />);
-
-    expect(screen.getByText('What matters most?')).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled();
-    expect(screen.queryByText('REALITY COMPLETE')).not.toBeOnTheScreen();
-    expect(screen.queryByText(/There is no best answer/)).not.toBeOnTheScreen();
-  });
-});
 
 describe('StarQuestionStep', () => {
   it('saves a choice locally and advances only when Continue is pressed', async () => {
@@ -25,7 +13,7 @@ describe('StarQuestionStep', () => {
 
     await render(
       <StarQuestionStep
-        id="building-time"
+        id="ordinary-day"
         onChange={onChange}
         onContinue={onContinue}
         profile={{ age: 30, name: 'Farzin' }}
@@ -33,9 +21,10 @@ describe('StarQuestionStep', () => {
       />,
     );
 
+    expect(screen.getByText('In 5 years · Age 35')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
-    await fireEvent.press(screen.getByRole('radio', { name: 'They matter about the same' }));
-    expect(onChange).toHaveBeenCalledWith('building-time', ['equal']);
+    await fireEvent.press(screen.getByRole('checkbox', { name: 'Independent work, my own schedule' }));
+    expect(onChange).toHaveBeenCalledWith('ordinary-day', ['independent']);
     expect(onContinue).not.toHaveBeenCalled();
   });
 });

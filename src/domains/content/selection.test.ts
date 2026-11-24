@@ -1,8 +1,25 @@
+import type { Line } from '@/domains/content/catalogue';
+import { BUNDLED_CATALOGUE, isCatalogue } from '@/domains/content/catalogue';
+import { suggestions } from '@/domains/content/selection';
 import type { AxisReading } from '@/domains/direction/initial-direction';
-import { CATALOGUE } from '@/domains/content/catalogue';
-import { nextAction } from '@/domains/content/selection';
 
-const readings: AxisReading[] = [
+function line(id: string, axis: Line['axis'], themes: Line['themes'] = []): Line {
+  return { action: `Do ${id}`, axis, id, kind: 'quote', person: 'P', said: 'S', source: 'Src', takeaway: `Take ${id}`, themes, url: null };
+}
+
+const LINES: Line[] = [
+  line('desire-1', 'desire'),
+  line('desire-2', 'desire', ['money']),
+  line('desire-3', 'desire'),
+  line('connection-1', 'connection'),
+  line('connection-2', 'connection', ['apology']),
+  line('frame-1', 'frame'),
+  line('craft-1', 'craft'),
+  line('agency-1', 'agency'),
+  line('appetite-1', 'appetite'),
+];
+
+const READINGS: AxisReading[] = [
   { axis: 'frame', off: 20 },
   { axis: 'desire', off: 90 },
   { axis: 'connection', off: 55 },
@@ -11,103 +28,49 @@ const readings: AxisReading[] = [
   { axis: 'agency', off: 10 },
 ];
 
-describe('choosing the next action', () => {
-  it('proposes from the axis he is furthest off on', () => {
-    const chosen = nextAction({ closed: [], passed: [], readings });
+describe('today’s two suggestions', () => {
+  it('come from the two axes he is furthest off on, in that order', () => {
+    const picked = suggestions({ day: 1, lines: LINES, readings: READINGS, seen: [] });
 
-    expect(chosen.axis).toBe('desire');
+    expect(picked.map((item) => item.axis)).toStrictEqual(['desire', 'connection']);
   });
 
-  it('uses what he said is costing him to choose the first action', () => {
-    const chosen = nextAction({
-      closed: [],
-      honestThing: 'conversation',
-      northStar: 'patriarch',
-      passed: [],
-      readings,
+  it('lead with lines that speak to what he said is costing him', () => {
+    const picked = suggestions({ day: 1, honestThing: 'apology', lines: LINES, readings: READINGS, seen: [] });
+
+    expect(picked[1].id).toBe('connection-2');
+  });
+
+  it('skip lines he has already taken or passed', () => {
+    const picked = suggestions({
+      day: 1, lines: LINES, readings: READINGS,
+      seen: ['desire-1', 'desire-2', 'desire-3'],
     });
 
-    expect(chosen.id).toBe('frame-say-it');
+    expect(picked.map((item) => item.axis)).toStrictEqual(['connection', 'appetite']);
   });
 
-  it('uses the closest authored action within the reflected area', () => {
-    const chosen = nextAction({
-      closed: [],
-      honestThing: 'body',
-      northStar: 'modern-man',
-      passed: [],
-      readings,
-    });
+  it('stay the same all day and change on another day', () => {
+    const many = Array.from({ length: 30 }, (_, index) => line(`desire-${index}`, 'desire'));
+    const monday = suggestions({ day: 100, lines: many, readings: READINGS, seen: [] });
+    const again = suggestions({ day: 100, lines: many, readings: READINGS, seen: [] });
+    const days = new Set(Array.from({ length: 7 }, (_, offset) =>
+      suggestions({ day: 100 + offset, lines: many, readings: READINGS, seen: [] })[0].id));
 
-    expect(chosen.id).toBe('craft-body');
+    expect(again[0].id).toBe(monday[0].id);
+    expect(days.size).toBeGreaterThan(1);
+  });
+});
+
+describe('the catalogue', () => {
+  it('ships a bundled copy the app accepts, so the first launch works offline', () => {
+    expect(isCatalogue(BUNDLED_CATALOGUE)).toBe(true);
+    expect(BUNDLED_CATALOGUE.lines.length).toBeGreaterThan(1000);
   });
 
-  it('lets the chosen North Star order subsequent Actions', () => {
-    const closeReadings: AxisReading[] = [
-      { axis: 'frame', off: 60 },
-      { axis: 'desire', off: 10 },
-      { axis: 'connection', off: 20 },
-      { axis: 'appetite', off: 10 },
-      { axis: 'craft', off: 50 },
-      { axis: 'agency', off: 10 },
-    ];
+  it('rejects a download with one malformed line rather than using part of it', () => {
+    const broken = { lines: [...LINES, { ...LINES[0], axis: 'courage' }], version: 2 };
 
-    const patriarch = nextAction({
-      closed: ['frame-say-it'],
-      northStar: 'patriarch',
-      passed: [],
-      readings: closeReadings,
-    });
-    const modernMan = nextAction({
-      closed: ['frame-say-it'],
-      northStar: 'modern-man',
-      passed: [],
-      readings: closeReadings,
-    });
-
-    expect(patriarch.axis).toBe('craft');
-    expect(modernMan.axis).toBe('frame');
-  });
-
-  it('gives the same action for the same inputs, every time', () => {
-    const first = nextAction({ closed: [], passed: [], readings });
-    const second = nextAction({ closed: [], passed: [], readings });
-
-    expect(second.id).toBe(first.id);
-  });
-
-  it('does not propose an action he has already closed', () => {
-    const closed = CATALOGUE.filter((action) => action.axis === 'desire').map((a) => a.id);
-    const chosen = nextAction({ closed, passed: [], readings });
-
-    expect(chosen.axis).toBe('connection');
-  });
-
-  it('does not propose an action he swapped away', () => {
-    const first = nextAction({ closed: [], passed: [], readings });
-    const second = nextAction({ closed: [], passed: [first.id], readings });
-
-    expect(second.id).not.toBe(first.id);
-    expect(second.axis).toBe('desire');
-  });
-
-  it('breaks a tie between axes the same way on every run', () => {
-    const level: AxisReading[] = [
-      { axis: 'frame', off: 50 },
-      { axis: 'desire', off: 50 },
-      { axis: 'connection', off: 50 },
-      { axis: 'appetite', off: 50 },
-      { axis: 'craft', off: 50 },
-      { axis: 'agency', off: 50 },
-    ];
-
-    expect(nextAction({ closed: [], passed: [], readings: level }).axis).toBe('frame');
-  });
-
-  it('returns to the oldest closed action once the corpus is exhausted', () => {
-    const closed = CATALOGUE.map((action) => action.id);
-    const chosen = nextAction({ closed, passed: [], readings });
-
-    expect(chosen.id).toBe(closed[0]);
+    expect(isCatalogue(broken)).toBe(false);
   });
 });

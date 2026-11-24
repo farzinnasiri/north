@@ -28,6 +28,8 @@ export function QuestionStep({
   return (
     <OnboardingFrame
       actionLabel="Continue"
+      body={question.body}
+      kicker={question.period}
       disabled={raw === null}
       emphasis={question.emphasis}
       onContinue={() => {

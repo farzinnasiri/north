@@ -8,12 +8,14 @@
     "userInterfaceStyle": "dark",
     "icon": "./assets/icon.png",
     "ios": {
+      "buildNumber": "1",
       "infoPlist": {
         "CADisableMinimumFrameDurationOnPhone": true
       },
       "supportsTablet": false
     },
     "android": {
+      "versionCode": 1,
       "predictiveBackGestureEnabled": false,
       "adaptiveIcon": {
         "backgroundColor": "#090B0C",
@@ -60,11 +62,25 @@
             "photo"
           ]
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "enableBackgroundRemoteNotifications": false
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "environment": "development",
+      "router": {},
+      "eas": {
+        "projectId": "d70b30a1-8671-4044-b939-7802f680d3f1"
+      }
+    },
+    "owner": "farzin.nasiri"
   }
 }

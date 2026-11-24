@@ -1,32 +1,14 @@
 import type { PropsWithChildren } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { View } from 'react-native';
 
-import { colors, radii, spacing } from '@/theme';
+import { GlassSurface } from '@/components/ui/glass';
+import { spacing } from '@/theme';
 
 type SurfaceProps = PropsWithChildren<{
   style?: StyleProp<ViewStyle>;
 }>;
 
+/** A glass plate for one block of content. */
 export function Surface({ children, style }: SurfaceProps) {
-  return (
-    <View
-      style={[
-        {
-          backgroundColor: colors.field,
-          borderColor: colors.line,
-          borderCurve: 'continuous',
-          borderRadius: radii.card,
-          borderWidth: 1,
-          gap: spacing.md,
-          overflow: 'hidden',
-          paddingHorizontal: spacing.lg,
-          paddingVertical: spacing.lg,
-        },
-        style,
-      ]}
-    >
-      {children}
-    </View>
-  );
+  return <GlassSurface style={[{ gap: spacing.md }, style]}>{children}</GlassSurface>;
 }
