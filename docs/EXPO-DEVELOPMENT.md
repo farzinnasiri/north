@@ -77,7 +77,7 @@ Cloud builds run on GitHub Actions (`farzinnasiri/north`) using `.github/workflo
 
 - `EAS_ASC_API_KEY`, `EAS_ASC_KEY_ID` (`Q6F666S4RG`), `EAS_ASC_ISSUER_ID` (`f282a20b-2313-4ca7-b771-69e0ea111692`) — shared App Store Connect API key (`~/.config/oooflabs/apple/AuthKey_Q6F666S4RG.p8`, also stored in system keychain under `asc --profile oooflabs`).
 - `EAS_IOS_DIST_P12` and `EAS_IOS_P12_PASSWORD` — team iOS Distribution certificate (`UCMN329AP2`, `~/.config/oooflabs/apple/oooflabs-ios-dist.p12`).
-- `EAS_IOS_PROFILE` — `North AppStore` provisioning profile (`S348ZKAYZT`, `~/.config/oooflabs/apple/north-appstore.mobileprovision`) for `com.oooflabs.north`.
+- `EAS_IOS_PROFILE` — `North AppStore` provisioning profile (`CW3U3TV6P8`, `~/.config/oooflabs/apple/north-appstore.mobileprovision`) for `com.oooflabs.north` (with `PUSH_NOTIFICATIONS` enabled on all three North bundle IDs).
 - `EAS_INSTALL_TOKEN` + repo variable `EAS_INSTALL_URL` (`https://oooflabs-rn-deploy.pages.dev`) — publishes direct ad-hoc builds (`development` / `preview`) to an over-the-air QR install page and syncs registered devices automatically.
 
 Ad-hoc profiles for `com.oooflabs.north.development` and `com.oooflabs.north.preview` are generated/reused automatically at build time from Apple + the device registry. Verify GitHub secrets at any time with `make credentials` (`rnd credentials --platform ios`).

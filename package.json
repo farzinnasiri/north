@@ -76,7 +76,7 @@
     "ios:device-register": "rnd device:create",
     "ios:testflight:check": "node scripts/check-ios-submission.mjs",
     "ios:testflight:build": "node scripts/check-ios-submission.mjs && rnd build --platform ios --profile testflight",
-    "ios:testflight": "node scripts/check-ios-submission.mjs && rnd build --platform ios --profile testflight --auto-submit --non-interactive",
+    "ios:testflight": "make ios-testflight",
     "ios:testflight:status": "node scripts/check-ios-submission.mjs && rnd submit:status --platform ios --profile testflight",
     "ios:app-link": "node scripts/link-ios-app.mjs"
   },

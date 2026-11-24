@@ -163,13 +163,14 @@ ios-testflight-build:
 
 ios-testflight-submit:
 	@node scripts/check-ios-submission.mjs
-	rnd build:download --platform ios
-	@IPA=$$(ls -t build/*.ipa 2>/dev/null | head -n 1); \
-	if [ -z "$$IPA" ]; then (cd build && unzip -o $$(ls -t *.zip | head -n 1)); IPA=$$(ls -t build/*.ipa | head -n 1); fi; \
+	@BUILD_ID=$$(rnd build:list --json | node -e "const list = JSON.parse(require('fs').readFileSync(0,'utf8')); const b = list.find(x => x.platform === 'IOS' && x.buildProfile === 'testflight' && x.status === 'FINISHED'); if (!b) { console.error('No finished iOS testflight build found. Run make ios-testflight-build first.'); process.exit(1); } console.log(b.id);"); \
+	rm -rf build && \
+	rnd build:download --build-id "$$BUILD_ID" && \
+	(cd build && unzip -o "$$BUILD_ID.zip" >/dev/null) && \
+	IPA=$$(ls -t build/*.ipa | head -n 1); \
 	rnd submit --platform ios --profile testflight --path "$$IPA"
 
-ios-testflight:
-	pnpm run ios:testflight
+ios-testflight: ios-testflight-build ios-testflight-submit
 
 ios-testflight-status:
 	pnpm run ios:testflight:status
