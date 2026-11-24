@@ -1,6 +1,7 @@
 # Each package root installs independently and shares pnpm's content-addressable store.
 packages: []
 allowBuilds:
+  "@parcel/watcher": false
   "browser-tabs-lock": false
   "bufferutil": true
   "core-js": false

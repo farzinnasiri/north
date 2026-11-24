@@ -1,10 +1,10 @@
-import type { RefObject } from 'react';
+import type { ComponentRef, RefObject } from 'react';
 import type { View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 
 export type RealityCardActionResult = 'done' | 'permission-denied';
 
-async function captureRealityCard(ref: RefObject<View | null>) {
+async function captureRealityCard(ref: RefObject<ComponentRef<typeof View> | null>) {
   return captureRef(ref, {
     format: 'png',
     quality: 1,
@@ -13,7 +13,7 @@ async function captureRealityCard(ref: RefObject<View | null>) {
 }
 
 export async function saveRealityCard(
-  ref: RefObject<View | null>,
+  ref: RefObject<ComponentRef<typeof View> | null>,
 ): Promise<RealityCardActionResult> {
   const uri = await captureRealityCard(ref);
   const link = document.createElement('a');

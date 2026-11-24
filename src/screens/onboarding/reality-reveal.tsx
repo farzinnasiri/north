@@ -1,3 +1,4 @@
+import type { ComponentRef } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
 import Animated, {
@@ -58,7 +59,7 @@ type Point = { x: number; y: number };
 
 /** One authored calibration: the answers resolve into the person's six-axis Reality. */
 export function RealityReveal({ onContinue, readings }: RealityRevealProps) {
-  const cardRef = useRef<View>(null);
+  const cardRef = useRef<ComponentRef<typeof View>>(null);
   const reduceMotion = useReducedMotion();
   const progress = useSharedValue(reduceMotion ? 1 : 0);
   const [saving, setSaving] = useState(false);

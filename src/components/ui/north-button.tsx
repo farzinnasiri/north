@@ -1,5 +1,6 @@
+import type { ComponentRef } from 'react';
 import { forwardRef, useState } from 'react';
-import type { PressableProps, StyleProp, View, ViewStyle } from 'react-native';
+import type { PressableProps, StyleProp, ViewStyle } from 'react-native';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import Animated, { useReducedMotion } from 'react-native-reanimated';
 import { GlassView } from 'expo-glass-effect';
@@ -24,7 +25,7 @@ type NorthButtonProps = PressableProps & {
  * and lets go over `quick`, so the control gives way under a finger and
  * recovers rather than snapping between two frames.
  */
-export const NorthButton = forwardRef<View, NorthButtonProps>(function NorthButton(
+export const NorthButton = forwardRef<ComponentRef<typeof Pressable>, NorthButtonProps>(function NorthButton(
   { accessibilityLabel, animateAvailability = false, disabled, label, style, tone = 'primary', ...props },
   ref,
 ) {

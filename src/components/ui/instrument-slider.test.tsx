@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { InstrumentSlider } from '@/components/ui/instrument-slider';
 
@@ -9,7 +10,9 @@ describe('InstrumentSlider', () => {
     { expectedOffset: 0, value: 0 },
     { expectedOffset: 292, value: 10 },
   ])('keeps the grip inside a 320px track at value $value', async ({ expectedOffset, value }) => {
+    // The app wraps every screen in this root (see AppShell); Gesture Handler 3 requires it.
     await render(
+      <GestureHandlerRootView>
       <InstrumentSlider
         accessibilityLabel="Test slider"
         leftLabel="Minimum"
@@ -17,7 +20,8 @@ describe('InstrumentSlider', () => {
         onChange={jest.fn()}
         rightLabel="Maximum"
         value={value}
-      />,
+      />
+      </GestureHandlerRootView>,
     );
 
     await fireEvent(screen.getByLabelText('Test slider'), 'layout', {

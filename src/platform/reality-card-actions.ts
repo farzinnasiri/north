@@ -1,11 +1,11 @@
-import type { RefObject } from 'react';
+import type { ComponentRef, RefObject } from 'react';
 import type { View } from 'react-native';
 import * as MediaLibrary from 'expo-media-library';
 import { captureRef, releaseCapture } from 'react-native-view-shot';
 
 export type RealityCardActionResult = 'done' | 'permission-denied';
 
-async function captureRealityCard(ref: RefObject<View | null>) {
+async function captureRealityCard(ref: RefObject<ComponentRef<typeof View> | null>) {
   return captureRef(ref, {
     fileName: 'north-starting-point',
     format: 'png',
@@ -15,7 +15,7 @@ async function captureRealityCard(ref: RefObject<View | null>) {
 }
 
 export async function saveRealityCard(
-  ref: RefObject<View | null>,
+  ref: RefObject<ComponentRef<typeof View> | null>,
 ): Promise<RealityCardActionResult> {
   const permission = await MediaLibrary.requestPermissionsAsync(true, ['photo']);
   if (!permission.granted) return 'permission-denied';

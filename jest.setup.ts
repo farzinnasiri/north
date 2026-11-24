@@ -5,6 +5,13 @@ import { setUpTests } from 'react-native-reanimated';
 
 setUpTests();
 
+// Gesture Handler 3 asks Worklets for the UI runtime on import. Under Jest the
+// browser build of Worklets refuses; there is no UI runtime to hand over.
+jest.mock('react-native-worklets', () => ({
+  ...jest.requireActual('react-native-worklets'),
+  getUIRuntimeHolder: () => ({}),
+}));
+
 // Native-only modules. The tests exercise the fallbacks: solid buttons where
 // Liquid Glass is unavailable, and no scheduled notifications.
 jest.mock('expo-glass-effect', () => ({

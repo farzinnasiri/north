@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import type { NorthStarType } from '@/domains/onboarding/onboarding';
 import {
@@ -45,7 +46,9 @@ describe('StarRevealStep', () => {
     ];
 
     function Harness() {
+      // The app wraps every screen in this root (see AppShell); Gesture Handler 3 requires it.
       return (
+        <GestureHandlerRootView>
         <StarRevealStep
           name="Farzin"
           onChoose={onChoose}
@@ -53,6 +56,7 @@ describe('StarRevealStep', () => {
           ranked={ranked}
           value={null}
         />
+        </GestureHandlerRootView>
       );
     }
 

@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from 'react';
-import type { PropsWithChildren } from 'react';
+import type { ComponentRef, PropsWithChildren } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 
@@ -14,7 +14,7 @@ type OnboardingStepTransitionProps = PropsWithChildren<{
   step: number;
 }>;
 
-type AnimatableView = View & {
+type AnimatableView = ComponentRef<typeof View> & {
   animate?: (keyframes: Keyframe[], options: KeyframeAnimationOptions) => Animation;
 };
 
