@@ -26,7 +26,7 @@ on:
       runner:
         description: Runner label
         required: true
-        default: xcode-27
+        default: macos-26
       config_json:
         description: The resolved build plan, as JSON
         required: true
@@ -39,8 +39,7 @@ concurrency:
 
 jobs:
   build:
-    # Upgrade rnd's default macos-26 runner label to GitHub's GA xcode-27 (iOS 27 SDK) runner.
-    runs-on: ${{ inputs.platform == 'ios' && (inputs.runner == 'macos-26-xlarge' && 'xcode-27-xlarge' || 'xcode-27') || inputs.runner }}
+    runs-on: ${{ inputs.runner }}
     timeout-minutes: 90
     env:
       EAS_PROFILE: ${{ inputs.profile }}
